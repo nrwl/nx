@@ -16,7 +16,7 @@ pub struct UltracacheConfigurationImportOptions {
     pub requested_commit: String,
     /// `Record<taskId, { commit, inputs, outputs }>` as JSON.
     pub configurations_json: String,
-    /// Hash each task's project folder state beside its configuration, as a
-    /// manifest's `hashProjectFolderState` does. Defaults to `false`.
-    pub hash_project_folder_state: Option<bool>,
+    /// Hash the folder state of each task's project beside its configuration, as a
+    /// manifest's `hashFolderState` does. Defaults to `false`.
+    pub hash_folder_state: Option<bool>,
 }

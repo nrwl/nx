@@ -29,7 +29,7 @@ const FOLDER_STATE_VERSION: &[u8] = b"folder-state:v1";
 
 /// Persisted folder-state digests, keyed by folder. The file map they are
 /// computed from is fixed for the hasher's lifetime.
-pub(crate) type OwnerFolderStateCache = OnceCache<String>;
+pub(crate) type FolderStateCache = OnceCache<String>;
 
 /// The kind of a file, from its name: everything after the first dot, so
 /// `a.component.spec.ts` is `component.spec.ts` and `eslint.config.mjs` is
@@ -84,7 +84,7 @@ pub fn hash_folder_state<'a>(files: impl IntoIterator<Item = &'a str>) -> String
 /// it: the files of the project owning `root` that sit under it. A folder no
 /// project owns has an empty state; finding its files would mean a project
 /// lookup for every workspace file.
-pub(crate) fn hash_owner_folder_state(
+pub(crate) fn hash_folder_state_at(
     root: &str,
     project_root_mappings: &ProjectRootMappings,
     project_file_map: &HashMap<String, Vec<FileData>>,
@@ -103,14 +103,14 @@ pub(crate) fn hash_owner_folder_state(
     )
 }
 
-pub(crate) fn hash_owner_folder_state_cached(
+pub(crate) fn hash_folder_state_cached(
     root: &str,
     project_root_mappings: &ProjectRootMappings,
     project_file_map: &HashMap<String, Vec<FileData>>,
-    cache: &OwnerFolderStateCache,
+    cache: &FolderStateCache,
 ) -> Arc<String> {
     let Ok(digest) = cache.get_or_try_init(root.to_string(), || {
-        Ok::<_, Infallible>(hash_owner_folder_state(
+        Ok::<_, Infallible>(hash_folder_state_at(
             root,
             project_root_mappings,
             project_file_map,
@@ -163,11 +163,11 @@ mod tests {
 
     impl Workspace {
         fn state(&self, root: &str) -> String {
-            hash_owner_folder_state(root, &self.mappings, &self.project_files)
+            hash_folder_state_at(root, &self.mappings, &self.project_files)
         }
 
-        fn state_cached(&self, root: &str, cache: &OwnerFolderStateCache) -> Arc<String> {
-            hash_owner_folder_state_cached(root, &self.mappings, &self.project_files, cache)
+        fn state_cached(&self, root: &str, cache: &FolderStateCache) -> Arc<String> {
+            hash_folder_state_cached(root, &self.mappings, &self.project_files, cache)
         }
     }
 
@@ -332,7 +332,7 @@ mod tests {
 
     #[test]
     fn the_cache_computes_once_per_folder() {
-        let cache = OwnerFolderStateCache::new();
+        let cache = FolderStateCache::new();
         let before = lib_a(&["libs/a/project.json"]);
         let first = before.state_cached("libs/a", &cache);
         let changed = lib_a(&["libs/a/project.json", "libs/a/x.ts"]);

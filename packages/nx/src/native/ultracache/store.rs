@@ -60,12 +60,12 @@ impl UltracacheConfigurationStore {
         for (id, entry) in entries {
             set.add_legacy(id, entry.inputs);
         }
-        set.hash_project_folder_state = options.hash_project_folder_state.unwrap_or(false);
+        set.hash_folder_state = options.hash_folder_state.unwrap_or(false);
         self.publish(options.requested_commit, set)
     }
 
     /// Imports the older Cloud API one JS property at a time.
-    /// The folder-state switch is the manifest's `hashProjectFolderState`; it
+    /// The folder-state switch is the manifest's `hashFolderState`; it
     /// defaults to `false`.
     #[napi]
     pub fn import_entries(
@@ -75,10 +75,10 @@ impl UltracacheConfigurationStore {
             ts_arg_type = "Readonly<Record<string, { commit: string; inputs: readonly string[] }>>"
         )]
         configurations: Object<'_>,
-        hash_project_folder_state: Option<bool>,
+        hash_folder_state: Option<bool>,
     ) -> napi::Result<UltracacheConfigurations, String> {
         let mut set = CompactSet::default();
-        set.hash_project_folder_state = hash_project_folder_state.unwrap_or(false);
+        set.hash_folder_state = hash_folder_state.unwrap_or(false);
         for id in Object::keys(&configurations).map_err(invalid_response)? {
             if !configurations
                 .has_own_property(&id)
@@ -131,7 +131,7 @@ impl UltracacheConfigurationStore {
 
 // Older Nx clients keep reading and writing the two original tables. Keeping
 // compact versions separate prevents those clients from opening a partial set.
-// A version in the original tables never hashes project folder state: those
+// A version in the original tables never hashes the folder state: those
 // clients predate it. The switch belongs to a compact version, and each
 // import publishes a new one with its own `fetched_at`, so one
 // (commit, fetched_at) pin never mixes the two.
@@ -167,9 +167,9 @@ CREATE TABLE IF NOT EXISTS io_snapshot_compact_features (
 ";
 
 /// The `io_snapshot_compact_features` row of a version whose manifest set
-/// `hashProjectFolderState`. A separate table, so older Nx versions sharing the
+/// `hashFolderState`. A separate table, so older Nx versions sharing the
 /// database keep reading and writing versions as before.
-const PROJECT_FOLDER_STATE: &str = "hashProjectFolderState";
+const FOLDER_STATE: &str = "hashFolderState";
 
 fn integers(ids: impl Iterator<Item = u32>) -> Rc<Vec<Value>> {
     Rc::new(ids.map(|id| Value::Integer(id.into())).collect())
@@ -217,10 +217,10 @@ impl UltracacheConfigurationStore {
             for (task, artifact) in &set.tasks {
                 insert_task.execute(params![version, task, artifact])?;
             }
-            if set.hash_project_folder_state {
+            if set.hash_folder_state {
                 conn.execute(
                     "INSERT INTO io_snapshot_compact_features VALUES (?1, ?2)",
-                    params![version, PROJECT_FOLDER_STATE],
+                    params![version, FOLDER_STATE],
                 )?;
             }
             Ok((version, fetched_at))
@@ -233,7 +233,7 @@ impl UltracacheConfigurationStore {
             },
             self.clone(),
             Some(version),
-            set.hash_project_folder_state,
+            set.hash_folder_state,
         ))
     }
 
@@ -250,7 +250,7 @@ impl UltracacheConfigurationStore {
              ), EXISTS (
                 SELECT 1 FROM io_snapshot_compact_features WHERE version = newest.id AND feature = ?3
              ) FROM newest",
-            params![commit, fetched_at, PROJECT_FOLDER_STATE],
+            params![commit, fetched_at, FOLDER_STATE],
             |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get::<_, bool>(3)?, row.get::<_, bool>(4)?)),
         ).inspect_err(|err| debug!("ultracache: unreadable configurations for {commit}: {err}")).ok()??;
         // An older writer can still pick its own timestamp. A worker cannot

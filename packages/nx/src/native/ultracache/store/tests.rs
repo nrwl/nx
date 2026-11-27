@@ -18,7 +18,7 @@ fn import(
     store.import_set(UltracacheConfigurationImportOptions {
         requested_commit: commit.into(),
         configurations_json: json.into(),
-        hash_project_folder_state: None,
+        hash_folder_state: None,
     })
 }
 
@@ -378,31 +378,31 @@ fn the_folder_state_switch_is_pinned_with_its_version() {
             "artifacts":{&id: {"sizeBytes":config.len()}}
         });
         if let Some(on) = switch {
-            manifest["hashProjectFolderState"] = json!(on);
+            manifest["hashFolderState"] = json!(on);
         }
         manifest
     };
     let on = import_files(&db, &dir, &manifest(Some(true))).unwrap();
     let off = import_files(&db, &dir, &manifest(Some(false))).unwrap();
     let absent = import_files(&db, &dir, &manifest(None)).unwrap();
-    assert!(on.hashes_project_folder_state());
-    assert!(!off.hashes_project_folder_state());
-    assert!(!absent.hashes_project_folder_state());
+    assert!(on.hashes_folder_state());
+    assert!(!off.hashes_folder_state());
+    assert!(!absent.hashes_folder_state());
 
     let reopen = |imported: &UltracacheConfigurations| {
         store(&dir)
             .get_version("head".into(), imported.resolution().fetched_at)
             .unwrap()
-            .hashes_project_folder_state()
+            .hashes_folder_state()
     };
     assert!(reopen(&on));
     assert!(!reopen(&off));
     assert!(!reopen(&absent));
-    assert!(!db.get("head".into()).unwrap().hashes_project_folder_state());
+    assert!(!db.get("head".into()).unwrap().hashes_folder_state());
 
     let json = r#"{"p:lint":{"commit":"c","inputs":["a"]}}"#;
     let legacy = import(&db, "legacy", json).unwrap();
-    assert!(!legacy.hashes_project_folder_state());
+    assert!(!legacy.hashes_folder_state());
     assert!(!reopen_commit(&dir, "legacy", &legacy));
 
     // The JSON import the Nx Cloud client re-imports a run with takes the switch too.
@@ -410,10 +410,10 @@ fn the_folder_state_switch_is_pinned_with_its_version() {
         .import_set(UltracacheConfigurationImportOptions {
             requested_commit: "rehash".into(),
             configurations_json: json.into(),
-            hash_project_folder_state: Some(true),
+            hash_folder_state: Some(true),
         })
         .unwrap();
-    assert!(rehashed.hashes_project_folder_state());
+    assert!(rehashed.hashes_folder_state());
     assert!(reopen_commit(&dir, "rehash", &rehashed));
     // A later import of the same commit is a new pin; the earlier one keeps its switch.
     let later = import(&db, "rehash", json).unwrap();
@@ -429,5 +429,5 @@ fn reopen_commit(dir: &TempDir, commit: &str, imported: &UltracacheConfiguration
     store(dir)
         .get_version(commit.into(), imported.resolution().fetched_at)
         .unwrap()
-        .hashes_project_folder_state()
+        .hashes_folder_state()
 }

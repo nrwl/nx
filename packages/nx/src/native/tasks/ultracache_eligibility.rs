@@ -57,7 +57,7 @@ pub(crate) struct UltracacheTask {
     pub digest: String,
     /// Also hash the folder state of the task's project: the configurations
     /// ask for it and the target does not set `excludeFolderStateHash`.
-    pub project_folder_state: bool,
+    pub folder_state: bool,
 }
 
 /// Why a task (or the whole run) hashes natively; `reason` is rendered by the
@@ -132,7 +132,7 @@ pub(crate) fn resolve<'a>(
     inputs: &EligibilityInputs,
 ) -> Resolved {
     let resolution = configurations.resolution_ref();
-    let project_folder_state = configurations.hashes_project_folder_state();
+    let folder_state = configurations.hashes_folder_state();
 
     let ultracache_settings: Vec<_> = ultracache_settings.into_iter().collect();
     let task_ids: Vec<&str> = ultracache_settings.iter().map(|(id, _)| *id).collect();
@@ -245,7 +245,7 @@ pub(crate) fn resolve<'a>(
                     dictionary: Arc::clone(&dictionary),
                     files,
                     digest: configuration_digest(ultracache),
-                    project_folder_state: project_folder_state
+                    folder_state: folder_state
                         && !ultracache
                             .and_then(|ultracache| ultracache.exclude_folder_state_hash)
                             .unwrap_or(false),

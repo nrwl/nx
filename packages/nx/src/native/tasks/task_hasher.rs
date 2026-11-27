@@ -18,15 +18,14 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        FilesExpansion, FilesExpansionCache, JsonHashResult, OwnerFolderStateCache,
+        FilesExpansion, FilesExpansionCache, FolderStateCache, JsonHashResult,
         ProjectFileIndicesCache, ProjectFileSetCache, SettledFiles, Source, TrackedBatch,
         WorkspaceFileIndex, WorkspaceFileIndicesCache, WorkspaceFileSetCache,
         collect_project_file_paths_cached, collect_project_files,
         collect_workspace_file_paths_cached, expand_cached, expand_globs, expand_task_outputs,
         file_hashes, fold_file_hashes, hash_all_externals, hash_external, hash_files,
-        hash_json_files, hash_owner_folder_state_cached, hash_project_config,
-        hash_project_files_cached, hash_task_output, hash_tsconfig_selectively,
-        hash_workspace_files_cached, output_prefixes,
+        hash_folder_state_cached, hash_json_files, hash_project_config, hash_project_files_cached,
+        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
     },
     types::FileData,
     walker::{PathPredicate, is_normalized_disk_root},
@@ -105,7 +104,7 @@ impl From<&HashInstruction> for HashInputsBuilder {
             // The folder state hashes file names only; listing every file of
             // the project as an input would drown the task's real reads.
             HashInstruction::UltracacheConfiguration(_)
-            | HashInstruction::OwnerFolderState(_)
+            | HashInstruction::FolderState(_)
             | HashInstruction::ProjectConfiguration(_)
             | HashInstruction::Cwd(_) => HashInputsBuilder::default(),
             // These variants require external context — callers must match on them
@@ -311,7 +310,7 @@ pub struct TaskHasher {
     tracked_file_indices: TrackedFileIndices,
     // One folder-state digest per folder, shared by every task of the project
     // rooted there.
-    owner_folder_state_cache: OwnerFolderStateCache,
+    folder_state_cache: FolderStateCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
     // A path index over the workspace files, built on first use. Workspace
@@ -357,7 +356,7 @@ impl TaskHasher {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             tracked_file_indices: TrackedFileIndices::default(),
-            owner_folder_state_cache: OwnerFolderStateCache::new(),
+            folder_state_cache: FolderStateCache::new(),
             all_externals_hash: OnceCell::new(),
             workspace_file_index: WorkspaceFileIndex::new(Arc::clone(&all_workspace_files)),
         }
@@ -873,7 +872,7 @@ impl TaskHasher {
                 | HashInstruction::AllExternalDependencies
                 | HashInstruction::JsonFileSet(_)
                 | HashInstruction::UltracacheConfiguration(_)
-                | HashInstruction::OwnerFolderState(_) => Some(OnceCell::new()),
+                | HashInstruction::FolderState(_) => Some(OnceCell::new()),
             })
             .collect();
         // Also classified once, for the same reason as `value_slots`.
@@ -1329,14 +1328,14 @@ impl TaskHasher {
                 // The rendered text, so the prefix lives in one place.
                 (hash(instruction.to_string().as_bytes()), inputs)
             }
-            HashInstruction::OwnerFolderState(root) => {
-                let digest = hash_owner_folder_state_cached(
+            HashInstruction::FolderState(root) => {
+                let digest = hash_folder_state_cached(
                     root,
                     project_root_mappings,
                     &self.project_file_map,
-                    &self.owner_folder_state_cache,
+                    &self.folder_state_cache,
                 );
-                trace!(parent: &span, "hash_project_folder_state: {:?}", now.elapsed());
+                trace!(parent: &span, "hash_folder_state: {:?}", now.elapsed());
                 ((*digest).clone(), empty)
             }
             HashInstruction::AllExternalDependencies => {
@@ -1556,7 +1555,7 @@ mod tests {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             tracked_file_indices: TrackedFileIndices::default(),
-            owner_folder_state_cache: OwnerFolderStateCache::new(),
+            folder_state_cache: FolderStateCache::new(),
             all_externals_hash: OnceCell::new(),
             workspace_file_index: WorkspaceFileIndex::new(all_workspace_files),
         }
@@ -2173,7 +2172,7 @@ mod tests {
                 let mut plan = vec![
                     HashInstruction::UltracacheConfiguration("digest".into()),
                     HashInstruction::ProjectFileSet("app".into(), vec!["libs/app/src/a.ts".into()]),
-                    HashInstruction::OwnerFolderState("libs/app".into()),
+                    HashInstruction::FolderState("libs/app".into()),
                 ];
                 if fold {
                     plan.push(HashInstruction::ignored_files(vec![

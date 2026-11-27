@@ -257,8 +257,8 @@ pub enum HashInstruction {
     /// directly in it (see `hashers::hash_folder_state`). Added beside an
     /// Ultracache configuration with the task's project root, so a new kind of
     /// file the recorded globs miss still changes the task's hash. Build it
-    /// with `owner_folder_state`.
-    OwnerFolderState(String),
+    /// with `folder_state`.
+    FolderState(String),
 }
 
 /// Hashed into every task regardless of its inputs (see `HashPlanner::get_plans_internal`).
@@ -387,10 +387,10 @@ pub const COMPACT_FILES_LABEL_ABOVE: usize = 8;
 impl HashInstruction {
     /// The folder state under `root`, a project root as the project graph
     /// spells it: no trailing `/`, and `.` for the workspace root.
-    pub fn owner_folder_state(root: &str) -> Self {
-        HashInstruction::OwnerFolderState(
-            crate::native::project_graph::utils::normalize_project_root(root),
-        )
+    pub fn folder_state(root: &str) -> Self {
+        HashInstruction::FolderState(crate::native::project_graph::utils::normalize_project_root(
+            root,
+        ))
     }
 
     /// An `IgnoredFileSet` that no project scopes.
@@ -494,7 +494,7 @@ impl fmt::Display for HashInstruction {
                 HashInstruction::ProjectConfiguration(project_name) => {
                     format!("{project_name}:ProjectConfiguration")
                 }
-                HashInstruction::OwnerFolderState(root) => format!("folder-state:{root}"),
+                HashInstruction::FolderState(root) => format!("folder-state:{root}"),
                 HashInstruction::TsConfiguration(project_name) => {
                     format!("{project_name}:TsConfig")
                 }
@@ -607,11 +607,11 @@ mod tests {
     #[test]
     fn the_folder_state_renders_its_folder_and_is_never_replaced() {
         let pool = InstructionPool::new();
-        let id = pool.intern(HashInstruction::owner_folder_state("libs/app/"));
+        let id = pool.intern(HashInstruction::folder_state("libs/app/"));
         assert_eq!(&*pool.label(id), "folder-state:libs/app");
         assert_eq!(
-            HashInstruction::owner_folder_state(""),
-            HashInstruction::OwnerFolderState(".".into())
+            HashInstruction::folder_state(""),
+            HashInstruction::FolderState(".".into())
         );
         assert!(!pool.replaced_by_configuration(id, false, |_| false));
     }

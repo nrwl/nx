@@ -285,7 +285,7 @@ describe('importUltracacheConfigurations', () => {
     );
   });
 
-  it('passes on whether to hash project folder state', () => {
+  it('passes on whether to hash the folder state', () => {
     const configurations = {
       'web:build': { commit: 'head', inputs: ['apps/web/**'], outputs: [] },
     };

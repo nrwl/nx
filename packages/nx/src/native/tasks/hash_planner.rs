@@ -625,8 +625,8 @@ impl HashPlanner {
         ));
         // Catches a new kind of file in the project that the recorded globs
         // miss. One instruction per project root, so its targets share the value.
-        if context.entry.project_folder_state {
-            result.ids([pool.intern(HashInstruction::owner_folder_state(
+        if context.entry.folder_state {
+            result.ids([pool.intern(HashInstruction::folder_state(
                 &self.project_graph.nodes[&task.target.project].root,
             ))]);
         }
@@ -3639,7 +3639,7 @@ mod always_tests {
                 ("e2e:e2e", &["libs/e2e/src/app.spec.ts"]),
                 ("e2e:lint", &["libs/e2e/src/app.spec.ts"]),
             ]);
-            let configurations = configurations.with_project_folder_state(folder_state);
+            let configurations = configurations.with_folder_state(folder_state);
             let ids = vec!["e2e:e2e", "e2e:lint", "app:build"];
             let graph = task_graph(
                 &[("e2e:e2e", &[]), ("e2e:lint", &[]), ("app:build", &[])],
@@ -3654,7 +3654,7 @@ mod always_tests {
                     .iter()
                     .copied()
                     .filter(|id| {
-                        matches!(plans.pool.get(*id).value(), HashInstruction::OwnerFolderState(root) if root == "libs/e2e")
+                        matches!(plans.pool.get(*id).value(), HashInstruction::FolderState(root) if root == "libs/e2e")
                     })
                     .collect()
             };
@@ -3686,7 +3686,7 @@ mod always_tests {
             ("e2e:e2e", &["libs/e2e/src/app.spec.ts"]),
             ("e2e:lint", &["libs/e2e/src/app.spec.ts"]),
         ]);
-        let configurations = configurations.with_project_folder_state(true);
+        let configurations = configurations.with_folder_state(true);
         let mut graph = task_graph(&[("e2e:e2e", &[]), ("e2e:lint", &[])], &[]);
         graph.tasks.get_mut("e2e:lint").unwrap().ultracache =
             Some(crate::native::tasks::types::TaskUltracacheSettings {
@@ -3701,7 +3701,7 @@ mod always_tests {
                 &[],
             )
             .unwrap();
-        let folder_state = HashInstruction::OwnerFolderState("libs/e2e".into());
+        let folder_state = HashInstruction::FolderState("libs/e2e".into());
         assert!(plans["e2e:e2e"].contains(&folder_state));
         assert!(!plans["e2e:lint"].contains(&folder_state));
         // The recording still applies.
@@ -3734,7 +3734,7 @@ mod always_tests {
                 .remove("e2e:lint")
                 .unwrap()
         };
-        let folder_state = HashInstruction::OwnerFolderState("libs/e2e".into());
+        let folder_state = HashInstruction::FolderState("libs/e2e".into());
         // The Nx Cloud client re-imports a run's configurations as JSON to
         // register its cache entries; those must hash as the files import did.
         let files = plan(UltracacheImport::Files(Some(true)));

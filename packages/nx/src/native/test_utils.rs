@@ -137,7 +137,7 @@ pub(crate) fn ultracache_configurations(
 }
 
 /// Which store entry point a test imports its configurations through, and the
-/// `hashProjectFolderState` it passes.
+/// `hashFolderState` it passes.
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) enum UltracacheImport {
     /// `UltracacheConfigurationStore.import`, as the Nx Cloud client's rehash does.
@@ -167,7 +167,7 @@ pub(crate) fn ultracache_configurations_imported(
         UltracacheConfigurationStore::new(&External::new(Arc::new(Mutex::new(db)))).unwrap();
     let commit = "c".repeat(40);
     let configurations = match import {
-        UltracacheImport::Json(hash_project_folder_state) => {
+        UltracacheImport::Json(hash_folder_state) => {
             let json = serde_json::Value::Object(
                 entries
                     .iter()
@@ -183,16 +183,16 @@ pub(crate) fn ultracache_configurations_imported(
                 .import_set(UltracacheConfigurationImportOptions {
                     requested_commit: commit,
                     configurations_json: json.to_string(),
-                    hash_project_folder_state,
+                    hash_folder_state,
                 })
                 .unwrap()
         }
-        UltracacheImport::Files(hash_project_folder_state) => {
+        UltracacheImport::Files(hash_folder_state) => {
             let mut manifest = serde_json::json!({
                 "enabled": true, "updatedAt": 1, "tasks": {}, "artifacts": {}
             });
-            if let Some(on) = hash_project_folder_state {
-                manifest["hashProjectFolderState"] = serde_json::json!(on);
+            if let Some(on) = hash_folder_state {
+                manifest["hashFolderState"] = serde_json::json!(on);
             }
             for (id, inputs) in entries {
                 let bytes =

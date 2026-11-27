@@ -21,7 +21,7 @@ pub use disk_expansion::*;
 pub use hash_cwd::*;
 pub use hash_env::*;
 pub use hash_external::*;
-pub(crate) use hash_folder_state::{OwnerFolderStateCache, hash_owner_folder_state_cached};
+pub(crate) use hash_folder_state::{FolderStateCache, hash_folder_state_cached};
 pub use hash_ignored_files::*;
 pub use hash_json::*;
 pub use hash_project_config::*;

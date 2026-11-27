@@ -494,7 +494,7 @@ fn instruction_matches_detail(
         // Adding, deleting or moving a file can change which kinds of files
         // its folder holds; an edit cannot. The diff does not say which a
         // change was, so every changed file in its scope counts.
-        HashInstruction::OwnerFolderState(root) => {
+        HashInstruction::FolderState(root) => {
             let owned = changed.in_folder(root);
             Ok(of_files(
                 owned
@@ -653,7 +653,7 @@ mod tests {
     #[test]
     fn the_folder_state_is_touched_by_any_change_its_project_owns() {
         let g = graph(&[("a", "libs/a"), ("nested", "libs/a/nested")]);
-        let folder_state = || vec![HashInstruction::OwnerFolderState("libs/a".into())];
+        let folder_state = || vec![HashInstruction::FolderState("libs/a".into())];
         assert_eq!(
             touched_for(&g, folder_state(), &["libs/a/eslint.config.mjs"]),
             vec!["a:build"]

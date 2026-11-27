@@ -392,10 +392,10 @@ export declare class UltracacheConfigurationStore {
   import(options: UltracacheConfigurationImportOptions): UltracacheConfigurations
   /**
    * Imports the older Cloud API one JS property at a time.
-   * The folder-state switch is the manifest's `hashProjectFolderState`; it
+   * The folder-state switch is the manifest's `hashFolderState`; it
    * defaults to `false`.
    */
-  importEntries(requestedCommit: string, configurations: Readonly<Record<string, { commit: string; inputs: readonly string[] }>>, hashProjectFolderState?: boolean | undefined | null): UltracacheConfigurations
+  importEntries(requestedCommit: string, configurations: Readonly<Record<string, { commit: string; inputs: readonly string[] }>>, hashFolderState?: boolean | undefined | null): UltracacheConfigurations
   /** Verifies and imports the immutable manifest and its referenced objects. */
   importFiles(requestedCommit: string, manifestPath: string, filesDirectory: string): UltracacheConfigurations
   /** The newest stored set for this commit, reading only its summary. */
@@ -1570,10 +1570,10 @@ export interface UltracacheConfigurationImportOptions {
   /** `Record<taskId, { commit, inputs, outputs }>` as JSON. */
   configurationsJson: string
   /**
-   * Hash each task's project folder state beside its configuration, as a
-   * manifest's `hashProjectFolderState` does. Defaults to `false`.
+   * Hash the folder state of each task's project beside its configuration, as a
+   * manifest's `hashFolderState` does. Defaults to `false`.
    */
-  hashProjectFolderState?: boolean
+  hashFolderState?: boolean
 }
 
 /** What was resolved for a commit; stored beside its entries. */
