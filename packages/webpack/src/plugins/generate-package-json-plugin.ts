@@ -12,6 +12,7 @@ import {
   serializeJson,
 } from '@nx/devkit';
 import { readRuntimeDependencies } from '@nx/js/internal';
+import { resolve } from 'path';
 
 const pluginName = 'GeneratePackageJsonPlugin';
 
@@ -45,8 +46,9 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
             this.options.projectGraph
           );
 
-          const importHelpers = !!readTsConfig(this.options.tsConfig).options
-            .importHelpers;
+          const importHelpers = !!readTsConfig(
+            resolve(this.options.root, this.options.tsConfig)
+          ).options.importHelpers;
           const shouldAddHelperDependency =
             importHelpers &&
             helperDependencies.every(
