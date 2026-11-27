@@ -1,6 +1,7 @@
 import { loadConfigFile } from '@nx/devkit/internal';
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { join } from 'node:path';
+import { getConfigBrowsers, readConnectEndpoint } from './config-browsers';
 import {
   normalizeWebServers,
   pickProbeEnv,
@@ -10,10 +11,11 @@ import {
 /**
  * Forked child that evaluates a Playwright config under the env it was spawned
  * with (see resolveWebServersUnderEnv) and returns the resolved `webServer`
- * addresses along with the probe env the config left behind. A child is used
- * rather than an in-process re-evaluation because createNodes evaluates configs
- * concurrently: a shared `process.env` swap would race across them, and the
- * module cache would hand back the first evaluation.
+ * addresses, browsers and remote browser endpoint along with the probe env the
+ * config left behind. A child is used rather than an in-process re-evaluation
+ * because createNodes evaluates configs concurrently: a shared `process.env`
+ * swap would race across them, and the module cache would hand back the first
+ * evaluation.
  *
  * argv: [configFilePath (workspace-relative), workspaceRoot]. The result is
  * sent over the IPC channel as a tagged `webserver-config-result` message, or
@@ -21,6 +23,7 @@ import {
  */
 export async function evaluateAndSendWebserverConfig(): Promise<void> {
   const [configFilePath, workspaceRoot] = process.argv.slice(2);
+  const connectEndpointBeforeConfig = process.env.PW_TEST_CONNECT_WS_ENDPOINT;
   const config = await loadConfigFile<PlaywrightTestConfig>(
     join(workspaceRoot, configFilePath)
   );
@@ -28,6 +31,11 @@ export async function evaluateAndSendWebserverConfig(): Promise<void> {
     type: 'webserver-config-result',
     webServers: normalizeWebServers(config.webServer),
     probeEnv: pickProbeEnv(process.env),
+    browsers: getConfigBrowsers(config),
+    connectEndpoint: readConnectEndpoint(
+      connectEndpointBeforeConfig,
+      process.env
+    ),
   });
 }
 

@@ -9,6 +9,7 @@ describe('webserver-config-worker', () => {
   const originalSend = process.send;
   const originalUrl = process.env.NX_PW_WORKER_TEST_URL;
   const originalNoProxy = process.env.NO_PROXY;
+  const originalEndpoint = process.env.PW_TEST_CONNECT_WS_ENDPOINT;
 
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), 'pw-config-worker-'));
@@ -27,6 +28,11 @@ describe('webserver-config-worker', () => {
     } else {
       process.env.NO_PROXY = originalNoProxy;
     }
+    if (originalEndpoint === undefined) {
+      delete process.env.PW_TEST_CONNECT_WS_ENDPOINT;
+    } else {
+      process.env.PW_TEST_CONNECT_WS_ENDPOINT = originalEndpoint;
+    }
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -34,11 +40,13 @@ describe('webserver-config-worker', () => {
     process.argv = ['node', 'worker.js', 'playwright.config.js', dir];
   }
 
-  it('evaluates the config from argv under the spawned env and sends the normalized webServers with the probe env the config left', async () => {
+  it('evaluates the config from argv under the spawned env and sends the normalized webServers with the probe env and remote endpoint the config left', async () => {
     delete process.env.NO_PROXY;
+    delete process.env.PW_TEST_CONNECT_WS_ENDPOINT;
     writeFileSync(
       join(dir, 'playwright.config.js'),
       `process.env.NO_PROXY = 'localhost';
+process.env.PW_TEST_CONNECT_WS_ENDPOINT = 'ws://localhost:3000';
 module.exports = {
   webServer: {
     command: 'npx nx run app1:serve',
@@ -75,6 +83,11 @@ module.exports = {
           },
         ],
         probeEnv: expect.objectContaining({ NO_PROXY: 'localhost' }),
+        browsers: ['chromium'],
+        connectEndpoint: {
+          value: 'ws://localhost:3000',
+          changedByConfig: true,
+        },
       },
     ]);
   });

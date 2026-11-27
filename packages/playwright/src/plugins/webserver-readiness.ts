@@ -11,6 +11,7 @@ import {
   noProxyEntries,
   resolveProxyForProtocol,
 } from '../executors/wait-for-webserver/proxy';
+import { readConnectEndpoint, type ConnectEndpoint } from './config-browsers';
 
 /**
  * The serializable subset of a Playwright `webServer` entry that the readiness
@@ -89,11 +90,14 @@ export function pickProbeEnv(env: NodeJS.ProcessEnv): ProbeEnv {
  * The webServer entries a config evaluation resolved and the probe env it left
  * behind, which is what Playwright's own probe runs under: the config runs
  * before the probe and can write env (through `dotenv`, say) that the readiness
- * task, its own target in its own process, never sees.
+ * task, its own target in its own process, never sees. `browsers` are the
+ * browsers its projects need downloaded.
  */
 export interface ConfigEvaluation {
   webServers: ResolvedWebServer[];
   probeEnv: ProbeEnv;
+  browsers: string[];
+  connectEndpoint: ConnectEndpoint;
 }
 
 let inProcessLoad: Promise<void> = Promise.resolve();
@@ -121,7 +125,12 @@ let inProcessLoad: Promise<void> = Promise.resolve();
 export async function loadConfigWithProbeEnv<T extends object, R>(
   configPath: string,
   consume: (config: T) => R
-): Promise<{ consumed: R; probeEnv: ProbeEnv; ambientEnv: NodeJS.ProcessEnv }> {
+): Promise<{
+  consumed: R;
+  probeEnv: ProbeEnv;
+  connectEndpoint: ConnectEndpoint;
+  ambientEnv: NodeJS.ProcessEnv;
+}> {
   const previous = inProcessLoad;
   let release: () => void;
   inProcessLoad = new Promise<void>((resolve) => (release = resolve));
@@ -131,10 +140,15 @@ export async function loadConfigWithProbeEnv<T extends object, R>(
     const before = { ...process.env };
     let consumed: R;
     let probeEnv: ProbeEnv;
+    let connectEndpoint: ConnectEndpoint;
     try {
       const config = await loadConfigFile<T>(configPath);
       consumed = consume(config);
       probeEnv = pickProbeEnv(process.env);
+      connectEndpoint = readConnectEndpoint(
+        before.PW_TEST_CONNECT_WS_ENDPOINT,
+        process.env
+      );
     } finally {
       restoreEnv(before);
       const applied = getAppliedDaemonClientEnv();
@@ -142,7 +156,12 @@ export async function loadConfigWithProbeEnv<T extends object, R>(
         applyDaemonEnvFromClient(applied.env);
       }
     }
-    return { consumed, probeEnv, ambientEnv: { ...process.env } };
+    return {
+      consumed,
+      probeEnv,
+      connectEndpoint,
+      ambientEnv: { ...process.env },
+    };
   } finally {
     release();
   }
@@ -364,8 +383,8 @@ let childEval: ChildEval = forkChildEval;
 let workerScriptPath = join(__dirname, 'webserver-config-worker.js');
 
 /**
- * Evaluates `configFilePath`'s `webServer` addresses under `taskEnv`, bounded by
- * the concurrency cap. Used only when the env diverges from ambient.
+ * Evaluates `configFilePath` under `taskEnv`, bounded by the concurrency cap.
+ * Used only when the env diverges from ambient.
  */
 export async function resolveWebServersUnderEnv(
   configFilePath: string,
@@ -398,6 +417,8 @@ function isWorkerMessage(
     error?: unknown;
     webServers?: unknown;
     probeEnv?: unknown;
+    browsers?: unknown;
+    connectEndpoint?: { changedByConfig?: unknown };
   };
   return (
     (candidate.type === 'webserver-config-error' &&
@@ -405,7 +426,9 @@ function isWorkerMessage(
     (candidate.type === 'webserver-config-result' &&
       Array.isArray(candidate.webServers) &&
       typeof candidate.probeEnv === 'object' &&
-      candidate.probeEnv !== null)
+      candidate.probeEnv !== null &&
+      Array.isArray(candidate.browsers) &&
+      typeof candidate.connectEndpoint?.changedByConfig === 'boolean')
   );
 }
 
@@ -482,6 +505,8 @@ function forkChildEval(
             resolve({
               webServers: message.webServers,
               probeEnv: message.probeEnv,
+              browsers: message.browsers,
+              connectEndpoint: message.connectEndpoint,
             })
           );
           break;

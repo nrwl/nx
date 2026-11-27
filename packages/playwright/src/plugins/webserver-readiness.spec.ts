@@ -542,7 +542,12 @@ describe('taskEnvDivergesFromAmbient', () => {
   });
 });
 
-const emptyEvaluation: ConfigEvaluation = { webServers: [], probeEnv: {} };
+const emptyEvaluation: ConfigEvaluation = {
+  webServers: [],
+  probeEnv: {},
+  browsers: [],
+  connectEndpoint: { value: undefined, changedByConfig: false },
+};
 
 describe('resolveWebServersUnderEnv concurrency', () => {
   afterEach(() => _setChildEval(null));
@@ -878,7 +883,7 @@ describe('forkChildEval (real fork)', () => {
     _setWorkerScriptPath(
       writeWorker(
         'ok.js',
-        `process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url: 'http://localhost:4301' }], probeEnv: { NO_PROXY: 'localhost' } }, () => process.exit(0));`
+        `process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url: 'http://localhost:4301' }], probeEnv: { NO_PROXY: 'localhost' }, browsers: ['webkit'], connectEndpoint: { value: 'ws://localhost:3000', changedByConfig: true } }, () => process.exit(0));`
       )
     );
     await expect(
@@ -886,6 +891,8 @@ describe('forkChildEval (real fork)', () => {
     ).resolves.toEqual({
       webServers: [{ command: 'x', url: 'http://localhost:4301' }],
       probeEnv: { NO_PROXY: 'localhost' },
+      browsers: ['webkit'],
+      connectEndpoint: { value: 'ws://localhost:3000', changedByConfig: true },
     });
   });
 
@@ -895,7 +902,7 @@ describe('forkChildEval (real fork)', () => {
     _setWorkerScriptPath(
       writeWorker(
         'cwd.js',
-        `process.send({ type: 'webserver-config-result', webServers: [{ command: process.cwd() }], probeEnv: {} }, () => process.exit(0));`
+        `process.send({ type: 'webserver-config-result', webServers: [{ command: process.cwd() }], probeEnv: {}, browsers: [], connectEndpoint: { changedByConfig: false } }, () => process.exit(0));`
       )
     );
     const projectRoot = join(fixtureDir, 'apps', 'e2e');
@@ -906,6 +913,8 @@ describe('forkChildEval (real fork)', () => {
     ).resolves.toEqual({
       webServers: [{ command: projectRoot }],
       probeEnv: {},
+      browsers: [],
+      connectEndpoint: { changedByConfig: false },
     });
   });
 
@@ -920,7 +929,7 @@ describe('forkChildEval (real fork)', () => {
         `process.send('ready');
 process.send({ event: 'progress' });
 process.send({ type: 'webserver-config-result', webServers: [] });
-process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url: 'http://localhost:4301' }], probeEnv: {} }, () => process.exit(0));`
+process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url: 'http://localhost:4301' }], probeEnv: {}, browsers: [], connectEndpoint: { changedByConfig: false } }, () => process.exit(0));`
       )
     );
     await expect(
@@ -928,6 +937,8 @@ process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url
     ).resolves.toEqual({
       webServers: [{ command: 'x', url: 'http://localhost:4301' }],
       probeEnv: {},
+      browsers: [],
+      connectEndpoint: { changedByConfig: false },
     });
   });
 

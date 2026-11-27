@@ -148,6 +148,75 @@ To scope it to the code its test file exercises, see
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/playwright/plugin`.
 
+### Installing browsers
+
+The plugin infers a `playwright-install` task that installs the browser of each project in your
+Playwright config.
+The `e2e` task and each atomized task depend on it, so the browsers are in place before the tests
+start.
+The task leaves out projects that use a branded browser such as Google Chrome, connect to a remote
+browser, or set `launchOptions.executablePath`.
+When no browser is left to install, Nx infers no install task.
+
+Nx reads the config with the `.env` files the tests load without a configuration: `.env.e2e`,
+`.env.e2e-ci` for the atomized tasks, and the `.env` files every task loads.
+When those files or the config itself set `PW_TEST_CONNECT_WS_ENDPOINT`, the tests connect to a
+remote browser and don't depend on the task.
+Values from a configuration's files, such as `.env.e2e.<configuration>`, or from the target's `env`
+and `envFile` options don't change the install.
+List a browser chosen there with the `browsers` option.
+When the remote endpoint comes from there, turn the task off.
+
+On Linux in CI, the task first installs the system packages the browsers need, as
+`playwright install --with-deps` does.
+It runs apt only when a package is missing, which needs root or passwordless sudo.
+Playwright versions before 1.60 can't report missing packages, so the task runs apt on every
+install.
+When the CI user has no root or passwordless sudo, it skips the system packages instead.
+Set `withDeps` to `true` to run apt anyway.
+On Windows Server, `playwright install --with-deps` also installs the `Server-Media-Foundation`
+feature for Chromium, which the task skips by default.
+Set `withDeps` to `true` when the task replaces that CI step.
+
+The task isn't cached, and Playwright downloads nothing when the browsers are already installed.
+The task loads its own `.env` files, like any other task.
+It skips the install when `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD` is set in the shell, in `.env` or in
+`.env.playwright-install`.
+On Linux and macOS, it also skips the install when the user running it can't write to the browsers
+folder.
+Set `PLAYWRIGHT_BROWSERS_PATH` in the shell or in `.env`, so the install and the tests use the same
+folder.
+
+Configure the task with the `installBrowsers` plugin option, an object with these keys:
+
+- `targetName` sets the task name. The default is `playwright-install`.
+- `browsers` lists the browsers to install by their `playwright install` names, or `"all"` for the
+  default Playwright browsers. The default is the browsers from your Playwright config.
+- `withDeps` controls the system packages. The default is `true` on Linux in CI and `false`
+  elsewhere.
+
+```json frame="none"
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/playwright/plugin",
+      "options": {
+        "installBrowsers": {
+          "browsers": ["chromium", "firefox"],
+          "withDeps": false
+        }
+      }
+    }
+  ]
+}
+```
+
+Set `installBrowsers` to `false` to stop inferring the task.
+A `dependsOn` list you set for the Playwright tasks in `targetDefaults` or in a project
+configuration replaces the inferred one, install task included, unless it contains the
+[spread token](/docs/reference/project-configuration#spread-token).
+
 ## E2E testing
 
 By default, when creating a new frontend application, Nx will prompt for which e2e test runner to use. Select `playwright` or pass in the arg `--e2eTestRunner=playwright`

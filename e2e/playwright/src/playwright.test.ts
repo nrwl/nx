@@ -94,9 +94,11 @@ describe('Playwright E2E Test runner', () => {
       const { targets } = JSON.parse(runCLI(`show project ${app}-e2e --json`));
       expect(targets['e2e-ci--src/example.spec.ts'].dependsOn).toEqual([
         { projects: [app], target: 'preview', waitFor: 'ready' },
+        { target: 'playwright-install' },
       ]);
       expect(targets['e2e-ci--src/feature.spec.ts'].dependsOn).toEqual([
         { projects: [app], target: 'preview', waitFor: 'ready', inputs: false },
+        { target: 'playwright-install' },
       ]);
 
       expect(runCLI(`lint ${app}-e2e`)).toContain(

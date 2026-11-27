@@ -15,7 +15,12 @@ import * as jsUtils from '@nx/js';
 import { PlaywrightTestConfig } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { _clearWarnedUnparseableCommands, createNodesV2 } from './plugin';
+import {
+  _clearWarnedUnparseableCommands,
+  createNodesV2,
+  type PlaywrightPluginOptions,
+} from './plugin';
+import { getConfigBrowsers, readConnectEndpoint } from './config-browsers';
 import {
   _setChildEval,
   normalizeWebServers,
@@ -49,14 +54,21 @@ function installFreshConfigEval(
     onEval?.(env);
     const source = readFileSync(join(wsRoot, configFilePath), 'utf8');
     const moduleShim: { exports: PlaywrightTestConfig } = { exports: {} };
+    // Like the forked child, the config writes to its own copy of the env.
+    const childEnv = { ...env };
     new Function('module', 'exports', 'process', source)(
       moduleShim,
       moduleShim.exports,
-      { ...process, env }
+      { ...process, env: childEnv }
     );
     return {
       webServers: normalizeWebServers(moduleShim.exports.webServer),
-      probeEnv: pickProbeEnv(env),
+      probeEnv: pickProbeEnv(childEnv),
+      browsers: getConfigBrowsers(moduleShim.exports),
+      connectEndpoint: readConnectEndpoint(
+        env.PW_TEST_CONNECT_WS_ENDPOINT,
+        childEnv
+      ),
     };
   });
 }
@@ -131,6 +143,11 @@ describe('@nx/playwright/plugin', () => {
                   "e2e": {
                     "cache": true,
                     "command": "playwright test",
+                    "dependsOn": [
+                      {
+                        "target": "playwright-install",
+                      },
+                    ],
                     "inputs": [
                       "default",
                       "^production",
@@ -232,6 +249,21 @@ describe('@nx/playwright/plugin', () => {
                     },
                     "outputs": [],
                   },
+                  "playwright-install": {
+                    "cache": false,
+                    "executor": "@nx/playwright:install-browsers",
+                    "metadata": {
+                      "description": "Installs the browsers the Playwright tests use.",
+                      "technologies": [
+                        "playwright",
+                      ],
+                    },
+                    "options": {
+                      "browsers": [
+                        "chromium",
+                      ],
+                    },
+                  },
                 },
               },
             },
@@ -282,6 +314,11 @@ describe('@nx/playwright/plugin', () => {
                   "e2e": {
                     "cache": true,
                     "command": "playwright test",
+                    "dependsOn": [
+                      {
+                        "target": "playwright-install",
+                      },
+                    ],
                     "inputs": [
                       "default",
                       "^production",
@@ -389,6 +426,21 @@ describe('@nx/playwright/plugin', () => {
                       "{projectRoot}/test-results/report.json",
                       "{projectRoot}/test-results/html",
                     ],
+                  },
+                  "playwright-install": {
+                    "cache": false,
+                    "executor": "@nx/playwright:install-browsers",
+                    "metadata": {
+                      "description": "Installs the browsers the Playwright tests use.",
+                      "technologies": [
+                        "playwright",
+                      ],
+                    },
+                    "options": {
+                      "browsers": [
+                        "chromium",
+                      ],
+                    },
                   },
                 },
               },
@@ -495,6 +547,11 @@ describe('@nx/playwright/plugin', () => {
       {
         "cache": true,
         "command": "playwright test tests/run-me.spec.ts --output=test-results/tests-run-me-spec-ts",
+        "dependsOn": [
+          {
+            "target": "playwright-install",
+          },
+        ],
         "inputs": [
           "default",
           "^production",
@@ -546,6 +603,11 @@ describe('@nx/playwright/plugin', () => {
       {
         "cache": true,
         "command": "playwright test tests/run-me-2.spec.ts --output=test-results/tests-run-me-2-spec-ts",
+        "dependsOn": [
+          {
+            "target": "playwright-install",
+          },
+        ],
         "inputs": [
           "default",
           "^production",
@@ -692,6 +754,11 @@ describe('@nx/playwright/plugin', () => {
       {
         "cache": true,
         "command": "playwright test tests/run-me.spec.ts --output=test-results/tests-run-me-spec-ts",
+        "dependsOn": [
+          {
+            "target": "playwright-install",
+          },
+        ],
         "inputs": [
           "default",
           "^production",
@@ -745,6 +812,11 @@ describe('@nx/playwright/plugin', () => {
       {
         "cache": true,
         "command": "playwright test tests/run-me-2.spec.ts --output=test-results/tests-run-me-2-spec-ts",
+        "dependsOn": [
+          {
+            "target": "playwright-install",
+          },
+        ],
         "inputs": [
           "default",
           "^production",
@@ -883,6 +955,9 @@ describe('@nx/playwright/plugin', () => {
             "target": "serve",
             "waitFor": "ready",
           },
+          {
+            "target": "playwright-install",
+          },
         ],
         "inputs": [
           "default",
@@ -990,6 +1065,9 @@ describe('@nx/playwright/plugin', () => {
             "target": "serve",
             "waitFor": "ready",
           },
+          {
+            "target": "playwright-install",
+          },
         ],
         "inputs": [
           "default",
@@ -1042,6 +1120,9 @@ describe('@nx/playwright/plugin', () => {
             ],
             "target": "serve",
             "waitFor": "ready",
+          },
+          {
+            "target": "playwright-install",
           },
         ],
         "inputs": [
@@ -1106,6 +1187,7 @@ describe('@nx/playwright/plugin', () => {
         waitForWebServer: true,
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
+        installBrowsers: false,
       },
       context
     );
@@ -1161,6 +1243,7 @@ describe('@nx/playwright/plugin', () => {
         waitForWebServer: true,
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
+        installBrowsers: false,
         waitForServerReady: false,
       },
       context
@@ -1277,6 +1360,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
+        installBrowsers: false,
         waitForWebServer: false,
       },
       context
@@ -1316,6 +1400,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
+        installBrowsers: false,
       },
       context
     );
@@ -1357,7 +1442,12 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
     async function atomizedTargets() {
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci', waitForWebServer: true },
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+          installBrowsers: false,
+          waitForWebServer: true,
+        },
         context
       );
       return results[0][1].projects['.'].targets;
@@ -1563,7 +1653,12 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci', waitForWebServer: false },
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+          installBrowsers: false,
+          waitForWebServer: false,
+        },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -1622,6 +1717,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
             {
               targetName: 'e2e',
               ciTargetName: 'e2e-ci',
+              installBrowsers: false,
               waitForWebServer: false,
             },
             context
@@ -1667,6 +1763,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
         waitForWebServer: true,
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
+        installBrowsers: false,
       },
       context
     );
@@ -2597,6 +2694,7 @@ module.exports = {
           waitForWebServer: true,
           targetName: 'e2e',
           ciTargetName: 'e2e-ci',
+          installBrowsers: false,
         },
         context
       );
@@ -3013,7 +3111,7 @@ module.exports = {};`,
     }
   });
 
-  it('skips the task-env config re-evaluation when the config has no webServer', async () => {
+  it('skips the task-env config re-evaluation when the config has no webServer and the install is off', async () => {
     const originalBaseUrl = process.env.BASE_URL;
     const originalWorkspaceRoot = workspaceRoot;
     delete process.env.BASE_URL;
@@ -3024,7 +3122,7 @@ module.exports = {};`,
     try {
       await mockPlaywrightConfig(tempFs, { testDir: 'tests' });
       // The dotenv makes the task env diverge from ambient, but with no
-      // ambient webServer there is nothing to gate, so no re-evaluation runs.
+      // ambient webServer and the install off, no re-evaluation runs.
       await tempFs.createFiles({
         'tests/run-me.spec.ts': '',
         '.env': 'BASE_URL=http://localhost:4301\n',
@@ -3032,7 +3130,11 @@ module.exports = {};`,
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+          installBrowsers: false,
+        },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -3086,7 +3188,7 @@ module.exports = {};`,
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        { targetName: 'e2e', ciTargetName: 'e2e-ci', installBrowsers: false },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -3229,7 +3331,12 @@ module.exports = {};`,
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { waitForWebServer: true, targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        {
+          waitForWebServer: true,
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+          installBrowsers: false,
+        },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -3278,6 +3385,7 @@ module.exports = {};`,
       {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
+        installBrowsers: false,
       },
       context
     );
@@ -3326,6 +3434,7 @@ module.exports = {};`,
         {
           targetName: 'e2e',
           ciTargetName: 'e2e-ci',
+          installBrowsers: false,
         },
         context
       );
@@ -3517,7 +3626,7 @@ module.exports = {};`,
 
     const results = await createNodesFunction(
       ['playwright.config.js'],
-      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      { targetName: 'e2e', ciTargetName: 'e2e-ci', installBrowsers: false },
       context
     );
     const { targets } = results[0][1].projects['.'];
@@ -3557,7 +3666,7 @@ module.exports = {};`,
 
         const results = await createNodesFunction(
           ['playwright.config.js'],
-          { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+          { targetName: 'e2e', ciTargetName: 'e2e-ci', installBrowsers: false },
           context
         );
         const { targets } = results[0][1].projects['.'];
@@ -3590,7 +3699,7 @@ module.exports = {};`,
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        { targetName: 'e2e', ciTargetName: 'e2e-ci', installBrowsers: false },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -3658,7 +3767,7 @@ module.exports = {};`,
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        { targetName: 'e2e', ciTargetName: 'e2e-ci', installBrowsers: false },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -3683,7 +3792,7 @@ module.exports = {};`,
 
     const results = await createNodesFunction(
       ['playwright.config.js'],
-      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      { targetName: 'e2e', ciTargetName: 'e2e-ci', installBrowsers: false },
       context
     );
     const { targets } = results[0][1].projects['.'];
@@ -3761,6 +3870,7 @@ module.exports = {};`,
       {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
+        installBrowsers: false,
       },
       context
     );
@@ -3901,6 +4011,9 @@ module.exports = {};`,
             "target": "dev",
             "waitFor": "ready",
           },
+          {
+            "target": "playwright-install",
+          },
         ],
         "inputs": [
           "default",
@@ -4016,6 +4129,9 @@ module.exports = {};`,
             "target": "dev",
             "waitFor": "ready",
           },
+          {
+            "target": "playwright-install",
+          },
         ],
         "inputs": [
           "default",
@@ -4076,6 +4192,9 @@ module.exports = {};`,
             ],
             "target": "dev",
             "waitFor": "ready",
+          },
+          {
+            "target": "playwright-install",
           },
         ],
         "inputs": [
@@ -4318,6 +4437,312 @@ module.exports = {};`,
       };
       expect(targets['e2e'].inputs).toContainEqual(rootTsconfigInput);
       expect(targets['e2e-ci'].inputs).toContainEqual(rootTsconfigInput);
+    });
+  });
+
+  describe('browser install target', () => {
+    const atomizedTargetName = 'e2e-ci--tests/run-me.spec.ts';
+
+    async function inferTargets(
+      config: PlaywrightTestConfig | string,
+      options: Partial<PlaywrightPluginOptions> = {}
+    ) {
+      await mockPlaywrightConfig(
+        tempFs,
+        typeof config === 'string' ? config : { testDir: 'tests', ...config }
+      );
+      await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci', ...options },
+        context
+      );
+      return results[0][1].projects['.'].targets;
+    }
+
+    it.each<[string, PlaywrightTestConfig | string, string[]]>([
+      [
+        'sorted and deduped across projects',
+        {
+          projects: [
+            { use: { browserName: 'webkit' } },
+            { use: { browserName: 'firefox' } },
+            { use: { browserName: 'webkit' } },
+          ],
+        },
+        ['firefox', 'webkit'],
+      ],
+      [
+        "merged with the config's use",
+        {
+          use: { browserName: 'firefox' },
+          projects: [{ use: {} }, { use: { browserName: 'webkit' } }],
+        },
+        ['firefox', 'webkit'],
+      ],
+      [
+        "keeping the config's value over an undefined one",
+        `module.exports = { testDir: 'tests', use: { browserName: 'firefox' }, projects: [{ use: { browserName: undefined } }] }`,
+        ['firefox'],
+      ],
+      [
+        'from a device descriptor',
+        { projects: [{ use: { defaultBrowserType: 'webkit' } }] },
+        ['webkit'],
+      ],
+      [
+        'with a Chromium channel',
+        {
+          projects: [
+            { use: { channel: 'chromium' } },
+            { use: { launchOptions: { channel: 'chromium-headless-shell' } } },
+          ],
+        },
+        ['chromium'],
+      ],
+      [
+        "with Playwright's chrome-for-testing alias for Chromium",
+        { use: { channel: 'chrome-for-testing' } },
+        ['chromium'],
+      ],
+      [
+        'leaving out projects that need no download',
+        {
+          projects: [
+            { use: { channel: 'chrome' } },
+            { use: { browserName: 'webkit' } },
+          ],
+        },
+        ['webkit'],
+      ],
+    ])(
+      "installs the browsers the config's projects launch: %s",
+      async (_, config, browsers) => {
+        const targets = await inferTargets(config);
+
+        expect(targets['playwright-install'].options).toEqual({ browsers });
+      }
+    );
+
+    it.each<[string, PlaywrightTestConfig]>([
+      ['a branded channel', { use: { channel: 'chrome' } }],
+      [
+        'a branded launch channel',
+        { use: { launchOptions: { channel: 'msedge' } } },
+      ],
+      [
+        'a remote browser',
+        { use: { connectOptions: { wsEndpoint: 'ws://localhost:3000' } } },
+      ],
+      [
+        'a custom executable',
+        { use: { launchOptions: { executablePath: '/usr/bin/chromium' } } },
+      ],
+      ['no projects', { projects: [] }],
+    ])('infers no install target for a config with %s', async (_, config) => {
+      const targets = await inferTargets(config);
+
+      expect(targets['playwright-install']).toBeUndefined();
+      expect(targets['e2e'].dependsOn).toBeUndefined();
+      expect(targets[atomizedTargetName].dependsOn).toBeUndefined();
+    });
+
+    it('infers no install target when installBrowsers is false', async () => {
+      const targets = await inferTargets({}, { installBrowsers: false });
+
+      expect(targets['playwright-install']).toBeUndefined();
+      expect(targets['e2e'].dependsOn).toBeUndefined();
+      expect(targets[atomizedTargetName].dependsOn).toBeUndefined();
+    });
+
+    it('uses the configured target name, browsers and withDeps', async () => {
+      const targets = await inferTargets(
+        {},
+        {
+          installBrowsers: {
+            targetName: 'install-browsers',
+            browsers: ['chromium', 'msedge'],
+            withDeps: false,
+          },
+        }
+      );
+
+      expect(targets['playwright-install']).toBeUndefined();
+      expect(targets['install-browsers'].options).toEqual({
+        browsers: ['chromium', 'msedge'],
+        withDeps: false,
+      });
+      expect(targets['e2e'].dependsOn).toEqual([
+        { target: 'install-browsers' },
+      ]);
+      expect(targets[atomizedTargetName].dependsOn).toEqual([
+        { target: 'install-browsers' },
+      ]);
+    });
+
+    it("installs Playwright's default browsers with browsers set to 'all'", async () => {
+      const targets = await inferTargets(
+        { use: { channel: 'chrome' } },
+        { installBrowsers: { browsers: 'all' } }
+      );
+
+      expect(targets['playwright-install'].options).toEqual({});
+      expect(targets['e2e'].dependsOn).toEqual([
+        { target: 'playwright-install' },
+      ]);
+    });
+
+    describe("under the test chains' dotenv files", () => {
+      let originalWorkspaceRoot: string;
+
+      beforeEach(() => {
+        originalWorkspaceRoot = workspaceRoot;
+        setWorkspaceRoot(tempFs.tempDir);
+        installFreshConfigEval();
+      });
+
+      afterEach(() => {
+        _setChildEval(null);
+        setWorkspaceRoot(originalWorkspaceRoot);
+      });
+
+      it('installs the browser a dotenv file selects', async () => {
+        await tempFs.createFiles({
+          '.env.e2e': 'NX_PW_TEST_BROWSER=webkit\n',
+        });
+
+        const targets = await inferTargets(
+          `module.exports = { testDir: 'tests', use: { browserName: process.env.NX_PW_TEST_BROWSER || 'chromium' } }`
+        );
+
+        expect(targets['playwright-install'].options).toEqual({
+          browsers: ['webkit'],
+        });
+        expect(targets['e2e'].dependsOn).toEqual([
+          { target: 'playwright-install' },
+        ]);
+        expect(targets[atomizedTargetName].dependsOn).toEqual([
+          { target: 'playwright-install' },
+        ]);
+      });
+
+      it.each<[PlaywrightPluginOptions['installBrowsers'], string[]]>([
+        [undefined, ['chromium']],
+        [{ browsers: ['firefox'] }, ['firefox']],
+      ])(
+        'leaves the install out of a chain whose dotenv connects to a remote browser with installBrowsers %j',
+        async (installBrowsers, browsers) => {
+          await tempFs.createFiles({
+            '.env.e2e-ci': 'PW_TEST_CONNECT_WS_ENDPOINT=ws://localhost:3000\n',
+          });
+
+          const targets = await inferTargets({}, { installBrowsers });
+
+          expect(targets['playwright-install'].options).toEqual({ browsers });
+          expect(targets['e2e'].dependsOn).toEqual([
+            { target: 'playwright-install' },
+          ]);
+          expect(targets[atomizedTargetName].dependsOn).toBeUndefined();
+        }
+      );
+
+      it('infers no install target when every chain connects to a remote browser', async () => {
+        await tempFs.createFiles({
+          '.env.e2e': 'PW_TEST_CONNECT_WS_ENDPOINT=ws://localhost:3000\n',
+        });
+
+        const targets = await inferTargets({});
+
+        expect(targets['playwright-install']).toBeUndefined();
+        expect(targets['e2e'].dependsOn).toBeUndefined();
+        expect(targets[atomizedTargetName].dependsOn).toBeUndefined();
+      });
+
+      it('infers no install target when the config connects to a remote browser', async () => {
+        const targets = await inferTargets(
+          `process.env.PW_TEST_CONNECT_WS_ENDPOINT = 'ws://localhost:3000';
+module.exports = { testDir: 'tests' };`
+        );
+
+        expect(targets['playwright-install']).toBeUndefined();
+        expect(targets['e2e'].dependsOn).toBeUndefined();
+        expect(targets[atomizedTargetName].dependsOn).toBeUndefined();
+      });
+
+      it.each<[PlaywrightPluginOptions['installBrowsers'], string[]]>([
+        [undefined, ['chromium']],
+        [{ browsers: ['firefox'] }, ['firefox']],
+      ])(
+        'installs for a chain whose config clears the remote endpoint its dotenv sets with installBrowsers %j',
+        async (installBrowsers, browsers) => {
+          await tempFs.createFiles({
+            '.env.e2e-ci': 'PW_TEST_CONNECT_WS_ENDPOINT=ws://localhost:3000\n',
+          });
+
+          const targets = await inferTargets(
+            `delete process.env.PW_TEST_CONNECT_WS_ENDPOINT;
+module.exports = { testDir: 'tests' };`,
+            { installBrowsers }
+          );
+
+          expect(targets['playwright-install'].options).toEqual({ browsers });
+          expect(targets[atomizedTargetName].dependsOn).toEqual([
+            { target: 'playwright-install' },
+          ]);
+        }
+      );
+
+      it("leaves the install out when the config connects to a remote browser under the chains' dotenv with a configured browser list", async () => {
+        await tempFs.createFiles({ '.env.e2e': 'USE_REMOTE_BROWSER=1\n' });
+
+        const targets = await inferTargets(
+          `if (process.env.USE_REMOTE_BROWSER) {
+  process.env.PW_TEST_CONNECT_WS_ENDPOINT = 'ws://localhost:3000';
+}
+module.exports = { testDir: 'tests' };`,
+          { installBrowsers: { browsers: ['firefox'] } }
+        );
+
+        expect(targets['e2e'].dependsOn).toBeUndefined();
+        expect(targets[atomizedTargetName].dependsOn).toBeUndefined();
+      });
+    });
+
+    it('keeps the install dependency next to the web server chain and test file directives', async () => {
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts':
+          '// @nx-depends-on: feature\nimport { test } from "@playwright/test";\n',
+      });
+      await mockPlaywrightConfig(tempFs, {
+        testDir: 'tests',
+        webServer: {
+          command: 'npx nx run app1:serve',
+          port: 4200,
+          reuseExistingServer: true,
+        },
+      });
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci', waitForWebServer: true },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(targets['e2e'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve', waitFor: 'ready' },
+        { target: 'e2e--wait-for-webserver' },
+        { target: 'playwright-install' },
+      ]);
+      expect(targets[atomizedTargetName].dependsOn).toEqual([
+        {
+          projects: ['app1'],
+          target: 'serve',
+          waitFor: 'ready',
+          inputs: false,
+        },
+        { target: 'e2e--wait-for-webserver' },
+        { target: 'playwright-install' },
+      ]);
     });
   });
 });
