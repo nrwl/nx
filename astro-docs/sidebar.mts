@@ -325,6 +325,10 @@ const learnGroups: SidebarItems = [
         link: 'features/ci-features/distribute-task-execution',
       },
       {
+        label: 'Optimize e2e test execution',
+        link: 'features/ci-features/split-and-cache-e2e-tests',
+      },
+      {
         label: 'Self-healing CI',
         link: 'features/ci-features/self-healing-ci',
       },

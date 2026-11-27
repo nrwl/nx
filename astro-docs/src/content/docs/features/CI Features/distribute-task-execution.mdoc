@@ -408,18 +408,8 @@ To give a task a worker to itself, set `parallelism: false` on its target in [pr
 
 ### Split and cache e2e tests by file
 
-Nx Atomizer automatically creates one task per e2e test file.
-Workers can distribute those smaller tasks across machines and use dynamic task packing to run them alongside other tasks.
-
-Each test file is also cached separately. When you scope each file to the code it tests, Nx can reuse
-cached results for unaffected tests instead of rerunning the whole suite.
-For example, a change limited to checkout reruns `checkout.spec.ts`, while `search.spec.ts` reuses its cached result.
-Workers then spend their time on the tests that need to run, reducing both CI time and compute costs.
-
-{% figure name="atomization" height=380 caption="One 18-minute e2e task, split into one task per spec file. On the next pull request, only the tasks that read the changed file rerun, and only one spec is among them. Everything else comes from the cache, so the run needs fewer workers." /%}
-
-See [automatically split slow tasks by file](/docs/kb/split-e2e-tasks) to enable Atomizer,
-and [skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests) to scope each test file to the code it exercises.
+Large e2e suites limit distribution when they run as a single task.
+See [split and cache e2e tests by file](/docs/features/ci-features/split-and-cache-e2e-tests) to split suites into per-file tasks that workers can distribute and cache individually.
 
 ### Packing budgets
 

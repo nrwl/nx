@@ -472,7 +472,7 @@ jobs:
 
 Learn more about configuring your [CI provider with these workflow examples](/docs/kb/ci-workflow-examples).
 
-## Skip unaffected test files
+## Cache test results per file
 
 Splitting an e2e suite lets its test files run in parallel, but by default each task still depends on
 the whole app, its dependencies, and the e2e project. Even a small change can rerun every test file.
