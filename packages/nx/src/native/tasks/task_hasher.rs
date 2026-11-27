@@ -410,14 +410,14 @@ impl TaskHasher {
         project_roots: &[String],
         files_expansion_cache: &FilesExpansionCache,
         run_stage: RunStage,
-        disk_batch: Option<&SettledFiles>,
+        batch: &FileSetBatch,
     ) -> anyhow::Result<Arc<FilesExpansion>> {
         let workspace_root = Path::new(&self.workspace_root);
         // The index answers from a listing it keeps only while nothing has
         // run, like the file map; afterwards it reads the disk for us.
         let list_directory = |dir: &str, accept: PathPredicate, skip: &[String]| {
             let read = |accept: PathPredicate| {
-                self.ignored_index.index().files_under(
+                self.ignored_index.index().files_under_in(
                     workspace_root,
                     dir,
                     // An unwatched index would rewalk the entire prefix to list it.
@@ -427,12 +427,13 @@ impl TaskHasher {
                         && (skip.is_empty() || self.ignored_index.index().has_watch()),
                     accept,
                     skip,
+                    Some(&batch.in_place),
                 )
             };
             if !run_stage.nothing_ran()
-                && let Some(batch) = disk_batch
+                && let Some(disk) = batch.disk.as_ref()
             {
-                batch.list_pruned_directory(dir, skip, accept, read)
+                disk.list_pruned_directory(dir, skip, accept, read)
             } else {
                 read(accept)
             }
@@ -533,7 +534,7 @@ impl TaskHasher {
                                     &project_roots,
                                     files_expansion_cache,
                                     run_stage,
-                                    batch.disk.as_ref(),
+                                    batch,
                                 )?,
                                 |path| self.known_file_hash(path, run_stage),
                                 self.ignored_index.index(),
@@ -588,7 +589,7 @@ impl TaskHasher {
                                 &project_roots,
                                 files_expansion_cache,
                                 run_stage,
-                                batch.disk.as_ref(),
+                                batch,
                             )?
                         }
                     }
@@ -835,6 +836,7 @@ impl TaskHasher {
                     run_stage.nothing_ran() && self.workspace_tracks_file(p)
                 })?
             },
+            in_place: Default::default(),
         };
         // Id-indexed snapshots so the hot loop reads a plain Vec instead of
         // taking a DashMap shard lock per (task, instruction) entry. Every
@@ -1173,7 +1175,7 @@ impl TaskHasher {
                     project_roots,
                     files_expansion_cache,
                     run_stage,
-                    batch.disk.as_ref(),
+                    batch,
                 )?;
                 let hashed = hash_files(
                     Path::new(&self.workspace_root),
@@ -1424,6 +1426,8 @@ struct RecordedCaches {
 struct FileSetBatch<'snapshot> {
     disk: Option<SettledFiles>,
     tracked: Option<TrackedBatch<'snapshot>>,
+    /// Per-call answers to `IgnoredIndex::files_under_in`'s resolve check.
+    in_place: dashmap::DashMap<String, bool>,
 }
 
 impl<'a> FileSetBatch<'a> {

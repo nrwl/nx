@@ -204,6 +204,25 @@ impl IgnoredIndex {
             .as_deref()
     }
 
+    fn resolves_in_place(
+        &self,
+        workspace_root: &Path,
+        dir: &str,
+        memo: Option<&DashMap<String, bool>>,
+    ) -> bool {
+        if let Some(hit) = memo.and_then(|memo| memo.get(dir).map(|hit| *hit)) {
+            return hit;
+        }
+        let resolved = self.canonical_root(workspace_root).is_some_and(|root| {
+            dunce::canonicalize(workspace_root.join(dir))
+                .is_ok_and(|resolved| resolved == root.join(dir))
+        });
+        if let Some(memo) = memo {
+            memo.insert(dir.to_owned(), resolved);
+        }
+        resolved
+    }
+
     /// Whether `dir` resolves outside the workspace. Resolved, not walked: a
     /// path that will not resolve is treated as inside on purpose, which is
     /// what lets an output root be kept before its task has written it.
@@ -333,16 +352,26 @@ impl IgnoredIndex {
         accept: PathPredicate,
         skip: &[String],
     ) -> Option<Vec<String>> {
+        self.files_under_in(workspace_root, dir, cached, accept, skip, None)
+    }
+
+    /// `files_under`, remembering each `dir`'s resolve check in `in_place`,
+    /// which must not outlive one hash call.
+    pub(crate) fn files_under_in(
+        &self,
+        workspace_root: &Path,
+        dir: &str,
+        cached: bool,
+        accept: PathPredicate,
+        skip: &[String],
+        in_place: Option<&DashMap<String, bool>>,
+    ) -> Option<Vec<String>> {
         let can_list = cached
             && self.is_tracked(dir)
             && self.watch.as_ref().is_none_or(|watch| {
                 // A listed ancestor can have skipped this explicit root,
                 // including a directory reached through a symlink.
-                !watch.may_miss_under(dir)
-                    && self.canonical_root(workspace_root).is_some_and(|root| {
-                        dunce::canonicalize(workspace_root.join(dir))
-                            .is_ok_and(|resolved| resolved == root.join(dir))
-                    })
+                !watch.may_miss_under(dir) && self.resolves_in_place(workspace_root, dir, in_place)
             });
         if can_list {
             // A listing that cannot settle, because the disk kept moving
@@ -1117,6 +1146,31 @@ mod tests {
             first,
             index.hash_file(temp.path(), path, None, RunStage::NothingRan)
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn one_call_remembers_whether_each_directory_resolves_in_place() {
+        let temp = workspace();
+        let elsewhere = TempDir::new().unwrap();
+        elsewhere.child("shared/out.js").write_str("one").unwrap();
+        std::os::unix::fs::symlink(
+            elsewhere.path().join("shared"),
+            temp.path().join("dist/cache"),
+        )
+        .unwrap();
+        let index = watched();
+        assert!(index.track(temp.path(), "dist"));
+        let in_place = DashMap::new();
+        for dir in ["dist", "dist/cache", "dist"] {
+            index
+                .files_under_in(temp.path(), dir, true, &|_| true, &[], Some(&in_place))
+                .unwrap();
+        }
+        let remembered = |dir: &str| in_place.get(dir).map(|hit| *hit);
+        assert_eq!(in_place.len(), 2);
+        assert_eq!(remembered("dist"), Some(true));
+        assert_eq!(remembered("dist/cache"), Some(false));
     }
 
     /// A tracked ancestor must not adopt a directory that would be refused on
