@@ -4,17 +4,17 @@ import {
   ProjectConfiguration,
   workspaceRoot,
 } from '@nx/devkit';
-import { runCommandsExecutor } from '@nx/devkit/internal';
+import { runCommandsExecutor, safeExecFileSync } from '@nx/devkit/internal';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import mavenExecutor from './maven.impl';
 import { MavenExecutorSchema } from './schema';
 
 vi.mock('@nx/devkit/internal', async () => ({
   ...(await vi.importActual<any>('@nx/devkit/internal')),
   runCommandsExecutor: vi.fn(async () => ({ success: true })),
-}));
-vi.mock('../../utils/detect-maven-executable', () => ({
-  detectMavenExecutable: () => 'mvn',
-  isMaven4: () => false,
+  safeExecFileSync: vi.fn(() => 'Apache Maven 3.9.9'),
 }));
 
 describe('Maven Executor', () => {
@@ -108,5 +108,123 @@ describe('Maven Executor', () => {
       }),
       context
     );
+  });
+
+  describe('a phase whose build state is already on disk', () => {
+    const buildState = '{projectRoot}/target/nx-build-state.json';
+    const noGoals: MavenExecutorSchema = { phase: 'initialize', goals: [] };
+    const originalMavenArgs = process.env.MAVEN_ARGS;
+    let root: string;
+    let project: ProjectConfiguration;
+
+    beforeEach(() => {
+      delete process.env.MAVEN_ARGS;
+      root = mkdtempSync(join(tmpdir(), 'nx-maven-executor-'));
+      mkdirSync(join(root, 'libs/test-project/target'), { recursive: true });
+      writeFileSync(
+        join(root, 'libs/test-project/target/nx-build-state.json'),
+        '{}'
+      );
+      context.root = root;
+      project = context.projectGraph.nodes['test-project'].data;
+      project.root = 'libs/test-project';
+      project.tags = ['maven:com.example', 'maven:jar'];
+      project.metadata = {
+        mavenProject: 'com.example:app',
+        groupId: 'com.example',
+      } as ProjectConfiguration['metadata'];
+      project.targets = {
+        build: {
+          executor: '@nx/maven:maven',
+          inputs: [{ fileset: buildState, includeIgnored: true }],
+          outputs: [buildState],
+        },
+      };
+      vi.mocked(runCommandsExecutor).mockClear();
+      vi.mocked(safeExecFileSync).mockClear();
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      vi.mocked(console.log).mockRestore();
+      rmSync(root, { recursive: true, force: true });
+      if (originalMavenArgs === undefined) {
+        delete process.env.MAVEN_ARGS;
+      } else {
+        process.env.MAVEN_ARGS = originalMavenArgs;
+      }
+    });
+
+    it('reports success without starting Maven when it has no goals', async () => {
+      await expect(mavenExecutor(noGoals, context)).resolves.toEqual({
+        success: true,
+      });
+      expect(runCommandsExecutor).not.toHaveBeenCalled();
+      expect(safeExecFileSync).not.toHaveBeenCalled();
+      // The rule lines are Maven 3.9.11's and 4.0.0-rc-5's output for this module.
+      expect(console.log).toHaveBeenCalledWith(
+        [
+          '[INFO] --------------------------< com.example:app >---------------------------',
+          '[INFO] Skipped Maven for test-project:build',
+          '[INFO]   from libs/test-project/pom.xml',
+          '[INFO] --------------------------------[ jar ]---------------------------------',
+          '[INFO] This target has no goals to run.',
+          "[INFO] The module's build state is already in libs/test-project/target/nx-build-state.json.",
+          '[INFO] ------------------------------------------------------------------------',
+        ].join('\n')
+      );
+    });
+
+    it.each<[string, MavenExecutorSchema, () => void]>([
+      ['it has goals', { goals: ['compiler:compile'] }, () => {}],
+      ['args are set', { ...noGoals, args: ['dependency:tree'] }, () => {}],
+      [
+        'the target sets __unparsed__',
+        { ...noGoals, __unparsed__: ['-X'] },
+        () => {},
+      ],
+      ['MAVEN_ARGS is set', noGoals, () => (process.env.MAVEN_ARGS = 'clean')],
+      [
+        'the build state file is missing',
+        noGoals,
+        () =>
+          rmSync(join(root, 'libs/test-project/target'), { recursive: true }),
+      ],
+      [
+        'it does not hash its own build state',
+        noGoals,
+        () => (project.targets.build.inputs = []),
+      ],
+      [
+        'it hashes the build state of its dependencies instead',
+        noGoals,
+        () =>
+          (project.targets.build.inputs = [
+            { fileset: buildState, includeIgnored: true, dependencies: true },
+          ]),
+      ],
+      [
+        'it hashes the build state only if git tracks it',
+        noGoals,
+        () => (project.targets.build.inputs = [{ fileset: buildState }]),
+      ],
+      [
+        'it does not output its build state',
+        noGoals,
+        () => (project.targets.build.outputs = []),
+      ],
+      [
+        'the module is a pom module',
+        noGoals,
+        () => (project.tags = ['maven:pom']),
+      ],
+    ])('starts Maven when %s', async (_, options, arrange) => {
+      arrange();
+
+      await mavenExecutor(options, context);
+
+      expect(runCommandsExecutor).toHaveBeenCalledTimes(1);
+      expect(console.log).not.toHaveBeenCalled();
+    });
   });
 });

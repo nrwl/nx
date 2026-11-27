@@ -1,4 +1,11 @@
-import { ExecutorContext, workspaceRoot } from '@nx/devkit';
+import { existsSync } from 'fs';
+import { basename, join } from 'path';
+import {
+  ExecutorContext,
+  getOutputsForTargetAndConfiguration,
+  joinPathFragments,
+  workspaceRoot,
+} from '@nx/devkit';
 import { runCommandsExecutor as runCommandsImpl } from '@nx/devkit/internal';
 import { MavenExecutorSchema } from './schema';
 import {
@@ -8,6 +15,7 @@ import {
 
 const nxMavenApplyGoal = 'dev.nx.maven:nx-maven-plugin:apply';
 const nxMavenRecordGoal = 'dev.nx.maven:nx-maven-plugin:record';
+const buildStateFile = 'nx-build-state.json';
 
 /**
  * Get the Maven project coordinates (groupId:artifactId) from project metadata.
@@ -70,6 +78,90 @@ function buildMavenArgs(
   return args;
 }
 
+// Without goals, Maven would only re-apply and re-record the module's build state.
+// Skip it when this task hashes that file and it exists, so its cache entry still holds it.
+// Pom modules always run: Maven 4 copies their POM into the project-local repository.
+function findSkippableBuildState(
+  options: MavenExecutorSchema,
+  context: ExecutorContext
+): string | undefined {
+  if (
+    !Array.isArray(options.goals) ||
+    options.goals.length > 0 ||
+    options.args?.length ||
+    options.__unparsed__?.length ||
+    // MAVEN_ARGS can add goals.
+    process.env.MAVEN_ARGS?.trim()
+  ) {
+    return undefined;
+  }
+
+  const node = context.projectGraph?.nodes?.[context.projectName];
+  if (!node || node.data.tags?.includes('maven:pom')) {
+    return undefined;
+  }
+
+  const target = node.data.targets?.[context.targetName];
+  const ownState = target?.outputs?.find(
+    (output) => basename(output) === buildStateFile
+  );
+  const hashesOwnState = target?.inputs?.some(
+    (input) =>
+      typeof input === 'object' &&
+      'fileset' in input &&
+      input.fileset === ownState &&
+      input.includeIgnored === true &&
+      !('dependencies' in input && input.dependencies)
+  );
+  if (!ownState || !hashesOwnState) {
+    return undefined;
+  }
+
+  const stateFile = getOutputsForTargetAndConfiguration(
+    {
+      project: context.projectName,
+      target: context.targetName,
+      configuration: context.configurationName,
+    },
+    {},
+    node
+  ).find((output) => basename(output) === buildStateFile);
+  return stateFile && existsSync(join(context.root, stateFile))
+    ? stateFile
+    : undefined;
+}
+
+// Maven 3's banner width, and Maven 4's on an 80-column terminal
+const mavenLineLength = 72;
+
+function mavenRule(label = ''): string {
+  const left = Math.max(0, Math.floor((mavenLineLength - label.length) / 2));
+  const right = Math.max(0, mavenLineLength - label.length - left);
+  return '-'.repeat(left) + label + '-'.repeat(right);
+}
+
+function printSkippedMaven(context: ExecutorContext, stateFile: string): void {
+  const project = context.projectGraph.nodes[context.projectName].data;
+  const groupId = (project.metadata as Record<string, string>)?.groupId;
+  // The analyzer tags each module `maven:<groupId>` and `maven:<packaging>`.
+  const packaging = groupId
+    ? project.tags
+        ?.find((tag) => tag.startsWith('maven:') && tag !== `maven:${groupId}`)
+        ?.slice('maven:'.length)
+    : undefined;
+
+  const lines = [
+    mavenRule(`--< ${getMavenProjectName(context)} >--`),
+    `Skipped Maven for ${context.projectName}:${context.targetName}`,
+    `  from ${joinPathFragments(project.root, 'pom.xml')}`,
+    mavenRule(packaging ? `[ ${packaging} ]` : ''),
+    'This target has no goals to run.',
+    `The module's build state is already in ${stateFile}.`,
+    mavenRule(),
+  ];
+  console.log(lines.map((line) => `[INFO] ${line}`).join('\n'));
+}
+
 /**
  * Maven single-task executor
  */
@@ -77,6 +169,12 @@ export default async function mavenExecutor(
   options: MavenExecutorSchema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
+  const skippableBuildState = findSkippableBuildState(options, context);
+  if (skippableBuildState) {
+    printSkippedMaven(context, skippableBuildState);
+    return { success: true };
+  }
+
   const mavenExecutable = detectMavenExecutable(workspaceRoot);
   const mavenProject = getMavenProjectName(context);
   const useMaven4 = isMaven4(workspaceRoot);
