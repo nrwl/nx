@@ -229,6 +229,40 @@ describe('Nx Running Tests', () => {
       updateJson(`libs/${mylib}/project.json`, (c) => original);
     }, 1000000);
 
+    it('should forward args with shell metacharacters to npm scripts unchanged', () => {
+      // runCLI goes through a shell, and cmd.exe has no single quotes
+      if (isWindows()) {
+        return;
+      }
+      const mylib = uniq('mylib');
+      runCLI(`generate @nx/node:lib libs/${mylib}`);
+      updateFile(
+        `libs/${mylib}/print-args.js`,
+        `console.log('ARGS:' + JSON.stringify(process.argv.slice(2)));`
+      );
+      updateFile(
+        `libs/${mylib}/package.json`,
+        JSON.stringify(<PackageJson>{
+          name: mylib,
+          version: '1.0.0',
+          scripts: { 'print-args': 'node print-args.js' },
+        })
+      );
+
+      const output = runCLI(
+        `print-args ${mylib} -- --data '{"slug":"test","displayName":"Test"}' '--glob=*' "it's"`
+      );
+
+      expect(output).toContain(
+        `ARGS:${JSON.stringify([
+          '--data',
+          '{"slug":"test","displayName":"Test"}',
+          '--glob=*',
+          "it's",
+        ])}`
+      );
+    });
+
     describe('tokens support', () => {
       let app: string;
 

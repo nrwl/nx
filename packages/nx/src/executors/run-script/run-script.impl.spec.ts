@@ -3,9 +3,13 @@ import { PassThrough } from 'stream';
 import type { MockInstance } from 'vitest';
 
 let mockSpawned: any;
+let spawnedCommand: string;
 vi.mock('child_process', async () => ({
   ...require('child_process'),
-  spawn: () => mockSpawned,
+  spawn: (command: string) => {
+    spawnedCommand = command;
+    return mockSpawned;
+  },
 }));
 const mockKillProcessTreeGraceful = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock('../../native', async (importOriginal) => ({
@@ -82,6 +86,28 @@ describe('run-script without a pseudo terminal', () => {
         }
       }
     });
+  });
+
+  it('quotes forwarded args that contain shell metacharacters', async () => {
+    mockSpawned = mockChild();
+    const result = runScript(
+      {
+        script: 'build',
+        __unparsed__: [
+          '--data',
+          '{"slug":"test","displayName":"Test"}',
+          '--a=*',
+        ],
+      },
+      context
+    );
+    mockSpawned.exit(0);
+    mockSpawned.close();
+    await result;
+
+    expect(spawnedCommand).toMatchInlineSnapshot(
+      `"npm run build -- --data "{\\"slug\\":\\"test\\",\\"displayName\\":\\"Test\\"}" --a="*""`
+    );
   });
 
   it('prints output read after the script exits before settling', async () => {

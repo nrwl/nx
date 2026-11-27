@@ -8,6 +8,7 @@ import {
 } from '../../tasks-runner/pseudo-terminal';
 import { hasExited, whenStdioClosed } from '../../utils/child-process';
 import { getPackageManagerCommand } from '../../utils/package-manager';
+import { wrapArgIntoQuotesIfNeeded } from '../../utils/shell-quoting';
 
 export interface RunScriptOptions {
   script: string;
@@ -20,7 +21,10 @@ export default async function (
 ) {
   const pm = getPackageManagerCommand();
   try {
-    let command = pm.run(options.script, options.__unparsed__.join(' '));
+    let command = pm.run(
+      options.script,
+      options.__unparsed__.map(wrapArgIntoQuotesIfNeeded).join(' ')
+    );
     let cwd = path.join(
       context.root,
       context.projectsConfigurations.projects[context.projectName].root
