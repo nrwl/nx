@@ -11,6 +11,7 @@ export interface ApplicationGeneratorOptions {
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'jest' | 'none';
+  bundler?: 'webpack' | 'rolldown';
   enableTypedLinting?: boolean;
   rootProject?: boolean;
   strict?: boolean;
