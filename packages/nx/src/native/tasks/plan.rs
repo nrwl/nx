@@ -20,7 +20,7 @@ pub(crate) mod kind {
 }
 
 fn kind_of(id: u32, pool: &InstructionPool) -> u8 {
-    pool.get(id).flags() as u8
+    pool.flags(id) as u8
 }
 
 #[derive(Clone, Default)]

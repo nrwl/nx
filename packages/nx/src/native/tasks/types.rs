@@ -287,6 +287,7 @@ pub struct InstructionPool {
     disk_globs: DashMap<Arc<str>, ()>,
     /// Compact display labels shared by every task that references the instruction.
     labels: DashMap<u32, Arc<str>>,
+    flags: DashMap<u32, InstructionFlags>,
     next_id: AtomicU32,
 }
 
@@ -318,6 +319,7 @@ impl InstructionPool {
                 let id = self.next_id.fetch_add(1, Ordering::Relaxed);
                 self.items.insert(id, vacant.key().clone());
                 self.labels.insert(id, Arc::from(vacant.key().label()));
+                self.flags.insert(id, vacant.key().flags());
                 vacant.insert(id);
                 id
             }
@@ -333,8 +335,7 @@ impl InstructionPool {
         keep_tsconfig: bool,
         read: impl Fn(&str) -> bool,
     ) -> bool {
-        let instruction = self.get(id);
-        let flags = instruction.flags();
+        let flags = self.flags(id);
         // The configuration's own reads are filesets too; the caller keeps those.
         if flags & (flag::TRACKED | flag::DECLARED_DISK | flag::RECORDED_DISK) != 0 {
             return true;
@@ -345,6 +346,7 @@ impl InstructionPool {
         if flags & flag::JSON == 0 {
             return false;
         }
+        let instruction = self.get(id);
         let HashInstruction::JsonFileSet(json) = &*instruction else {
             unreachable!("only a JsonFileSet is flagged JSON")
         };
@@ -373,6 +375,13 @@ impl InstructionPool {
             .get(&id)
             .expect("instruction ids are only handed out by intern()")
             .clone()
+    }
+
+    pub fn flags(&self, id: u32) -> InstructionFlags {
+        *self
+            .flags
+            .get(&id)
+            .expect("instruction ids are only handed out by intern()")
     }
 
     pub fn len(&self) -> usize {

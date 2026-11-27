@@ -473,7 +473,7 @@ impl TaskHasher {
         let mut groups = ids
             .par_iter()
             .filter_map(|&id| {
-                let flags = pool.get(id).flags();
+                let flags = pool.flags(id);
                 (flags & FOLDED != 0).then_some((id, flags & flag::RECORDED_DISK != 0))
             })
             .map(|(id, reads_disk)| {
@@ -552,7 +552,7 @@ impl TaskHasher {
         let groups = groups.into_iter().map(|(_, files)| files).collect();
         let covered = ids
             .par_iter()
-            .filter(|&&id| pool.get(id).flags() & COVERS_READS != 0)
+            .filter(|&&id| pool.flags(id) & COVERS_READS != 0)
             .map(|&id| {
                 if let Some(cached) = caches.covered_files.get(&id) {
                     return Ok(Arc::clone(&cached));
@@ -838,9 +838,8 @@ impl TaskHasher {
             .map(|id| SharedStr::from(pool.label(id)))
             .collect();
         let key_ranks = instruction_key_ranks(&instruction_keys);
-        let flags: Vec<InstructionFlags> = (0..pool.len() as u32)
-            .map(|id| pool.get(id).flags())
-            .collect();
+        let flags: Vec<InstructionFlags> =
+            (0..pool.len() as u32).map(|id| pool.flags(id)).collect();
         let value_slots: Vec<Option<OnceCell<SharedStr>>> = flags
             .iter()
             .map(|f| (f & flag::ENV_DEPENDENT == 0).then(OnceCell::new))
