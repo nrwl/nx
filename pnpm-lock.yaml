@@ -989,6 +989,9 @@ importers:
       '@xstate/react':
         specifier: 3.0.1
         version: 3.0.1(@types/react@18.3.1)(react@18.3.1)(xstate@4.34.0)
+      '@xterm/headless':
+        specifier: 6.0.0
+        version: 6.0.0
       '@zkochan/js-yaml':
         specifier: 'catalog:'
         version: 0.0.7
@@ -14796,6 +14799,9 @@ packages:
         optional: true
       xstate:
         optional: true
+
+  '@xterm/headless@6.0.0':
+    resolution: {integrity: sha512-5Yj1QINYCyzrZtf8OFIHi47iQtI+0qYFPHmouEfG8dHNxbZ9Tb9YGSuLcsEwj9Z+OL75GJqPyJbyoFer80a2Hw==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -41322,6 +41328,8 @@ snapshots:
       xstate: 4.34.0
     transitivePeerDependencies:
       - '@types/react'
+
+  '@xterm/headless@6.0.0': {}
 
   '@xtuc/ieee754@1.2.0': {}
 
