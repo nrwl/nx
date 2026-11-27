@@ -1334,7 +1334,6 @@ impl TaskHasher {
                     root,
                     project_root_mappings,
                     &self.project_file_map,
-                    &self.all_workspace_files,
                     &self.owner_folder_state_cache,
                 );
                 trace!(parent: &span, "hash_project_folder_state: {:?}", now.elapsed());

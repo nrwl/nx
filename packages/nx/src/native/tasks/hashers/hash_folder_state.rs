@@ -81,43 +81,32 @@ pub fn hash_folder_state<'a>(files: impl IntoIterator<Item = &'a str>) -> String
 
 /// The folder state of the files under `root`, a normalized workspace-relative
 /// folder (`.` for the workspace root), minus those of projects nested below
-/// it. The project owning `root` holds exactly those files; with no owning
-/// project, they are the files under it that no project owns.
+/// it: the files of the project owning `root` that sit under it. A folder no
+/// project owns has an empty state; finding its files would mean a project
+/// lookup for every workspace file.
 pub(crate) fn hash_owner_folder_state(
     root: &str,
     project_root_mappings: &ProjectRootMappings,
     project_file_map: &HashMap<String, Vec<FileData>>,
-    all_workspace_files: &[FileData],
 ) -> String {
     let prefix = match root {
         "." => String::new(),
         root => format!("{root}/"),
     };
-    let under = |file: &&str| file.starts_with(&prefix);
-    match find_project_for_path(root, project_root_mappings) {
-        Some(owner) => hash_folder_state(
-            project_file_map
-                .get(owner)
-                .into_iter()
-                .flatten()
-                .map(|file| file.file.as_str())
-                .filter(under),
-        ),
-        None => hash_folder_state(
-            all_workspace_files
-                .iter()
-                .map(|file| file.file.as_str())
-                .filter(under)
-                .filter(|file| find_project_for_path(file, project_root_mappings).is_none()),
-        ),
-    }
+    hash_folder_state(
+        find_project_for_path(root, project_root_mappings)
+            .and_then(|owner| project_file_map.get(owner))
+            .into_iter()
+            .flatten()
+            .map(|file| file.file.as_str())
+            .filter(|file| file.starts_with(&prefix)),
+    )
 }
 
 pub(crate) fn hash_owner_folder_state_cached(
     root: &str,
     project_root_mappings: &ProjectRootMappings,
     project_file_map: &HashMap<String, Vec<FileData>>,
-    all_workspace_files: &[FileData],
     cache: &OwnerFolderStateCache,
 ) -> Arc<String> {
     let Ok(digest) = cache.get_or_try_init(root.to_string(), || {
@@ -125,7 +114,6 @@ pub(crate) fn hash_owner_folder_state_cached(
             root,
             project_root_mappings,
             project_file_map,
-            all_workspace_files,
         ))
     });
     digest
@@ -141,7 +129,6 @@ mod tests {
     struct Workspace {
         mappings: ProjectRootMappings,
         project_files: HashMap<String, Vec<FileData>>,
-        all: Vec<FileData>,
     }
 
     fn file(path: &str) -> FileData {
@@ -151,7 +138,7 @@ mod tests {
         }
     }
 
-    fn workspace(projects: &[(&str, &str, &[&str])], unowned: &[&str]) -> Workspace {
+    fn workspace(projects: &[(&str, &str, &[&str])]) -> Workspace {
         let nodes = projects
             .iter()
             .map(|(name, root, _)| {
@@ -168,37 +155,24 @@ mod tests {
             .iter()
             .map(|(name, _, files)| (name.to_string(), files.iter().map(|f| file(f)).collect()))
             .collect();
-        let all = project_files
-            .values()
-            .flatten()
-            .cloned()
-            .chain(unowned.iter().map(|f| file(f)))
-            .collect();
         Workspace {
             mappings: create_project_root_mappings(&nodes),
             project_files,
-            all,
         }
     }
 
     impl Workspace {
         fn state(&self, root: &str) -> String {
-            hash_owner_folder_state(root, &self.mappings, &self.project_files, &self.all)
+            hash_owner_folder_state(root, &self.mappings, &self.project_files)
         }
 
         fn state_cached(&self, root: &str, cache: &OwnerFolderStateCache) -> Arc<String> {
-            hash_owner_folder_state_cached(
-                root,
-                &self.mappings,
-                &self.project_files,
-                &self.all,
-                cache,
-            )
+            hash_owner_folder_state_cached(root, &self.mappings, &self.project_files, cache)
         }
     }
 
     fn lib_a(files: &[&str]) -> Workspace {
-        workspace(&[("a", "libs/a", files)], &[])
+        workspace(&[("a", "libs/a", files)])
     }
 
     #[test]
@@ -275,14 +249,11 @@ mod tests {
         // The file map gives every file to its innermost project, and files
         // no other project owns to the root project.
         let projects = |nested: &'static [&'static str], root: &'static [&'static str]| {
-            workspace(
-                &[
-                    ("root", ".", root),
-                    ("a", "libs/a", &["libs/a/project.json"]),
-                    ("nested", "libs/a/nested", nested),
-                ],
-                &[],
-            )
+            workspace(&[
+                ("root", ".", root),
+                ("a", "libs/a", &["libs/a/project.json"]),
+                ("nested", "libs/a/nested", nested),
+            ])
         };
         let before = projects(
             &["libs/a/nested/project.json"],
@@ -310,17 +281,14 @@ mod tests {
     #[test]
     fn a_folder_inside_a_project_takes_only_the_files_under_it() {
         let both = |extra: &'static str| {
-            workspace(
-                &[
-                    (
-                        "a",
-                        "libs/a",
-                        &["libs/a/project.json", "libs/a/src/a.ts", extra],
-                    ),
-                    ("nested", "libs/a/src/nested", &["libs/a/src/nested/x.mjs"]),
-                ],
-                &[],
-            )
+            workspace(&[
+                (
+                    "a",
+                    "libs/a",
+                    &["libs/a/project.json", "libs/a/src/a.ts", extra],
+                ),
+                ("nested", "libs/a/src/nested", &["libs/a/src/nested/x.mjs"]),
+            ])
         };
         let src = both("libs/a/b.ts").state("libs/a/src");
         assert_eq!(src, hash_folder_state(["libs/a/src/a.ts"]));
@@ -330,15 +298,9 @@ mod tests {
     }
 
     #[test]
-    fn a_folder_no_project_owns_takes_the_files_no_project_owns() {
-        let files = workspace(
-            &[("a", "tools/a", &["tools/a/project.json"])],
-            &["tools/x.ts", "tools/y/z.mjs", "other/w.ts"],
-        );
-        assert_eq!(
-            files.state("tools"),
-            hash_folder_state(["tools/x.ts", "tools/y/z.mjs"])
-        );
+    fn a_folder_no_project_owns_has_an_empty_state() {
+        let files = workspace(&[("a", "tools/a", &["tools/a/project.json"])]);
+        assert_eq!(files.state("tools"), hash_folder_state([]));
     }
 
     #[test]
