@@ -52,6 +52,29 @@ describe('parseViteFlags', () => {
   });
 });
 
+describe.skipIf(process.platform === 'win32')('quoted shell fallbacks', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('reads the config filename that the shell passes to Vite', () => {
+    vi.stubEnv('NX_TEST_CONFIG', undefined);
+    expect(
+      parseViteFlags(
+        { args: '--config ${NX_TEST_CONFIG:-"my config.mjs"}' },
+        'serve'
+      )
+    ).toMatchObject({ config: 'my config.mjs' });
+  });
+
+  it('keeps the port readiness check enabled for a quoted default', () => {
+    vi.stubEnv('NX_TEST_PORT', undefined);
+    const flags = parseViteFlags(
+      { args: '--port ${NX_TEST_PORT:-"4300"}' },
+      'serve'
+    );
+    expect(getViteServerAddress({}, flags, 'serve')).toEqual({ port: 4300 });
+  });
+});
+
 describe('getViteServerAddress', () => {
   it("takes the flag, then the config, then Vite's default port", () => {
     expect(
