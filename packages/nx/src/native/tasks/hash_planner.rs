@@ -139,7 +139,7 @@ pub struct HashPlanner {
     /// in all get_plans calls: values derive only from the immutable project
     /// graph and nx_json. Only consulted for acyclic dependency closures — see
     /// `dependency_memo_enabled`.
-    subtree_memo: parking_lot::RwLock<HashMap<String, SubtreeResult>>,
+    subtree_memo: dashmap::DashMap<String, SubtreeResult>,
     /// Own-project instructions can be reused even when a cyclic closure must
     /// still be traversed for each task. Initialized only on that fallback.
     local_inputs_memo: OnceLock<OnceCache<LocalDependencyInputs>>,
@@ -940,16 +940,12 @@ impl HashPlanner {
         external_deps_mapped: &HashMap<String, Vec<String>>,
     ) -> anyhow::Result<SubtreeResult> {
         let key = group_cache_key(dep, inputs);
-        if let Some(hit) = self.subtree_memo.read().get(&key) {
+        if let Some(hit) = self.subtree_memo.get(&key) {
             return Ok(hit.clone());
         }
-        // A single writer builds missing immutable nodes in postorder. Several
-        // cold tasks can reach the same long suffix at once. Waiting here keeps
-        // the total number of local expansions bounded by distinct cache keys.
-        let mut memo = self.subtree_memo.write();
-        if let Some(hit) = memo.get(&key) {
-            return Ok(hit.clone());
-        }
+        // Builds missing nodes in postorder without a shared lock. Racing tasks
+        // can expand the same key; the results are identical and the first wins.
+        let memo = &self.subtree_memo;
         struct Frame<'a> {
             key: String,
             children: std::slice::Iter<'a, String>,
@@ -1017,7 +1013,7 @@ impl HashPlanner {
                 if self.project_graph.nodes.contains_key(child) {
                     let key = group_cache_key(child, inputs);
                     if let Some(hit) = memo.get(&key) {
-                        current.include(hit);
+                        current.include(&hit);
                     } else {
                         stack.push(frame(child, key)?);
                     }
@@ -1040,7 +1036,7 @@ impl HashPlanner {
                 always: done.always.finish(pool),
                 needs_legacy: done.needs_legacy,
             };
-            memo.insert(done.key, subtree.clone());
+            let subtree = memo.entry(done.key).or_insert(subtree).clone();
             match stack.last_mut() {
                 Some(parent) => parent.include(&subtree),
                 None => return Ok(subtree),
@@ -2347,7 +2343,7 @@ mod tests {
             }
         }
         assert_eq!(planner.local_inputs_memo.get().unwrap().len(), 1);
-        assert_eq!(planner.subtree_memo.read().len(), 0);
+        assert_eq!(planner.subtree_memo.len(), 0);
         let output = planner
             .local_dependency_inputs("leaf", std::slice::from_ref(&input))
             .unwrap()
