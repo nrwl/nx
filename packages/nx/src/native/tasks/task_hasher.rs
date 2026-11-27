@@ -9,7 +9,7 @@ use crate::native::glob::{normalize_glob, partition_glob};
 use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
-    tasks::types::{HashInstruction, HashPlans, InstructionPool},
+    tasks::types::{HashInstruction, HashPlans, InstructionFlags, InstructionPool, flag},
     types::{NapiDashMap, SharedStr, SharedStrMap},
 };
 use crate::native::{
@@ -472,16 +472,9 @@ impl TaskHasher {
         let read = |p: &str| self.disk_file_hash(p, run_stage);
         let mut groups = ids
             .par_iter()
-            .filter_map(|&id| match pool.get(id).value() {
-                group @ (HashInstruction::IgnoredFileSet {
-                    from_ultracache: true,
-                    ..
-                }
-                | HashInstruction::ProjectFileSet(..)
-                | HashInstruction::WorkspaceFileSet(_)) => {
-                    Some((id, matches!(group, HashInstruction::IgnoredFileSet { .. })))
-                }
-                _ => None,
+            .filter_map(|&id| {
+                let flags = pool.get(id).flags();
+                (flags & FOLDED != 0).then_some((id, flags & flag::RECORDED_DISK != 0))
             })
             .map(|(id, reads_disk)| {
                 if let Some(cached) = caches.group_files.get(&id) {
@@ -559,16 +552,7 @@ impl TaskHasher {
         let groups = groups.into_iter().map(|(_, files)| files).collect();
         let covered = ids
             .par_iter()
-            .filter(|&&id| {
-                matches!(
-                    pool.get(id).value(),
-                    HashInstruction::TaskOutput(..)
-                        | HashInstruction::IgnoredFileSet {
-                            from_ultracache: false,
-                            ..
-                        }
-                )
-            })
+            .filter(|&&id| pool.get(id).flags() & COVERS_READS != 0)
             .map(|&id| {
                 if let Some(cached) = caches.covered_files.get(&id) {
                     return Ok(Arc::clone(&cached));
@@ -854,43 +838,14 @@ impl TaskHasher {
             .map(|id| SharedStr::from(pool.label(id)))
             .collect();
         let key_ranks = instruction_key_ranks(&instruction_keys);
-        // Classify once per instruction, so cache hits do not need the pool's
-        // shard lock. The exhaustive match keeps env-dependent inputs out of
-        // the shared slots even when new instruction variants are introduced.
-        let value_slots: Vec<Option<OnceCell<SharedStr>>> = (0..pool.len() as u32)
-            .map(|id| match pool.get(id).value() {
-                HashInstruction::Environment(_) | HashInstruction::Runtime(_) => None,
-                HashInstruction::WorkspaceFileSet(_)
-                | HashInstruction::Cwd(_)
-                | HashInstruction::ProjectFileSet(_, _)
-                | HashInstruction::IgnoredFileSet { .. }
-                | HashInstruction::ProjectConfiguration(_)
-                | HashInstruction::TsConfiguration(_)
-                | HashInstruction::TaskOutput(_, _)
-                | HashInstruction::External(_)
-                | HashInstruction::AllExternalDependencies
-                | HashInstruction::JsonFileSet(_)
-                | HashInstruction::UltracacheConfiguration(_) => Some(OnceCell::new()),
-            })
+        let flags: Vec<InstructionFlags> = (0..pool.len() as u32)
+            .map(|id| pool.get(id).flags())
             .collect();
-        // Also classified once, for the same reason as `value_slots`.
-        let fold_kinds: Vec<FoldKind> = (0..pool.len() as u32)
-            .map(|id| match pool.get(id).value() {
-                HashInstruction::UltracacheConfiguration(_) => FoldKind::UltracacheConfiguration,
-                HashInstruction::IgnoredFileSet {
-                    from_ultracache: true,
-                    ..
-                } => FoldKind::UltracacheGroup,
-                HashInstruction::ProjectFileSet(..) | HashInstruction::WorkspaceFileSet(_) => {
-                    FoldKind::TrackedFiles
-                }
-                HashInstruction::TaskOutput(..) | HashInstruction::IgnoredFileSet { .. } => {
-                    FoldKind::CoversReads
-                }
-                _ => FoldKind::Other,
-            })
+        let value_slots: Vec<Option<OnceCell<SharedStr>>> = flags
+            .iter()
+            .map(|f| (f & flag::ENV_DEPENDENT == 0).then(OnceCell::new))
             .collect();
-        let is = |id: u32, kind: FoldKind| fold_kinds[id as usize] == kind;
+        let is = |id: u32, mask: InstructionFlags| flags[id as usize] & mask != 0;
         let same_pool = |known: &std::sync::Weak<InstructionPool>| {
             std::ptr::eq(known.as_ptr(), Arc::as_ptr(pool))
         };
@@ -915,10 +870,8 @@ impl TaskHasher {
                 }
                 // A recorded plan with something that could cover its reads folds
                 // them into its configuration entry, see `fold_recorded_files`.
-                let folds_recorded = ids
-                    .iter()
-                    .any(|&id| is(id, FoldKind::UltracacheConfiguration))
-                    && ids.iter().any(|&id| is(id, FoldKind::CoversReads));
+                let folds_recorded = ids.iter().any(|&id| is(id, flag::ULTRACACHE_CONFIGURATION))
+                    && ids.iter().any(|&id| is(id, COVERS_READS));
                 let js_env = resolve_env(task_id);
                 // Workers accumulate locally, then publish one result per task.
                 // The inner parallel iterator also preserves concurrency when
@@ -929,9 +882,7 @@ impl TaskHasher {
                 let mut entries = Vec::with_capacity(ids.len());
                 let mut pending = Vec::new();
                 for &id in ids.iter() {
-                    if folds_recorded
-                        && (is(id, FoldKind::UltracacheGroup) || is(id, FoldKind::TrackedFiles))
-                    {
+                    if folds_recorded && is(id, FOLDED) {
                         continue;
                     }
                     let cached = if should_collect_inputs {
@@ -1041,7 +992,7 @@ impl TaskHasher {
                     let (recorded, files) = fold_recorded_files(&lists, should_collect_inputs);
                     if let Some((_, value)) = entries
                         .iter_mut()
-                        .find(|(id, _)| is(*id, FoldKind::UltracacheConfiguration))
+                        .find(|(id, _)| is(*id, flag::ULTRACACHE_CONFIGURATION))
                     {
                         *value = SharedStr::from(hash(format!("{value}{recorded}").as_bytes()));
                     }
@@ -1064,7 +1015,7 @@ impl TaskHasher {
         }
         known.1.resize(value_slots.len(), None);
         for (id, slot) in value_slots.iter().enumerate() {
-            if is(id as u32, FoldKind::TrackedFiles)
+            if is(id as u32, flag::TRACKED)
                 && let Some(value) = slot.as_ref().and_then(OnceCell::get)
             {
                 known.1[id] = Some(value.clone());
@@ -1408,18 +1359,11 @@ impl TaskHasher {
     }
 }
 
-/// What an instruction is to the fold of a plan's Ultracache reads.
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum FoldKind {
-    UltracacheConfiguration,
-    UltracacheGroup,
-    /// A fileset of tracked files. In a plan that folds, the recording's
-    /// reads are these, so they fold with the groups.
-    TrackedFiles,
-    /// Hashes files on its own, so Ultracache reads of them need not count.
-    CoversReads,
-    Other,
-}
+/// In a plan that folds, the recording's reads: its Ultracache groups, and
+/// its tracked filesets.
+const FOLDED: InstructionFlags = flag::RECORDED_DISK | flag::TRACKED;
+/// Hashes files on its own, so Ultracache reads of them need not count.
+const COVERS_READS: InstructionFlags = flag::OUTPUT | flag::DECLARED_DISK;
 
 type RecordedFileLists = (Vec<Arc<Vec<(String, String)>>>, Vec<Arc<HashSet<String>>>);
 

@@ -248,6 +248,26 @@ pub enum HashInstruction {
     UltracacheConfiguration(String),
 }
 
+pub type InstructionFlags = u16;
+
+/// See `HashInstruction::flags`. The low byte holds exactly one of these, the
+/// instruction's class in a `Plan`.
+pub(crate) mod flag {
+    use super::InstructionFlags;
+
+    pub const OTHER: InstructionFlags = 1;
+    pub const TRACKED: InstructionFlags = 2;
+    pub const TS: InstructionFlags = 4;
+    pub const JSON: InstructionFlags = 8;
+    pub const OUTPUT: InstructionFlags = 16;
+    pub const DECLARED_DISK: InstructionFlags = 32;
+    pub const RECORDED_DISK: InstructionFlags = 64;
+    pub const ABSOLUTE_CWD: InstructionFlags = 128;
+    pub const ULTRACACHE_CONFIGURATION: InstructionFlags = 256;
+    /// Hashes to a value that depends on the task's env.
+    pub const ENV_DEPENDENT: InstructionFlags = 512;
+}
+
 /// Hashed into every task regardless of its inputs (see `HashPlanner::get_plans_internal`).
 pub(crate) const ALWAYS_ON_WORKSPACE_FILES: [&str; 3] = [
     "{workspaceRoot}/nx.json",
@@ -313,23 +333,28 @@ impl InstructionPool {
         keep_tsconfig: bool,
         read: impl Fn(&str) -> bool,
     ) -> bool {
+        let instruction = self.get(id);
+        let flags = instruction.flags();
         // The configuration's own reads are filesets too; the caller keeps those.
-        match &*self.get(id) {
-            HashInstruction::ProjectFileSet(..)
-            | HashInstruction::WorkspaceFileSet(_)
-            | HashInstruction::IgnoredFileSet { .. } => true,
-            HashInstruction::TsConfiguration(_) => !keep_tsconfig,
-            HashInstruction::JsonFileSet(json) => {
-                let glob = json
-                    .json_path
-                    .strip_prefix("{workspaceRoot}/")
-                    .unwrap_or(&json.json_path);
-                match partition_glob(glob) {
-                    (path, None) => !read(&path),
-                    _ => !read(glob),
-                }
-            }
-            _ => false,
+        if flags & (flag::TRACKED | flag::DECLARED_DISK | flag::RECORDED_DISK) != 0 {
+            return true;
+        }
+        if flags & flag::TS != 0 {
+            return !keep_tsconfig;
+        }
+        if flags & flag::JSON == 0 {
+            return false;
+        }
+        let HashInstruction::JsonFileSet(json) = &*instruction else {
+            unreachable!("only a JsonFileSet is flagged JSON")
+        };
+        let glob = json
+            .json_path
+            .strip_prefix("{workspaceRoot}/")
+            .unwrap_or(&json.json_path);
+        match partition_glob(glob) {
+            (path, None) => !read(&path),
+            _ => !read(glob),
         }
     }
 
@@ -379,6 +404,30 @@ impl HashInstruction {
             project_roots: Vec::new(),
             from_ultracache: false,
         }
+    }
+
+    /// No wildcard arm, so a new variant does not compile until it is classified.
+    pub fn flags(&self) -> InstructionFlags {
+        use HashInstruction::*;
+        let (class, extra) = match self {
+            WorkspaceFileSet(_) | ProjectFileSet(..) => (flag::TRACKED, 0),
+            TsConfiguration(_) => (flag::TS, 0),
+            JsonFileSet(_) => (flag::JSON, 0),
+            TaskOutput(..) => (flag::OUTPUT, 0),
+            Cwd(CwdMode::Absolute) => (flag::ABSOLUTE_CWD, 0),
+            IgnoredFileSet {
+                from_ultracache: true,
+                ..
+            } => (flag::RECORDED_DISK, 0),
+            IgnoredFileSet { .. } => (flag::DECLARED_DISK, 0),
+            Runtime(_) | Environment(_) => (flag::OTHER, flag::ENV_DEPENDENT),
+            UltracacheConfiguration(_) => (flag::OTHER, flag::ULTRACACHE_CONFIGURATION),
+            Cwd(CwdMode::Relative)
+            | ProjectConfiguration(_)
+            | AllExternalDependencies
+            | External(_) => (flag::OTHER, 0),
+        };
+        class | extra
     }
 
     /// What hash details name this instruction: its Display, except that a

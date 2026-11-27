@@ -1,43 +1,26 @@
 //! A union of interned instructions. A dependency node owns its local ids and
 //! references its direct children. Filtering a whole class of inputs (for
 //! example, replacing declared files with observed reads) changes only the view.
-use super::types::{CwdMode, HashInstruction, InstructionPool};
+use super::types::{InstructionPool, flag};
 use std::{borrow::Cow, collections::BTreeMap, sync::Arc};
 
 pub(crate) mod kind {
-    pub const OTHER: u8 = 1;
-    pub const TRACKED: u8 = 2;
-    pub const TS: u8 = 4;
-    pub const JSON: u8 = 8;
-    pub const OUTPUT: u8 = 16;
-    pub const DECLARED_DISK: u8 = 32;
-    pub const RECORDED_DISK: u8 = 64;
-    pub const ABSOLUTE_CWD: u8 = 128;
+    use super::flag;
+
+    pub const OTHER: u8 = flag::OTHER as u8;
+    pub const TRACKED: u8 = flag::TRACKED as u8;
+    pub const TS: u8 = flag::TS as u8;
+    pub const JSON: u8 = flag::JSON as u8;
+    pub const OUTPUT: u8 = flag::OUTPUT as u8;
+    pub const DECLARED_DISK: u8 = flag::DECLARED_DISK as u8;
+    pub const RECORDED_DISK: u8 = flag::RECORDED_DISK as u8;
+    pub const ABSOLUTE_CWD: u8 = flag::ABSOLUTE_CWD as u8;
     pub const ALWAYS_DEFERRED: u8 = OUTPUT | ABSOLUTE_CWD;
     pub const DISK: u8 = DECLARED_DISK | RECORDED_DISK;
 }
 
 fn kind_of(id: u32, pool: &InstructionPool) -> u8 {
-    use HashInstruction::*;
-    match pool.get(id).value() {
-        WorkspaceFileSet(_) | ProjectFileSet(..) => kind::TRACKED,
-        TsConfiguration(_) => kind::TS,
-        JsonFileSet(_) => kind::JSON,
-        TaskOutput(..) => kind::OUTPUT,
-        Cwd(CwdMode::Absolute) => kind::ABSOLUTE_CWD,
-        IgnoredFileSet {
-            from_ultracache: true,
-            ..
-        } => kind::RECORDED_DISK,
-        IgnoredFileSet { .. } => kind::DECLARED_DISK,
-        Runtime(_)
-        | Environment(_)
-        | Cwd(CwdMode::Relative)
-        | ProjectConfiguration(_)
-        | AllExternalDependencies
-        | External(_)
-        | UltracacheConfiguration(_) => kind::OTHER,
-    }
+    pool.get(id).flags() as u8
 }
 
 #[derive(Clone, Default)]
@@ -278,6 +261,7 @@ impl InstructionIdSet {
 
 #[cfg(test)]
 mod tests {
+    use super::super::types::HashInstruction;
     use super::*;
 
     #[test]
