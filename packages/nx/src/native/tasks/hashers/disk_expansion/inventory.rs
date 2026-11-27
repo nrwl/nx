@@ -11,15 +11,13 @@ use parking_lot::Mutex;
 use rayon::prelude::*;
 use std::fs::Metadata;
 use std::ops::Range;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::{Arc, OnceLock};
 
 use crate::native::glob::expand_literal_braces;
 use crate::native::tasks::types::{HashInstruction, HashPlans};
 use crate::native::utils::path::{escapes_workspace, parent_dirs};
-use crate::native::walker::{
-    DiskWalkIgnores, PathPredicate, disk_relative_path, is_normalized_disk_root,
-};
+use crate::native::walker::{DiskWalkIgnores, PathPredicate, is_normalized_disk_root, walk_disk};
 
 const MIN_PARALLEL_DISK_OPS: usize = 64;
 const MIN_DISK_CHUNK_SIZE: usize = 16;
@@ -51,6 +49,11 @@ impl File {
             })
             .as_deref()
     }
+}
+
+enum Found {
+    File(File),
+    Directory(String),
 }
 
 struct PositiveMatches {
@@ -88,117 +91,84 @@ impl SettledFiles {
             ..Default::default()
         };
         let ignores = DiskWalkIgnores::new()?;
-        // Walk shallower roots first. Siblings can be stat'ed together once
-        // any ancestor walks have covered the roots they can see.
-        let mut roots: Vec<_> = roots
-            .into_iter()
-            .map(|root| {
-                let depth =
-                    usize::from(!root.is_empty()) + root.bytes().filter(|&c| c == b'/').count();
-                (depth, root)
-            })
-            .collect();
-        roots.sort_unstable_by_key(|&(depth, _)| depth);
-        let mut directories = HashSet::new();
+        let skipped = |dir: &str| ignores.skips(&workspace_root.join(dir));
         let mut directory_roots = HashSet::new();
         let mut entries = Vec::new();
-        let explicit_files: HashSet<&str> = roots.iter().map(|&(_, root)| root).collect();
-        let mut seen_files = HashSet::new();
-        for layer in roots.chunk_by(|a, b| a.0 == b.0) {
-            let uncovered: Vec<_> = layer
-                .iter()
-                .filter_map(|&(_, root)| {
-                    if seen_files.contains(root) {
-                        return None;
-                    }
-                    let start = workspace_root.join(root);
-                    (!directories.contains(&start)).then_some((root, start))
-                })
-                .collect();
+        let mut pending = roots;
+        while !pending.is_empty() {
+            // A root an ancestor's walk should reach waits to see whether it does.
+            let (awaiting, starts): (HashSet<_>, Vec<_>) =
+                pending.par_iter().copied().partition(|root| {
+                    let ancestor = parent_dirs(root)
+                        .chain([""])
+                        .find(|dir| pending.contains(dir));
+                    !root.is_empty()
+                        && ancestor.is_some_and(|ancestor| {
+                            !std::iter::once(*root)
+                                .chain(parent_dirs(root))
+                                .take_while(|dir| dir.len() > ancestor.len())
+                                .any(skipped)
+                        })
+                });
             let stat =
-                |(root, start): (_, PathBuf)| metadata(&start).map(|meta| (root, meta.file_type()));
+                |root| metadata(&workspace_root.join(root)).map(|meta| (root, meta.file_type()));
             let stats: Vec<_> =
-                if uncovered.len() >= MIN_PARALLEL_DISK_OPS && rayon::current_num_threads() > 1 {
-                    uncovered
+                if starts.len() >= MIN_PARALLEL_DISK_OPS && rayon::current_num_threads() > 1 {
+                    starts
                         .into_par_iter()
                         .with_min_len(MIN_DISK_CHUNK_SIZE)
                         .filter_map(stat)
                         .collect()
                 } else {
-                    uncovered.into_iter().filter_map(stat).collect()
+                    starts.into_iter().filter_map(stat).collect()
                 };
+            let mut walks = Vec::new();
             for (root, kind) in stats {
                 if kind.is_file() {
                     entries.push(File::new(root.to_owned(), root.len()));
-                    seen_files.insert(root.to_owned());
                     continue;
                 }
                 directory_roots.insert(root.to_owned());
-                if !kind.is_dir() {
-                    continue;
+                if kind.is_dir() {
+                    walks.push(workspace_root.join(root));
                 }
-                counts.traversal_starts += 1;
-                let mut level = vec![workspace_root.join(root)];
-                while !level.is_empty() {
-                    level.retain(|d| directories.insert(d.clone()));
-                    counts.read_dir_calls += level.len();
-                    let children: Vec<_> = level
-                        .par_iter()
-                        .map(|dir| {
-                            let mut dirs = Vec::new();
-                            let mut files = Vec::new();
-                            if let Ok(list) = std::fs::read_dir(dir) {
-                                for entry in list.flatten() {
-                                    let path = entry.path();
-                                    if ignores.skips(&path) {
-                                        continue;
-                                    }
-                                    let Some(relative) = disk_relative_path(workspace_root, &path)
-                                    else {
-                                        continue;
-                                    };
-                                    let Ok(kind) = entry.file_type() else {
-                                        continue;
-                                    };
-                                    if kind.is_dir() {
-                                        dirs.push(path);
-                                    } else if kind.is_file()
-                                        || (kind.is_symlink()
-                                            && std::fs::metadata(&path).is_ok_and(|m| !m.is_dir()))
-                                    {
-                                        files.push(relative.into_owned());
-                                    }
-                                }
-                            }
-                            (dirs, files)
-                        })
-                        .collect();
-                    level.clear();
-                    for (mut dirs, files) in children {
-                        level.append(&mut dirs);
-                        for path in files {
-                            // A literal root may also have been reached from a broader walk.
-                            if explicit_files.contains(path.as_str()) {
-                                seen_files.insert(path.clone());
-                            }
-                            entries.push(File::new(path, root.len()));
-                        }
+            }
+            counts.traversal_starts += walks.len();
+            let reached = Mutex::new(Vec::new());
+            let found = walk_disk(
+                &walks,
+                workspace_root,
+                &[],
+                rayon::current_num_threads(),
+                |entry| {
+                    if let Some(&root) = awaiting.get(&*entry.path) {
+                        reached.lock().push(root);
+                    }
+                    let path = entry.path.into_owned();
+                    if entry.is_dir {
+                        return Some(Found::Directory(path));
+                    }
+                    // The walk's start is `depth` segments up.
+                    let visible_from = (0..entry.depth)
+                        .fold(path.len(), |end, _| path[..end].rfind('/').unwrap_or(0));
+                    Some(Found::File(File::new(path, visible_from)))
+                },
+            )?;
+            for found in found {
+                match found {
+                    Found::File(file) => entries.push(file),
+                    Found::Directory(dir) => {
+                        counts.read_dir_calls += 1;
+                        directory_roots.insert(dir);
                     }
                 }
             }
+            pending = awaiting;
+            for root in reached.into_inner() {
+                pending.remove(root);
+            }
         }
-        // An explicit file root may also have been found below a directory.
-        // Keep its widest visibility and assign one ID for all its consumers.
-        entries.par_sort_unstable_by(|a, b| {
-            a.path
-                .cmp(&b.path)
-                .then(a.visible_from.cmp(&b.visible_from))
-        });
-        entries.dedup_by(|a, b| a.path == b.path);
-        counts.unique_directories = directories.len();
-        directory_roots.extend(directories.into_iter().filter_map(|dir| {
-            disk_relative_path(workspace_root, &dir).map(|path| path.into_owned())
-        }));
+        entries.par_sort_unstable_by(|a, b| a.path.cmp(&b.path));
         counts.files = entries.len();
         counts.scan_seconds = timer.elapsed().as_secs_f64();
         Ok(Self {
@@ -237,7 +207,6 @@ struct InventoryCounts {
     requested_roots: usize,
     traversal_starts: usize,
     read_dir_calls: usize,
-    unique_directories: usize,
     files: usize,
     scan_seconds: f64,
 }
@@ -625,6 +594,7 @@ impl SettledFiles {
 mod tests {
     use super::super::{Source, expand_globs};
     use super::*;
+    use crate::native::walker::disk_relative_path;
     use assert_fs::TempDir;
 
     #[cfg(unix)]
@@ -1019,6 +989,7 @@ mod tests {
             "pkg-extra/z.ts",
             "pkg/nested/a.ts",
             "pkg/node_modules/sub/hidden.ts",
+            "pkg/node_modules/sub/deep/hidden.ts",
         ] {
             let path = workspace.join(name);
             std::fs::create_dir_all(path.parent().unwrap())?;
@@ -1026,7 +997,10 @@ mod tests {
         }
         #[cfg(unix)]
         {
-            std::fs::write(external.path().join("linked.ts"), "x")?;
+            std::fs::create_dir(external.path().join("deeper"))?;
+            for name in ["linked.ts", "deeper/linked.ts"] {
+                std::fs::write(external.path().join(name), "x")?;
+            }
             std::os::unix::fs::symlink(external.path(), workspace.join("pkg/external"))?;
             std::os::unix::fs::symlink(
                 workspace.join("pkg/src/a.ts"),
@@ -1039,7 +1013,9 @@ mod tests {
             "pkg/src",
             "pkg-extra",
             "pkg/node_modules/sub",
+            "pkg/node_modules/sub/deep",
             "pkg/external",
+            "pkg/external/deeper",
             "missing",
         ];
         let scope_roots = vec!["pkg".into(), "pkg/nested".into()];
@@ -1071,7 +1047,7 @@ mod tests {
         }
         assert_eq!(
             inventory.counts.read_dir_calls,
-            inventory.counts.unique_directories
+            inventory.directory_roots.len()
         );
         let new_file = "pkg/src/producer-output.ts";
         std::fs::write(workspace.join(new_file), "new contents")?;
