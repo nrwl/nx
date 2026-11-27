@@ -7,6 +7,8 @@ import {
 } from '@nx/devkit';
 import { ChildProcess, spawn } from 'child_process';
 import { EventEmitter } from 'events';
+import { existsSync, readFileSync } from 'fs';
+import { dirname } from 'path';
 import { Readable } from 'stream';
 import { GradleExecutorSchema } from './schema';
 
@@ -415,6 +417,56 @@ describe('getGradlewTasksToRun', () => {
           }),
         },
       ]);
+    });
+
+    it('passes the batch runner arguments to java through an argument file', async () => {
+      const originalDebug = process.env.NX_GRADLE_BATCH_DEBUG;
+      process.env.NX_GRADLE_BATCH_DEBUG =
+        '-Xdebug -Xrunjdwp:transport=dt_socket';
+      let argsFileContent = '';
+      spawnMock.mockImplementation(((_command: string, args: string[]) => {
+        argsFileContent = readFileSync(args[args.length - 1].slice(1), 'utf-8');
+        return createFakeChild({ stdoutLines: [], exitCode: 0 });
+      }) as any);
+
+      try {
+        await collect(
+          gradleBatch(
+            batchTaskGraph,
+            batchInputs,
+            { __overrides_unparsed__: [] } as any,
+            context
+          )
+        );
+      } finally {
+        if (originalDebug === undefined) {
+          delete process.env.NX_GRADLE_BATCH_DEBUG;
+        } else {
+          process.env.NX_GRADLE_BATCH_DEBUG = originalDebug;
+        }
+      }
+
+      expect(spawnMock).toHaveBeenCalledTimes(1);
+      const [command, args] = spawnMock.mock.calls[0] as unknown as [
+        string,
+        string[],
+      ];
+      expect(command).toBe('java');
+      expect(args).toHaveLength(3);
+      expect(args.slice(0, 2)).toEqual([
+        '-Xdebug',
+        '-Xrunjdwp:transport=dt_socket',
+      ]);
+      expect(args[2]).toMatch(/^@/);
+
+      const argsFileLines = argsFileContent.split('\n');
+      expect(argsFileLines[0]).toBe('"-jar"');
+      const tasksJson = JSON.stringify(batchInputs);
+      expect(argsFileLines).toContain(
+        `"--tasks=${tasksJson.replaceAll('"', '\\"')}"`
+      );
+
+      expect(existsSync(dirname(args[2].slice(1)))).toBe(false);
     });
   });
 
