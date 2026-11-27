@@ -19,15 +19,23 @@ pub fn selective_files_hash(files: Vec<NxFile>, archived_files: &FilesArchive) -
     let now = std::time::Instant::now();
     // Reuse needs the whole metadata key, not just the mtime, because a rewrite
     // inside one mtime tick keeps the mtime. The gather-window guard stays on top
-    // of it for filesystems whose other timestamps are just as coarse.
+    // of it for filesystems whose other timestamps are just as coarse. A
+    // symlink's own key and its target's are checked apart, so neither a
+    // retargeted link nor an edited target can hide behind the other.
     let gathered_at = archived_files.gathered_at();
 
     for file in files {
-        if let Some((hash, metadata_key)) = archived_files.get(&file.normalized_path) {
-            if metadata_key == file.metadata_key && file.mod_time < gathered_at {
+        if let Some((hash, metadata_key, target_metadata_key)) =
+            archived_files.get(&file.normalized_path)
+        {
+            if metadata_key == file.metadata_key
+                && target_metadata_key == file.target_metadata_key
+                && file.mod_time < gathered_at
+                && file.target_mod_time < gathered_at
+            {
                 archived.push((
                     file.normalized_path,
-                    NxFileHashed(hash.to_owned(), metadata_key),
+                    NxFileHashed(hash.to_owned(), metadata_key, target_metadata_key),
                 ));
                 continue;
             }
@@ -57,8 +65,12 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
         files
             .into_par_iter()
             .filter_map(|file| {
-                hash_file_path(&file.full_path)
-                    .map(|hash| (file.normalized_path, NxFileHashed(hash, file.metadata_key)))
+                hash_file_path(&file.full_path).map(|hash| {
+                    (
+                        file.normalized_path,
+                        NxFileHashed(hash, file.metadata_key, file.target_metadata_key),
+                    )
+                })
             })
             .collect::<Vec<_>>()
     } else {
@@ -73,7 +85,7 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
                     hash_file_path(&file.full_path).map(|hash| {
                         (
                             file.normalized_path.clone(),
-                            NxFileHashed(hash, file.metadata_key),
+                            NxFileHashed(hash, file.metadata_key, file.target_metadata_key),
                         )
                     })
                 })
@@ -117,6 +129,7 @@ mod tests {
                 NxFileHashed(
                     String::from("hash1"),
                     get_metadata_key(&temp.child("test.txt").metadata().unwrap()),
+                    0,
                 ),
             ),
             (
@@ -124,6 +137,7 @@ mod tests {
                 NxFileHashed(
                     String::from("hash2"),
                     get_metadata_key(&temp.child("foo.txt").metadata().unwrap()),
+                    0,
                 ),
             ),
             (
@@ -131,18 +145,19 @@ mod tests {
                 NxFileHashed(
                     String::from("hash3"),
                     get_metadata_key(&temp.child("bar.txt").metadata().unwrap()),
+                    0,
                 ),
             ),
             // this file was modified, so the key in the archive is not the key its
             // metadata produces now
             (
                 String::from("modified.txt"),
-                NxFileHashed(String::from("hash4"), 0),
+                NxFileHashed(String::from("hash4"), 0, 0),
             ),
             // this file is does not exist on the fs, aka it was deleted
             (
                 String::from("baz/qux.txt"),
-                NxFileHashed(String::from("hash5"), 0),
+                NxFileHashed(String::from("hash5"), 0, 0),
             ),
         ]
         .into_iter()
@@ -199,7 +214,7 @@ mod tests {
 
         let archived = vec![(
             String::from("same-tick.txt"),
-            NxFileHashed(String::from("stale-hash"), get_metadata_key(&metadata)),
+            NxFileHashed(String::from("stale-hash"), get_metadata_key(&metadata), 0),
         )]
         .into_iter()
         .collect::<NxFileHashes>()
@@ -227,7 +242,11 @@ mod tests {
 
         let archived = vec![(
             String::from("settled.txt"),
-            NxFileHashed(String::from("archived-hash"), get_metadata_key(&metadata)),
+            NxFileHashed(
+                String::from("archived-hash"),
+                get_metadata_key(&metadata),
+                0,
+            ),
         )]
         .into_iter()
         .collect::<NxFileHashes>()
@@ -255,7 +274,7 @@ mod tests {
 
         let archived = vec![(
             String::from("same-size.txt"),
-            NxFileHashed(String::from("stale-hash"), get_metadata_key(&before)),
+            NxFileHashed(String::from("stale-hash"), get_metadata_key(&before), 0),
         )]
         .into_iter()
         .collect::<NxFileHashes>()
@@ -294,6 +313,163 @@ mod tests {
             hashed.get("same-size.txt").unwrap().0,
             "stale-hash",
             "a rewrite the mtime cannot show must still be re-hashed"
+        );
+    }
+
+    #[cfg(unix)]
+    fn set_times(path: &std::path::Path, secs: i64) {
+        use nix::fcntl::AT_FDCWD;
+        use nix::sys::stat::{UtimensatFlags, utimensat};
+        use nix::sys::time::TimeSpec;
+
+        let spec = TimeSpec::new(secs, 0);
+        utimensat(
+            AT_FDCWD,
+            path,
+            &spec,
+            &spec,
+            UtimensatFlags::NoFollowSymlink,
+        )
+        .unwrap();
+    }
+
+    #[cfg(unix)]
+    fn walked(root: &std::path::Path, path: &str) -> crate::native::walker::NxFile {
+        nx_walker(root, true)
+            .find(|file| file.normalized_path == path)
+            .unwrap_or_else(|| panic!("{path} was not walked"))
+    }
+
+    /// An archive holding `sentinel` for `link.txt`, keyed on what the walk
+    /// reports for it now.
+    #[cfg(unix)]
+    fn archive_link(root: &std::path::Path, gathered_at: i64) -> FilesArchive {
+        let link = walked(root, "link.txt");
+        let hashes = vec![(
+            String::from("link.txt"),
+            NxFileHashed(
+                String::from("sentinel"),
+                link.metadata_key,
+                link.target_metadata_key,
+            ),
+        )]
+        .into_iter()
+        .collect::<NxFileHashes>()
+        .with_gathered_at(gathered_at);
+        FilesArchive::from_hashes(&hashes).unwrap()
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn should_rehash_a_symlink_when_its_target_is_edited() {
+        // Editing the file a symlink points at leaves the link's own metadata
+        // alone, which used to replay the stored hash until
+        // `.nx/workspace-data` was cleared.
+        use crate::native::hasher::hash;
+
+        let temp = TempDir::new().unwrap();
+        let target = temp.child("target.txt");
+        target.write_str("one").unwrap();
+        set_times(target.path(), 10);
+        let link = temp.path().join("link.txt");
+        std::os::unix::fs::symlink("target.txt", &link).unwrap();
+        set_times(&link, 10);
+
+        let archived = archive_link(temp.path(), 20);
+        let unchanged =
+            super::selective_files_hash(nx_walker(temp.path(), true).collect(), &archived);
+        assert_eq!(
+            unchanged.get("link.txt").unwrap().0,
+            "sentinel",
+            "an unchanged symlink should still be reused"
+        );
+
+        let before = walked(temp.path(), "link.txt");
+        target.write_str("two").unwrap();
+        set_times(target.path(), 10);
+        let after = walked(temp.path(), "link.txt");
+        assert_eq!(
+            (after.mod_time, after.metadata_key, after.target_mod_time),
+            (before.mod_time, before.metadata_key, before.target_mod_time),
+            "the edit must leave the link's metadata and the target's mtime as they were"
+        );
+
+        let edited = super::selective_files_hash(nx_walker(temp.path(), true).collect(), &archived);
+        assert_eq!(
+            edited.get("link.txt").unwrap().0,
+            hash(b"two"),
+            "editing a symlink target must re-hash the link"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn should_rehash_a_staged_symlink_replacement_that_shares_its_target_mtime() {
+        // Link mtime 10, its staged replacement 11, both targets 12, gathered
+        // at 13. The target side is identical by mtime, so only the link's own
+        // key can show the swap.
+        use std::os::unix::fs::symlink;
+
+        use crate::native::hasher::hash;
+
+        let temp = TempDir::new().unwrap();
+        let previous = temp.child("previous.txt");
+        previous.write_str("one").unwrap();
+        set_times(previous.path(), 12);
+        let link = temp.path().join("link.txt");
+        symlink("previous.txt", &link).unwrap();
+        set_times(&link, 10);
+
+        let archived = archive_link(temp.path(), 13);
+        let unchanged =
+            super::selective_files_hash(nx_walker(temp.path(), true).collect(), &archived);
+        assert_eq!(
+            unchanged.get("link.txt").unwrap().0,
+            "sentinel",
+            "an unchanged symlink should still be reused"
+        );
+
+        let replacement = temp.child("replacement.txt");
+        replacement.write_str("two").unwrap();
+        set_times(replacement.path(), 12);
+        let staged = temp.path().join("link.txt.next");
+        symlink("replacement.txt", &staged).unwrap();
+        set_times(&staged, 11);
+        std::fs::rename(&staged, &link).unwrap();
+
+        let swapped = walked(temp.path(), "link.txt");
+        assert_eq!((swapped.mod_time, swapped.target_mod_time), (11, 12));
+        let replaced =
+            super::selective_files_hash(nx_walker(temp.path(), true).collect(), &archived);
+        assert_eq!(
+            replaced.get("link.txt").unwrap().0,
+            hash(b"two"),
+            "a staged symlink replacement must be re-hashed"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn should_rehash_a_symlink_whose_target_changed_during_the_gather() {
+        // Both keys match, and the link predates the gather, but the target's
+        // mtime does not: it could have been rewritten within that tick.
+        use crate::native::hasher::hash;
+
+        let temp = TempDir::new().unwrap();
+        let target = temp.child("target.txt");
+        target.write_str("one").unwrap();
+        set_times(target.path(), 12);
+        let link = temp.path().join("link.txt");
+        std::os::unix::fs::symlink("target.txt", &link).unwrap();
+        set_times(&link, 10);
+
+        let during_gather = archive_link(temp.path(), 12);
+        let guarded =
+            super::selective_files_hash(nx_walker(temp.path(), true).collect(), &during_gather);
+        assert_eq!(
+            guarded.get("link.txt").unwrap().0,
+            hash(b"one"),
+            "a target mtime that does not predate the gather must be re-hashed"
         );
     }
 }

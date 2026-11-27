@@ -2100,7 +2100,7 @@ mod tests {
             .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
             .collect();
         entries.sort();
-        assert_eq!(entries, vec!["nx_files.lock", "nx_files_v3.nxt"]);
+        assert_eq!(entries, vec!["nx_files.lock", "nx_files_v4.nxt"]);
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -2227,7 +2227,7 @@ mod tests {
         let cache = TempDir::new().unwrap();
         write_files_archive(
             as_string(&cache),
-            &[("stale.ts".to_string(), NxFileHashed("h".to_string(), 1))]
+            &[("stale.ts".to_string(), NxFileHashed("h".to_string(), 1, 0))]
                 .into_iter()
                 .collect::<NxFileHashes>(),
         );
@@ -2258,7 +2258,7 @@ mod tests {
             as_string(&cache),
             &[(
                 "from-the-other-process.ts".to_string(),
-                NxFileHashed("h".to_string(), 1),
+                NxFileHashed("h".to_string(), 1, 0),
             )]
             .into_iter()
             .collect::<NxFileHashes>(),
@@ -2288,7 +2288,7 @@ mod tests {
         // An archive from an earlier run, older than any wait that starts now.
         write_files_archive(
             as_string(&cache),
-            &[("stale.ts".to_string(), NxFileHashed("h".to_string(), 1))]
+            &[("stale.ts".to_string(), NxFileHashed("h".to_string(), 1, 0))]
                 .into_iter()
                 .collect::<NxFileHashes>(),
         );

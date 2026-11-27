@@ -19,6 +19,10 @@ pub struct NxFile {
     pub normalized_path: String,
     pub mod_time: i64,
     pub metadata_key: u64,
+    /// The symlink target's mtime and metadata key, or `0` for both when this
+    /// is not a symlink or its target cannot be stat'd.
+    pub target_mod_time: i64,
+    pub target_metadata_key: u64,
 }
 
 /// Walks the directory in a single thread and does not ignore any files
@@ -172,11 +176,14 @@ where
             return None;
         }
 
+        let (target_mod_time, target_metadata_key) = target_stamps(dir_entry.path(), &metadata);
         Some(NxFile {
             full_path: String::from(dir_entry.path().to_string_lossy()),
             normalized_path: file_path.to_normalized_string(),
             mod_time: get_mod_time(&metadata),
             metadata_key: get_metadata_key(&metadata),
+            target_mod_time,
+            target_metadata_key,
         })
     })
 }
@@ -258,11 +265,14 @@ fn walk_and_find_ignore_files(
                 return Continue;
             }
 
+            let (target_mod_time, target_metadata_key) = target_stamps(dir_entry.path(), &metadata);
             tx.send(NxFile {
                 full_path: String::from(dir_entry.path().to_string_lossy()),
                 normalized_path: file_path.to_normalized_string(),
                 mod_time: get_mod_time(&metadata),
                 metadata_key: get_metadata_key(&metadata),
+                target_mod_time,
+                target_metadata_key,
             })
             .ok();
 
@@ -281,6 +291,18 @@ fn walk_and_find_ignore_files(
 /// block indefinitely on such paths (FIFOs wait for a writer).
 fn is_hashable_file(file_type: &std::fs::FileType) -> bool {
     file_type.is_file() || file_type.is_symlink()
+}
+
+/// The mtime and metadata key of the file a symlink resolves to. Editing that
+/// file leaves the link's own metadata untouched.
+fn target_stamps(path: &Path, metadata: &std::fs::Metadata) -> (i64, u64) {
+    if metadata.file_type().is_symlink()
+        && let Ok(target) = std::fs::metadata(path)
+    {
+        (get_mod_time(&target), get_metadata_key(&target))
+    } else {
+        (0, 0)
+    }
 }
 
 /// Files tools write and remove moments later. Vite and vitest write them
