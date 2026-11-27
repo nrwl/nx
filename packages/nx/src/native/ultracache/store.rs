@@ -65,8 +65,8 @@ impl UltracacheConfigurationStore {
     }
 
     /// Imports the older Cloud API one JS property at a time.
-    /// `hash_project_folder_state` is the manifest's `hashProjectFolderState`;
-    /// it defaults to `false`.
+    /// The folder-state switch is the manifest's `hashProjectFolderState`; it
+    /// defaults to `false`.
     #[napi]
     pub fn import_entries(
         &self,

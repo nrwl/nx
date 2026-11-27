@@ -290,9 +290,11 @@ pub fn get_ultracache_report(
     .report()
 }
 
-/// The marker's digest: the task's `ignoreReads`, `collectStats`,
-/// `includeUnstableFiles` and `excludeFolderStateHash`, which shape the reads its recording holds, so editing them re-runs the task and
-/// records it afresh. Sorted, since glob order means nothing.
+/// The marker's digest: the task's `ignoreReads`, `collectStats` and
+/// `includeUnstableFiles`, which shape the reads its recording holds, and
+/// `excludeFolderStateHash`, which changes what its hash covers. Editing any
+/// of them re-runs the task and records it afresh. Sorted, since glob order
+/// means nothing.
 fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     // Destructured so a new ultracache key must be placed here: one left out
     // would never re-run a task that keeps hitting. Any mode but `on` means no

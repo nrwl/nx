@@ -95,8 +95,9 @@ impl<'a> ChangedFiles<'a> {
         }
     }
 
-    /// Indices of the files under `root` (`.` for the workspace) that no
-    /// project nested below it owns.
+    /// Indices of the files under `root` (`.` for the workspace) that the
+    /// project owning `root` owns. None when no project owns `root`, matching
+    /// the hasher, which gives such a folder an empty state.
     fn in_folder(&self, root: &str) -> Vec<usize> {
         let prefix = match root {
             "." => String::new(),
@@ -110,13 +111,7 @@ impl<'a> ChangedFiles<'a> {
                 .filter(under)
                 .copied()
                 .collect(),
-            None => self
-                .all
-                .iter()
-                .filter(under)
-                .filter(|&&i| self.roots.owner_of(&self.files[i]).is_none())
-                .copied()
-                .collect(),
+            None => Vec::new(),
         }
     }
 

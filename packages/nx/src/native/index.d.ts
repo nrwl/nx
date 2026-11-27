@@ -392,8 +392,8 @@ export declare class UltracacheConfigurationStore {
   import(options: UltracacheConfigurationImportOptions): UltracacheConfigurations
   /**
    * Imports the older Cloud API one JS property at a time.
-   * `hash_project_folder_state` is the manifest's `hashProjectFolderState`;
-   * it defaults to `false`.
+   * The folder-state switch is the manifest's `hashProjectFolderState`; it
+   * defaults to `false`.
    */
   importEntries(requestedCommit: string, configurations: Readonly<Record<string, { commit: string; inputs: readonly string[] }>>, hashProjectFolderState?: boolean | undefined | null): UltracacheConfigurations
   /** Verifies and imports the immutable manifest and its referenced objects. */
