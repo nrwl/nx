@@ -325,7 +325,7 @@ const learnGroups: SidebarItems = [
         link: 'features/ci-features/distribute-task-execution',
       },
       {
-        label: 'Split and cache e2e tests',
+        label: 'Optimize e2e test execution',
         link: 'features/ci-features/split-and-cache-e2e-tests',
       },
       {

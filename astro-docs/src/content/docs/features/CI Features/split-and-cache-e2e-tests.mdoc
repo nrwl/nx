@@ -1,13 +1,15 @@
 ---
-title: Split and cache e2e tests by file
+title: Optimize e2e test execution
 description: Split slow e2e test suites into per-file tasks with Nx Atomizer, distribute them across workers, and cache each test file separately so unaffected tests don't rerun.
 keywords:
   [
+    optimize e2e tests,
     split e2e tests,
     atomizer,
     per-file caching,
     cache e2e tests,
     skip unaffected e2e tests,
+    sharding,
     ciTargetName,
   ]
 sidebar:
@@ -35,6 +37,10 @@ When you run the CI test target, Nx handles each test file as an independent tas
 1. When a single test flakes, Nx Cloud isolates and retries only that file's task instead of the whole suite.
 1. Each split task has its own cache entry, and a one-line directive at the top of a test file scopes its hash to the code that file tests.
    A change limited to checkout reruns `checkout.spec.ts`, while `search.spec.ts` replays its cached result.
+
+Test runners offer their own parallelism, such as Playwright sharding (`--shard`) or Cypress parallelization, which split tests across dedicated CI jobs.
+Static shards still leave machines waiting on whichever shard gets the slowest specs, and dedicated test runners sit idle while builds run or after tests finish.
+Because Nx turns each test file into a regular task in the same graph as your builds, lints, and unit tests, Nx Cloud workers continuously assign work as machines free up, pack e2e tasks alongside lighter tasks, and skip unaffected test files from the cache altogether.
 
 This workflow builds on Nx Cloud workers, so make sure you [set up Nx Cloud workers](/docs/features/ci-features/distribute-task-execution#set-up-nx-cloud-workers) first.
 From there, first split your e2e targets into per-file tasks, then enable per-file caching so unaffected test files don't rerun.
