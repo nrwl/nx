@@ -36,7 +36,8 @@ fn kind_of(id: u32, pool: &InstructionPool) -> u8 {
         | ProjectConfiguration(_)
         | AllExternalDependencies
         | External(_)
-        | UltracacheConfiguration(_) => kind::OTHER,
+        | UltracacheConfiguration(_)
+        | FolderState(_) => kind::OTHER,
     }
 }
 

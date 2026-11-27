@@ -128,6 +128,7 @@ const KNOWN_ULTRACACHE_KEYS = new Set<string>([
   'ignoreReads',
   'ignoreWrites',
   'includeUnstableFiles',
+  'excludeFolderStateHash',
   NX_SPREAD_TOKEN,
 ]);
 
@@ -188,7 +189,7 @@ function validateTargetUltracache(
   for (const key of Object.keys(ultracache)) {
     if (!KNOWN_ULTRACACHE_KEYS.has(key)) {
       errors.push(
-        `"ultracache.${key}" for target ${where} is not an ultracache option. Supported options are "mode", "collectStats", "ignoreReads", "ignoreWrites" and "includeUnstableFiles".`
+        `"ultracache.${key}" for target ${where} is not an ultracache option. Supported options are "mode", "collectStats", "ignoreReads", "ignoreWrites", "includeUnstableFiles" and "excludeFolderStateHash".`
       );
     }
   }
@@ -207,7 +208,11 @@ function validateTargetUltracache(
     );
   }
 
-  for (const key of ['collectStats', 'includeUnstableFiles'] as const) {
+  for (const key of [
+    'collectStats',
+    'includeUnstableFiles',
+    'excludeFolderStateHash',
+  ] as const) {
     const value = ultracache[key];
     if (value !== undefined && typeof value !== 'boolean') {
       errors.push(

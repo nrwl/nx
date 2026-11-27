@@ -19,3 +19,9 @@ export const TASK_GRAPH_FORMAT = 2;
 // it matches recorded reads against tracked files only for a target that
 // sets the option to `false`.
 export const ULTRACACHE_INCLUDES_UNSTABLE_FILES_BY_DEFAULT = true;
+
+// A task hashed from its Ultracache configuration also hashes its project's
+// folder state when the configurations ask for it: `hashFolderState`
+// in the files manifest, or the option of that name on
+// `UltracacheConfigurationStore.import` and `importUltracacheConfigurations`.
+export const ULTRACACHE_HASHES_FOLDER_STATE = true;

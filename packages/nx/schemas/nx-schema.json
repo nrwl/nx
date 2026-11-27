@@ -1260,6 +1260,11 @@
               "default": true,
               "description": "Also hash recorded reads of unstable files: files that `.gitignore` or `.nxignore` exclude, such as the outputs of a dependency task. If the recording read a dependency's outputs, the task is hashed only after that dependency runs. Set it to `false` to hash only reads of stable files."
             },
+            "excludeFolderStateHash": {
+              "type": "boolean",
+              "default": false,
+              "description": "Never hash the folder state of the task's project (which kinds of files each of its folders holds) beside its Ultracache configuration, even when Nx Cloud turns that on for the workspace. Use it for projects where files come and go without changing what the task does. Set it in `targetDefaults` or on every target of a project to opt the whole project out."
+            },
             "ignoreReads": {
               "type": "array",
               "items": {

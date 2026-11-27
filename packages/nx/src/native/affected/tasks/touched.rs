@@ -75,6 +75,7 @@ struct ChangedFiles<'a> {
     files: Vec<String>,
     all: Vec<usize>,
     by_owner: HashMap<&'a str, Vec<usize>>,
+    roots: &'a ProjectRoots,
 }
 
 impl<'a> ChangedFiles<'a> {
@@ -90,6 +91,27 @@ impl<'a> ChangedFiles<'a> {
             all: (0..files.len()).collect(),
             files,
             by_owner,
+            roots,
+        }
+    }
+
+    /// Indices of the files under `root` (`.` for the workspace) that the
+    /// project owning `root` owns. None when no project owns `root`, matching
+    /// the hasher, which gives such a folder an empty state.
+    fn in_folder(&self, root: &str) -> Vec<usize> {
+        let prefix = match root {
+            "." => String::new(),
+            root => format!("{root}/"),
+        };
+        let under = |i: &&usize| self.files[**i].starts_with(&prefix);
+        match self.roots.owner_of(root) {
+            Some(owner) => self
+                .candidates(Some(owner))
+                .iter()
+                .filter(under)
+                .copied()
+                .collect(),
+            None => Vec::new(),
         }
     }
 
@@ -469,6 +491,22 @@ fn instruction_matches_detail(
             all_externals: externals.any(),
             ..Default::default()
         }),
+        // Adding, deleting or moving a file can change which kinds of files
+        // its folder holds; an edit cannot. The diff does not say which a
+        // change was, so every changed file in its scope counts.
+        HashInstruction::FolderState(root) => {
+            let owned = changed.in_folder(root);
+            Ok(of_files(
+                owned
+                    .iter()
+                    .take(if detail { owned.len() } else { 1 })
+                    .map(|&i| InputMatch {
+                        file: raw_files[i].clone(),
+                        pattern: None,
+                    })
+                    .collect(),
+            ))
+        }
         HashInstruction::ProjectConfiguration(project) => Ok(TaskInputMatches {
             project_configs: reconfigured
                 .get(project.as_str())
@@ -610,6 +648,18 @@ mod tests {
             ),
             vec!["a:build"]
         );
+    }
+
+    #[test]
+    fn the_folder_state_is_touched_by_any_change_its_project_owns() {
+        let g = graph(&[("a", "libs/a"), ("nested", "libs/a/nested")]);
+        let folder_state = || vec![HashInstruction::FolderState("libs/a".into())];
+        assert_eq!(
+            touched_for(&g, folder_state(), &["libs/a/eslint.config.mjs"]),
+            vec!["a:build"]
+        );
+        assert!(touched_for(&g, folder_state(), &["libs/a/nested/x.ts"]).is_empty());
+        assert!(touched_for(&g, folder_state(), &["README.md"]).is_empty());
     }
 
     #[test]

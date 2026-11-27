@@ -55,6 +55,9 @@ pub(crate) struct UltracacheTask {
     pub dictionary: SharedInputs,
     pub files: Vec<u32>,
     pub digest: String,
+    /// Also hash the folder state of the task's project: the configurations
+    /// ask for it and the target does not set `excludeFolderStateHash`.
+    pub folder_state: bool,
 }
 
 /// Why a task (or the whole run) hashes natively; `reason` is rendered by the
@@ -129,6 +132,7 @@ pub(crate) fn resolve<'a>(
     inputs: &EligibilityInputs,
 ) -> Resolved {
     let resolution = configurations.resolution_ref();
+    let folder_state = configurations.hashes_folder_state();
 
     let ultracache_settings: Vec<_> = ultracache_settings.into_iter().collect();
     let task_ids: Vec<&str> = ultracache_settings.iter().map(|(id, _)| *id).collect();
@@ -241,6 +245,10 @@ pub(crate) fn resolve<'a>(
                     dictionary: Arc::clone(&dictionary),
                     files,
                     digest: configuration_digest(ultracache),
+                    folder_state: folder_state
+                        && !ultracache
+                            .and_then(|ultracache| ultracache.exclude_folder_state_hash)
+                            .unwrap_or(false),
                 },
             ))
         })
@@ -283,32 +291,37 @@ pub fn get_ultracache_report(
 }
 
 /// The marker's digest: the task's `ignoreReads`, `collectStats` and
-/// `includeUnstableFiles`, which shape the reads its recording holds, so editing them re-runs the task and
-/// records it afresh. Sorted, since glob order means nothing.
+/// `includeUnstableFiles`, which shape the reads its recording holds, and
+/// `excludeFolderStateHash`, which changes what its hash covers. Editing any
+/// of them re-runs the task and records it afresh. Sorted, since glob order
+/// means nothing.
 fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     // Destructured so a new ultracache key must be placed here: one left out
     // would never re-run a task that keeps hitting. Any mode but `on` means no
     // marker, since the task never reaches here. Recorded writes are never
     // used, so `ignoreWrites` can't change what the task caches.
-    let (mut reads, collect_stats, include_unstable_files) = match ultracache {
-        Some(TaskUltracacheSettings {
-            ignore_reads,
-            ignore_writes: _,
-            mode: _,
-            collect_stats,
-            include_unstable_files,
-        }) => (
-            ignore_reads.clone().unwrap_or_default(),
-            collect_stats.unwrap_or(false),
-            include_unstable_files.unwrap_or(true),
-        ),
-        None => (Vec::new(), false, true),
-    };
+    let (mut reads, collect_stats, include_unstable_files, exclude_folder_state_hash) =
+        match ultracache {
+            Some(TaskUltracacheSettings {
+                ignore_reads,
+                ignore_writes: _,
+                mode: _,
+                collect_stats,
+                include_unstable_files,
+                exclude_folder_state_hash,
+            }) => (
+                ignore_reads.clone().unwrap_or_default(),
+                collect_stats.unwrap_or(false),
+                include_unstable_files.unwrap_or(true),
+                exclude_folder_state_hash.unwrap_or(false),
+            ),
+            None => (Vec::new(), false, true, false),
+        };
     reads.sort();
     reads.dedup();
     // Equals the old marker of a task with no exclusions that recorded no writes.
     let base = Xxh3::new().digest().to_string();
-    if reads.is_empty() && !collect_stats && !include_unstable_files {
+    if reads.is_empty() && !collect_stats && !include_unstable_files && !exclude_folder_state_hash {
         return base;
     }
     let mut hasher = Xxh3::new();
@@ -320,6 +333,9 @@ fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     }
     if include_unstable_files {
         hasher.update(b"\xFFincludeUnstableFiles\0");
+    }
+    if exclude_folder_state_hash {
+        hasher.update(b"\xFFexcludeFolderStateHash\0");
     }
     // NUL after each glob, so adjacent globs cannot run together.
     for glob in reads {
@@ -536,6 +552,22 @@ mod tests {
         ] {
             assert!(!escapes_workspace(glob), "{glob}");
         }
+    }
+
+    #[test]
+    fn only_exclude_folder_state_hash_true_changes_the_configuration_digest() {
+        let digest = |exclude_folder_state_hash, collect_stats| {
+            configuration_digest(Some(&TaskUltracacheSettings {
+                exclude_folder_state_hash,
+                collect_stats,
+                ..Default::default()
+            }))
+        };
+        assert_eq!(digest(None, None), configuration_digest(None));
+        assert_eq!(digest(Some(false), None), digest(None, None));
+        assert_ne!(digest(Some(true), None), digest(None, None));
+        assert_ne!(digest(Some(true), Some(true)), digest(None, Some(true)));
+        assert_ne!(digest(Some(true), None), digest(None, Some(true)));
     }
 
     #[test]

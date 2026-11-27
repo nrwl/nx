@@ -539,7 +539,8 @@ impl HashPlanner {
     }
 
     /// Observed reads minus natively covered files, one group per owning
-    /// project and one for the reads no project owns, plus the entry digest.
+    /// project and one for the reads no project owns, plus the entry digest
+    /// and, when the configurations ask for it, the folder state of its root.
     /// A group is disk-backed, and unowned reads join the `.` project's group,
     /// else the task's. With `includeUnstableFiles: false` it is an ordinary
     /// fileset instead. Declared filesets, negations included, never shape
@@ -622,6 +623,13 @@ impl HashPlanner {
             &not_installed,
             include_unstable,
         ));
+        // Catches a new kind of file in the project that the recorded globs
+        // miss. One instruction per project root, so its targets share the value.
+        if context.entry.folder_state {
+            result.ids([pool.intern(HashInstruction::folder_state(
+                &self.project_graph.nodes[&task.target.project].root,
+            ))]);
+        }
         result
     }
 
@@ -3427,7 +3435,8 @@ mod always_tests {
     use super::*;
     use crate::native::project_graph::types::{Project, Target};
     use crate::native::test_utils::{
-        excluding_unstable_files, including_unstable_files, task_graph, ultracache_configurations,
+        UltracacheImport, excluding_unstable_files, including_unstable_files, task_graph,
+        ultracache_configurations, ultracache_configurations_imported,
     };
     use crate::native::types::{DepsOutputsInput, FileSetInput, InputsInput, JsInputs, JsonInput};
     use napi::Either;
@@ -3613,6 +3622,130 @@ mod always_tests {
             .iter()
             .map(|id| plans.pool.get(*id).value().clone())
             .collect()
+    }
+
+    #[test]
+    fn the_folder_state_is_planned_only_when_the_configurations_ask_for_it() {
+        let plans = |folder_state: bool| {
+            let planner = planner(
+                vec![
+                    ("e2e:e2e", vec![fileset("{projectRoot}/**/*", false)]),
+                    ("e2e:lint", vec![fileset("{projectRoot}/**/*", false)]),
+                    ("app:build", vec![fileset("{projectRoot}/**/*", false)]),
+                ],
+                &[],
+            );
+            let (_dir, configurations) = ultracache_configurations(&[
+                ("e2e:e2e", &["libs/e2e/src/app.spec.ts"]),
+                ("e2e:lint", &["libs/e2e/src/app.spec.ts"]),
+            ]);
+            let configurations = configurations.with_folder_state(folder_state);
+            let ids = vec!["e2e:e2e", "e2e:lint", "app:build"];
+            let graph = task_graph(
+                &[("e2e:e2e", &[]), ("e2e:lint", &[]), ("app:build", &[])],
+                &[],
+            );
+            let plans = planner
+                .get_plans_internal(ids, graph, Some(&configurations), &[])
+                .unwrap();
+            let folder_states = |task: &str| -> Vec<u32> {
+                plans.plans[task]
+                    .ids()
+                    .iter()
+                    .copied()
+                    .filter(|id| {
+                        matches!(plans.pool.get(*id).value(), HashInstruction::FolderState(root) if root == "libs/e2e")
+                    })
+                    .collect()
+            };
+            (
+                folder_states("e2e:e2e"),
+                folder_states("e2e:lint"),
+                folder_states("app:build"),
+            )
+        };
+        let (e2e, lint, app) = plans(true);
+        assert_eq!(e2e.len(), 1);
+        // Both targets of the project share one instruction, hashed once.
+        assert_eq!(e2e, lint);
+        // A task with no configuration keeps its declared inputs and nothing more.
+        assert!(app.is_empty());
+        assert_eq!(plans(false), (vec![], vec![], vec![]));
+    }
+
+    #[test]
+    fn a_target_that_excludes_the_folder_state_never_plans_it() {
+        let planner = planner(
+            vec![
+                ("e2e:e2e", vec![fileset("{projectRoot}/**/*", false)]),
+                ("e2e:lint", vec![fileset("{projectRoot}/**/*", false)]),
+            ],
+            &[],
+        );
+        let (_dir, configurations) = ultracache_configurations(&[
+            ("e2e:e2e", &["libs/e2e/src/app.spec.ts"]),
+            ("e2e:lint", &["libs/e2e/src/app.spec.ts"]),
+        ]);
+        let configurations = configurations.with_folder_state(true);
+        let mut graph = task_graph(&[("e2e:e2e", &[]), ("e2e:lint", &[])], &[]);
+        graph.tasks.get_mut("e2e:lint").unwrap().ultracache =
+            Some(crate::native::tasks::types::TaskUltracacheSettings {
+                exclude_folder_state_hash: Some(true),
+                ..Default::default()
+            });
+        let plans = planner
+            .get_plans_materialized(
+                vec!["e2e:e2e", "e2e:lint"],
+                graph,
+                Some(&configurations),
+                &[],
+            )
+            .unwrap();
+        let folder_state = HashInstruction::FolderState("libs/e2e".into());
+        assert!(plans["e2e:e2e"].contains(&folder_state));
+        assert!(!plans["e2e:lint"].contains(&folder_state));
+        // The recording still applies.
+        assert!(
+            plans["e2e:lint"]
+                .iter()
+                .any(|i| matches!(i, HashInstruction::UltracacheConfiguration(_)))
+        );
+    }
+
+    #[test]
+    fn every_import_path_plans_the_folder_state_alike() {
+        let plan = |import: UltracacheImport| {
+            let planner = planner(
+                vec![("e2e:lint", vec![fileset("{projectRoot}/**/*", false)])],
+                &[],
+            );
+            let (_dir, configurations) = ultracache_configurations_imported(
+                &[("e2e:lint", &["libs/e2e/src/app.spec.ts"])],
+                import,
+            );
+            planner
+                .get_plans_materialized(
+                    vec!["e2e:lint"],
+                    task_graph(&[("e2e:lint", &[])], &[]),
+                    Some(&configurations),
+                    &[],
+                )
+                .unwrap()
+                .remove("e2e:lint")
+                .unwrap()
+        };
+        let folder_state = HashInstruction::FolderState("libs/e2e".into());
+        // The Nx Cloud client re-imports a run's configurations as JSON to
+        // register its cache entries; those must hash as the files import did.
+        let files = plan(UltracacheImport::Files(Some(true)));
+        assert!(files.contains(&folder_state));
+        assert_eq!(plan(UltracacheImport::Json(Some(true))), files);
+
+        let off = plan(UltracacheImport::Files(None));
+        assert!(!off.contains(&folder_state));
+        assert_eq!(plan(UltracacheImport::Files(Some(false))), off);
+        assert_eq!(plan(UltracacheImport::Json(None)), off);
+        assert_eq!(plan(UltracacheImport::Json(Some(false))), off);
     }
 
     #[test]

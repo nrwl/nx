@@ -60,10 +60,13 @@ impl UltracacheConfigurationStore {
         for (id, entry) in entries {
             set.add_legacy(id, entry.inputs);
         }
+        set.hash_folder_state = options.hash_folder_state.unwrap_or(false);
         self.publish(options.requested_commit, set)
     }
 
     /// Imports the older Cloud API one JS property at a time.
+    /// The folder-state switch is the manifest's `hashFolderState`; it
+    /// defaults to `false`.
     #[napi]
     pub fn import_entries(
         &self,
@@ -72,8 +75,10 @@ impl UltracacheConfigurationStore {
             ts_arg_type = "Readonly<Record<string, { commit: string; inputs: readonly string[] }>>"
         )]
         configurations: Object<'_>,
+        hash_folder_state: Option<bool>,
     ) -> napi::Result<UltracacheConfigurations, String> {
         let mut set = CompactSet::default();
+        set.hash_folder_state = hash_folder_state.unwrap_or(false);
         for id in Object::keys(&configurations).map_err(invalid_response)? {
             if !configurations
                 .has_own_property(&id)
@@ -126,6 +131,10 @@ impl UltracacheConfigurationStore {
 
 // Older Nx clients keep reading and writing the two original tables. Keeping
 // compact versions separate prevents those clients from opening a partial set.
+// A version in the original tables never hashes the folder state: those
+// clients predate it. The switch belongs to a compact version, and each
+// import publishes a new one with its own `fetched_at`, so one
+// (commit, fetched_at) pin never mixes the two.
 const SCHEMA: &str = "
 CREATE TABLE IF NOT EXISTS io_snapshot_versions (
     commit_sha TEXT NOT NULL, fetched_at INTEGER NOT NULL, tasks INTEGER NOT NULL,
@@ -151,7 +160,16 @@ CREATE TABLE IF NOT EXISTS io_snapshot_compact_globs (
     version INTEGER NOT NULL, id INTEGER NOT NULL, glob TEXT NOT NULL,
     PRIMARY KEY (version, id)
 ) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS io_snapshot_compact_features (
+    version INTEGER NOT NULL, feature TEXT NOT NULL,
+    PRIMARY KEY (version, feature)
+) WITHOUT ROWID;
 ";
+
+/// The `io_snapshot_compact_features` row of a version whose manifest set
+/// `hashFolderState`. A separate table, so older Nx versions sharing the
+/// database keep reading and writing versions as before.
+const FOLDER_STATE: &str = "hashFolderState";
 
 fn integers(ids: impl Iterator<Item = u32>) -> Rc<Vec<Value>> {
     Rc::new(ids.map(|id| Value::Integer(id.into())).collect())
@@ -199,6 +217,12 @@ impl UltracacheConfigurationStore {
             for (task, artifact) in &set.tasks {
                 insert_task.execute(params![version, task, artifact])?;
             }
+            if set.hash_folder_state {
+                conn.execute(
+                    "INSERT INTO io_snapshot_compact_features VALUES (?1, ?2)",
+                    params![version, FOLDER_STATE],
+                )?;
+            }
             Ok((version, fetched_at))
         }).map_err(|err| napi::Error::new("WRITE_FAILED".into(), err.to_string()))?;
         Ok(UltracacheConfigurations::new(
@@ -209,11 +233,12 @@ impl UltracacheConfigurationStore {
             },
             self.clone(),
             Some(version),
+            set.hash_folder_state,
         ))
     }
 
     fn open(&self, commit: String, fetched_at: Option<i64>) -> Option<UltracacheConfigurations> {
-        let (version, fetched_at, tasks, ambiguous) = self.db.lock().unwrap().query_row(
+        let (version, fetched_at, tasks, ambiguous, folder_state) = self.db.lock().unwrap().query_row(
             "WITH newest AS (
                 SELECT id, fetched_at, tasks FROM (
                     SELECT id, fetched_at, tasks FROM io_snapshot_compact_versions WHERE commit_sha = ?1
@@ -222,9 +247,11 @@ impl UltracacheConfigurationStore {
              )
              SELECT id, fetched_at, tasks, id IS NOT NULL AND EXISTS (
                 SELECT 1 FROM io_snapshot_versions WHERE commit_sha = ?1 AND fetched_at = newest.fetched_at
+             ), EXISTS (
+                SELECT 1 FROM io_snapshot_compact_features WHERE version = newest.id AND feature = ?3
              ) FROM newest",
-            params![commit, fetched_at],
-            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get::<_, bool>(3)?)),
+            params![commit, fetched_at, FOLDER_STATE],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get::<_, bool>(3)?, row.get::<_, bool>(4)?)),
         ).inspect_err(|err| debug!("ultracache: unreadable configurations for {commit}: {err}")).ok()??;
         // An older writer can still pick its own timestamp. A worker cannot
         // distinguish two versions with the same public pin.
@@ -240,6 +267,7 @@ impl UltracacheConfigurationStore {
             },
             self.clone(),
             version,
+            folder_state,
         ))
     }
 

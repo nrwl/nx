@@ -390,8 +390,12 @@ export declare class UltracacheConfigurationStore {
   constructor(db: ExternalObject<NxDbConnection>)
   /** Compatibility with consumers of the original native JSON importer. */
   import(options: UltracacheConfigurationImportOptions): UltracacheConfigurations
-  /** Imports the older Cloud API one JS property at a time. */
-  importEntries(requestedCommit: string, configurations: Readonly<Record<string, { commit: string; inputs: readonly string[] }>>): UltracacheConfigurations
+  /**
+   * Imports the older Cloud API one JS property at a time.
+   * The folder-state switch is the manifest's `hashFolderState`; it
+   * defaults to `false`.
+   */
+  importEntries(requestedCommit: string, configurations: Readonly<Record<string, { commit: string; inputs: readonly string[] }>>, hashFolderState?: boolean | undefined | null): UltracacheConfigurations
   /** Verifies and imports the immutable manifest and its referenced objects. */
   importFiles(requestedCommit: string, manifestPath: string, filesDirectory: string): UltracacheConfigurations
   /** The newest stored set for this commit, reading only its summary. */
@@ -1518,6 +1522,13 @@ export interface TaskUltracacheSettings {
    * `.nxignore` exclude, such as dependency outputs. Defaults to `true`.
    */
   includeUnstableFiles?: boolean
+  /**
+   * Never hash the folder state of the task's project beside its
+   * Ultracache configuration, even when Nx Cloud asks for it. For projects
+   * where files come and go without changing what the task does. Defaults
+   * to `false`.
+   */
+  excludeFolderStateHash?: boolean
 }
 
 export interface TerminalOutputRecord {
@@ -1558,6 +1569,11 @@ export interface UltracacheConfigurationImportOptions {
   requestedCommit: string
   /** `Record<taskId, { commit, inputs, outputs }>` as JSON. */
   configurationsJson: string
+  /**
+   * Hash the folder state of each task's project beside its configuration, as a
+   * manifest's `hashFolderState` does. Defaults to `false`.
+   */
+  hashFolderState?: boolean
 }
 
 /** What was resolved for a commit; stored beside its entries. */

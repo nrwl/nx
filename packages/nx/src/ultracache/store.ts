@@ -66,14 +66,17 @@ export function getUltracacheConfigurationStore(): UltracacheConfigurationStore 
  * Stores the configurations the Nx Cloud client read for `requestedCommit` and
  * returns their handle, for `runDiscreteTasks` and `runContinuousTasks`. Exposed to the
  * client through `nx/nx-cloud-internals`. Throws with the store's `code`.
+ * `hashFolderState` matches the files manifest's field of that name.
  */
 export function importUltracacheConfigurations(
   requestedCommit: string,
-  configurations: ReadUltracacheConfigurationsResult['configurations']
+  configurations: ReadUltracacheConfigurationsResult['configurations'],
+  hashFolderState?: boolean
 ): UltracacheConfigurations {
   return getUltracacheConfigurationStore().importEntries(
     requestedCommit,
-    configurations
+    configurations,
+    hashFolderState
   );
 }
 
@@ -153,7 +156,11 @@ export async function loadUltracacheConfigurationsForRun(
                   result.files.manifestPath,
                   result.files.filesDirectory
                 )
-              : store.importEntries(head, result.configurations),
+              : // Only a client without `readUltracacheConfigurationFiles`
+                // gets here (see `fetchUltracacheConfigurations`). Its JSON
+                // carries no `hashFolderState`, and such a client predates
+                // the switch, so folder state stays off.
+                store.importEntries(head, result.configurations),
         });
       }))
     );

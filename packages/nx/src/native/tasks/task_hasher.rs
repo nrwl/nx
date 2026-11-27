@@ -18,13 +18,15 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        FilesExpansion, FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache,
-        ProjectFileSetCache, SettledFiles, Source, TrackedBatch, WorkspaceFileIndex,
-        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
-        collect_project_files, collect_workspace_file_paths_cached, expand_cached, expand_globs,
-        expand_task_outputs, file_hashes, fold_file_hashes, hash_all_externals, hash_external,
-        hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
-        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
+        FilesExpansion, FilesExpansionCache, FolderStateCache, GitTrackedFiles, JsonHashResult,
+        ProjectFileIndicesCache, ProjectFileSetCache, SettledFiles, Source, TrackedBatch,
+        WorkspaceFileIndex, WorkspaceFileIndicesCache, WorkspaceFileSetCache,
+        collect_project_file_paths_cached, collect_project_files,
+        collect_workspace_file_paths_cached, expand_cached, expand_globs, expand_task_outputs,
+        file_hashes, fold_file_hashes, git_tracked_files, hash_all_externals, hash_external,
+        hash_files, hash_folder_state_cached, hash_json_files, hash_project_config,
+        hash_project_files_cached, hash_task_output, hash_tsconfig_selectively,
+        hash_workspace_files_cached, output_prefixes,
     },
     types::FileData,
     walker::{PathPredicate, is_normalized_disk_root},
@@ -100,7 +102,10 @@ impl From<&HashInstruction> for HashInputsBuilder {
                 external: HashSet::from(["AllExternalDependencies".to_string()]),
                 ..Default::default()
             },
+            // The folder state hashes file names only; listing every file of
+            // the project as an input would drown the task's real reads.
             HashInstruction::UltracacheConfiguration(_)
+            | HashInstruction::FolderState(_)
             | HashInstruction::ProjectConfiguration(_)
             | HashInstruction::Cwd(_) => HashInputsBuilder::default(),
             // These variants require external context — callers must match on them
@@ -304,6 +309,12 @@ pub struct TaskHasher {
     workspace_file_indices_cache: WorkspaceFileIndicesCache,
     project_file_indices_cache: ProjectFileIndicesCache,
     tracked_file_indices: TrackedFileIndices,
+    // One folder-state digest per folder, shared by every task of the project
+    // rooted there.
+    folder_state_cache: FolderStateCache,
+    // The git index, read once and only when a plan hashes a folder state, so
+    // files a task wrote never count toward one.
+    git_tracked_files: GitTrackedFiles,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
     // A path index over the workspace files, built on first use. Workspace
@@ -349,6 +360,8 @@ impl TaskHasher {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             tracked_file_indices: TrackedFileIndices::default(),
+            folder_state_cache: FolderStateCache::new(),
+            git_tracked_files: GitTrackedFiles::new(),
             all_externals_hash: OnceCell::new(),
             workspace_file_index: WorkspaceFileIndex::new(Arc::clone(&all_workspace_files)),
         }
@@ -863,7 +876,8 @@ impl TaskHasher {
                 | HashInstruction::External(_)
                 | HashInstruction::AllExternalDependencies
                 | HashInstruction::JsonFileSet(_)
-                | HashInstruction::UltracacheConfiguration(_) => Some(OnceCell::new()),
+                | HashInstruction::UltracacheConfiguration(_)
+                | HashInstruction::FolderState(_) => Some(OnceCell::new()),
             })
             .collect();
         // Also classified once, for the same reason as `value_slots`.
@@ -1319,6 +1333,20 @@ impl TaskHasher {
                 // The rendered text, so the prefix lives in one place.
                 (hash(instruction.to_string().as_bytes()), inputs)
             }
+            HashInstruction::FolderState(root) => {
+                let tracked = self
+                    .git_tracked_files
+                    .get_or_init(|| git_tracked_files(Path::new(&self.workspace_root)));
+                let digest = hash_folder_state_cached(
+                    root,
+                    project_root_mappings,
+                    &self.project_file_map,
+                    tracked.as_ref(),
+                    &self.folder_state_cache,
+                );
+                trace!(parent: &span, "hash_folder_state: {:?}", now.elapsed());
+                ((*digest).clone(), empty)
+            }
             HashInstruction::AllExternalDependencies => {
                 // Identical for every task, so fold once and reuse (individual externals
                 // are already cached in external_cache).
@@ -1497,6 +1525,18 @@ mod tests {
             .iter()
             .filter_map(|(file, _)| file.split('/').nth(1))
             .collect();
+        let nodes = projects
+            .iter()
+            .map(|project| {
+                (
+                    project.to_string(),
+                    crate::native::project_graph::types::Project {
+                        root: format!("libs/{project}"),
+                        ..Default::default()
+                    },
+                )
+            })
+            .collect();
         let project_file_map: HashMap<String, Vec<FileData>> = projects
             .into_iter()
             .map(|project| {
@@ -1508,7 +1548,7 @@ mod tests {
             ignored_index: Arc::new(ignored_index),
             workspace_root: workspace_root.to_string_lossy().to_string(),
             project_graph: Arc::new(ProjectGraph {
-                nodes: HashMap::new(),
+                nodes,
                 dependencies: HashMap::new(),
                 external_nodes: HashMap::new(),
             }),
@@ -1524,6 +1564,8 @@ mod tests {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             tracked_file_indices: TrackedFileIndices::default(),
+            folder_state_cache: FolderStateCache::new(),
+            git_tracked_files: GitTrackedFiles::new(),
             all_externals_hash: OnceCell::new(),
             workspace_file_index: WorkspaceFileIndex::new(all_workspace_files),
         }
@@ -2096,17 +2138,43 @@ mod tests {
     /// Hashes `plan` over tracked `files`, with `libs/app/generated` on disk
     /// for a declared `includeIgnored` group to hash.
     fn tracked_hash(files: &[(&str, &str)], plan: Vec<HashInstruction>) -> String {
+        hash_with_untracked(files, &[], plan)
+    }
+
+    /// Like `tracked_hash`, with `untracked` also in the file map but not in
+    /// the git index, as a task's output that is not gitignored would be.
+    fn hash_with_untracked(
+        files: &[(&str, &str)],
+        untracked: &[(&str, &str)],
+        plan: Vec<HashInstruction>,
+    ) -> String {
         let temp = assert_fs::TempDir::new().unwrap();
         for (path, content) in files
             .iter()
+            .chain(untracked)
             .chain(&[("libs/app/generated/api.ts", "generated")])
         {
             let path = temp.path().join(path);
             std::fs::create_dir_all(path.parent().unwrap()).unwrap();
             std::fs::write(path, content).unwrap();
         }
+        let git = |args: &[&str]| {
+            let status = crate::native::utils::command::create_command("git")
+                .args(args)
+                .current_dir(temp.path())
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .status()
+                .unwrap();
+            assert!(status.success(), "git {args:?}");
+        };
+        git(&["init", "-q"]);
+        let mut add = vec!["add", "--"];
+        add.extend(files.iter().map(|(path, _)| *path));
+        git(&add);
         let reader = IgnoredIndexReader::new(Arc::new(IgnoredIndex::new(None)), Arc::new(|| {}));
-        let hasher = hasher_tracking(temp.path(), reader, files);
+        let in_file_map: Vec<(&str, &str)> = files.iter().chain(untracked).copied().collect();
+        let hasher = hasher_tracking(temp.path(), reader, &in_file_map);
         let plans = crate::native::test_utils::hash_plans(&[("e2e:typecheck", plan)]);
         let env = HashMap::new();
         let hashes = hasher
@@ -2119,6 +2187,89 @@ mod tests {
             )
             .unwrap();
         hashes.0.get("e2e:typecheck").unwrap().value.clone()
+    }
+
+    #[test]
+    fn a_new_kind_of_file_the_reads_miss_changes_a_folder_state_plan() {
+        let base = [
+            ("libs/app/project.json", "p"),
+            ("libs/app/src/a.ts", "a"),
+            ("libs/app/src/b.ts", "b"),
+            ("libs/e2e/project.json", "e"),
+        ];
+        let with = |extra: &[(&'static str, &'static str)]| {
+            let mut files = base.to_vec();
+            files.extend_from_slice(extra);
+            files
+        };
+        // With and without a declared group, which makes the plan fold its reads.
+        for fold in [false, true] {
+            let plan = || {
+                let mut plan = vec![
+                    HashInstruction::UltracacheConfiguration("digest".into()),
+                    HashInstruction::ProjectFileSet("app".into(), vec!["libs/app/src/a.ts".into()]),
+                    HashInstruction::FolderState("libs/app".into()),
+                ];
+                if fold {
+                    plan.push(HashInstruction::ignored_files(vec![
+                        "libs/app/generated".to_string(),
+                    ]));
+                }
+                plan
+            };
+            let before = tracked_hash(&base, plan());
+            assert_ne!(
+                tracked_hash(&with(&[("libs/app/eslint.config.mjs", "x")]), plan()),
+                before,
+                "fold: {fold}"
+            );
+            assert_ne!(
+                tracked_hash(&with(&[("libs/app/src/lib/c.ts", "c")]), plan()),
+                before,
+                "fold: {fold}"
+            );
+            assert_eq!(
+                tracked_hash(&with(&[("libs/app/src/c.ts", "c")]), plan()),
+                before,
+                "fold: {fold}"
+            );
+            assert_eq!(
+                tracked_hash(&with(&[("libs/e2e/eslint.config.mjs", "x")]), plan()),
+                before,
+                "fold: {fold}"
+            );
+            let mut edited = base.to_vec();
+            edited[2].1 = "b edited";
+            assert_eq!(tracked_hash(&edited, plan()), before, "fold: {fold}");
+        }
+        // An untracked file of a new kind, such as a task's report that is not
+        // gitignored, leaves the folder state alone; once tracked, it counts.
+        let plan = || {
+            vec![
+                HashInstruction::UltracacheConfiguration("digest".into()),
+                HashInstruction::FolderState("libs/app".into()),
+            ]
+        };
+        let report = [("libs/app/report.junit.xml", "<xml/>")];
+        assert_eq!(
+            hash_with_untracked(&base, &report, plan()),
+            tracked_hash(&base, plan())
+        );
+        assert_ne!(
+            tracked_hash(&with(&report), plan()),
+            tracked_hash(&base, plan())
+        );
+        // Without the instruction, the same new file goes unnoticed.
+        let plan = || {
+            vec![
+                HashInstruction::UltracacheConfiguration("digest".into()),
+                HashInstruction::ProjectFileSet("app".into(), vec!["libs/app/src/a.ts".into()]),
+            ]
+        };
+        assert_eq!(
+            tracked_hash(&with(&[("libs/app/eslint.config.mjs", "x")]), plan()),
+            tracked_hash(&base, plan())
+        );
     }
 
     #[test]
