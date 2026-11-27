@@ -25,6 +25,7 @@ import {
 
 import { isIsolationEnabled } from './isolation/enabled';
 import {
+  getRefusedSocketOperation,
   isPluginWorkerSocketRefusal,
   isPluginWorkerStartupFailure,
 } from './isolation/isolated-plugin';
@@ -119,8 +120,8 @@ function loadNxPluginInProcess(
  * been told about the Nx socket root refuses the worker's socket, and failing
  * the whole command over that is worse than running the plugins here. The
  * fallback is narrow on purpose. It needs a failure to start or reach the
- * worker, plus either a detectable sandbox or the worker's own EPERM/EACCES
- * exit code under an AI agent — the second arm is what covers an agent whose
+ * worker, plus either a detectable sandbox or an EPERM/EACCES on the worker's
+ * socket under an AI agent. The second arm is what covers an agent whose
  * sandbox sets no variable `isSandbox()` reads. A plugin that loaded and then
  * threw is rethrown, because rerunning it in-process would bury its actual
  * error.
@@ -139,10 +140,10 @@ export const loadingMethod = async (
   try {
     return await loadIsolatedNxPlugin(plugin, root, index);
   } catch (e) {
-    // Proof, kept separate from policy. The errno the worker saw is what makes
-    // the message certain; whether that errno is also grounds for degrading is a
-    // different question, and conflating them made the warning assert a sandbox
-    // for agents the hint itself declines to name.
+    // Proof, kept separate from policy. The errno on the worker's socket is
+    // what makes the message certain; whether that errno is also grounds for
+    // degrading is a different question, and conflating them made the warning
+    // assert a sandbox for agents the hint itself declines to name.
     const provenRefusal = isPluginWorkerSocketRefusal(e);
     // An agent is required alongside the errno, so a refusal on an ordinary
     // workstation still surfaces rather than silently losing isolation.
@@ -165,14 +166,17 @@ export const loadingMethod = async (
         // title asserting a sandbox could sit above a body that deliberately
         // does not.
         title: provenRefusal
-          ? 'Nx was denied permission to create a plugin worker socket. Running plugins in the main process instead.'
+          ? 'Nx was denied permission to use a plugin worker socket. Running plugins in the main process instead.'
           : 'Could not start a plugin worker. Running plugins in the main process instead.',
         bodyLines: [
           'Plugins that expect isolation may misbehave, and this is slower than a worker.',
           // `certain` on the errno alone. Reaching here via `isSandbox()` proves
           // only that a worker died before it connected, which denied permission
           // explains but so does an OOM kill or a broken install.
-          ...sandboxSocketHint({ certain: provenRefusal }),
+          ...sandboxSocketHint({
+            certain: provenRefusal,
+            operation: getRefusedSocketOperation(e),
+          }),
         ],
       });
     }

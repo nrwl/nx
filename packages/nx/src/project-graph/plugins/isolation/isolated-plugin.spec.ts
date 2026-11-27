@@ -5,6 +5,7 @@ import {
   connectToWorker,
   describeWorkerExit,
   getPluginWorkerSocketId,
+  getRefusedSocketOperation,
   isPluginWorkerSocketRefusal,
   IsolatedPlugin,
   LoadResultPayload,
@@ -332,6 +333,45 @@ describe('IsolatedPlugin', () => {
       await expect(
         connectToWorker(worker, '/mock/socket/path', 'test-plugin')
       ).rejects.toSatisfy((error) => !isPluginWorkerSocketRefusal(error));
+    });
+  });
+
+  describe('a connect the operating system refuses', () => {
+    afterEach(() => {
+      vi.mocked(waitForSocketConnection).mockReset();
+    });
+
+    // A sandbox that allows the worker's bind and refuses the host's connect:
+    // ENOENT until the worker listens, then EPERM.
+    it('stops polling, stops the worker and reports a refusal', async () => {
+      const worker = new EventEmitter() as any;
+      worker.kill = vi.fn();
+      vi.mocked(waitForSocketConnection).mockImplementation(
+        async (socketPath: string, options) => {
+          for (const code of ['ENOENT', 'EPERM']) {
+            const error = Object.assign(
+              new Error(`connect ${code} ${socketPath}`),
+              { code }
+            );
+            if (options?.onConnectError?.(error, socketPath)) {
+              return null;
+            }
+          }
+          throw new Error('polled past a refused connect');
+        }
+      );
+
+      const error = await connectToWorker(
+        worker,
+        '/mock/socket/path',
+        'test-plugin'
+      ).catch((e) => e);
+
+      expect(getRefusedSocketOperation(error)).toBe('connect');
+      expect(error.message).toContain('connect EPERM /mock/socket/path');
+      expect(error.message).toContain('connect to its unix socket');
+      expect(error.message).not.toContain('NX_SOCKET_DIR');
+      expect(worker.kill).toHaveBeenCalled();
     });
   });
 

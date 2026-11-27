@@ -11,7 +11,11 @@ import {
   withTrustedBerryBinFolders,
 } from '../../../daemon/client/daemon-environment';
 import { serverLogger } from '../../../daemon/logger';
-import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
+import {
+  sandboxSocketHint,
+  type RefusedSocketOperation,
+} from '../../../daemon/sandbox-socket-hint';
+import { isPermissionDenied } from '../../../utils/permission-errors';
 import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-code';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import {
@@ -737,6 +741,7 @@ export async function connectToWorker(
 ): Promise<Socket> {
   const abortController = new AbortController();
   let earlyExitError: Error | null = null;
+  let connectRefusal: NodeJS.ErrnoException | undefined;
 
   // If the worker exits before we connect, abort polling immediately
   // rather than burning through attempts against a dead socket.
@@ -744,8 +749,7 @@ export async function connectToWorker(
     if (!abortController.signal.aborted) {
       // The worker sets this code only after an EPERM/EACCES on its own bind,
       // so it is proof of a refusal rather than an inference from the
-      // environment — the only evidence available under an agent whose sandbox
-      // sets no variable `isSandbox()` reads.
+      // environment.
       const refused = code === SOCKET_REFUSED_EXIT_CODE;
       earlyExitError = markWorkerStartupFailure(
         new Error(
@@ -761,7 +765,7 @@ export async function connectToWorker(
               : []),
           ].join('\n')
         ),
-        refused
+        refused ? 'bind' : undefined
       );
       abortController.abort();
     }
@@ -769,6 +773,14 @@ export async function connectToWorker(
 
   const socket = await waitForSocketConnection(ipcPath, {
     signal: abortController.signal,
+    // Some sandboxes allow the worker's bind and refuse this connect, and
+    // retrying cannot change that answer.
+    onConnectError: (error) => {
+      if (isPermissionDenied(error)) {
+        connectRefusal = error;
+        return true;
+      }
+    },
   });
 
   if (socket) {
@@ -778,6 +790,23 @@ export async function connectToWorker(
       `[isolated-plugin] connected to worker for "${name}" (pid: ${worker.pid})`
     );
     return socket;
+  }
+
+  if (connectRefusal) {
+    // Left running, the worker reports its connect timeout into whatever this
+    // process prints by then. A refused signal leaves it to that timeout.
+    try {
+      worker.kill();
+    } catch {}
+    throw markWorkerStartupFailure(
+      new Error(
+        [
+          `The operating system refused the connection to the plugin worker for "${name}" (${connectRefusal.message}).`,
+          ...sandboxSocketHint({ certain: true, operation: 'connect' }),
+        ].join('\n')
+      ),
+      'connect'
+    );
   }
 
   if (earlyExitError) {
@@ -799,7 +828,9 @@ export const PLUGIN_WORKER_STARTUP_FAILURE = Symbol.for(
 );
 
 /**
- * Set when the worker exited with the socket-refused code. Narrower than
+ * Set to the refused call when the operating system refused the worker's
+ * socket: `'bind'` for the worker's bind (its socket-refused exit code), or
+ * `'connect'` for our connect. Narrower than
  * {@link PLUGIN_WORKER_STARTUP_FAILURE}, which covers every way a worker can
  * fail to come up, and is what lets the caller degrade on a refusal without
  * also degrading for an OOM kill or a broken install.
@@ -828,10 +859,13 @@ export function describeWorkerExit(
   return '(no exit code or signal reported)';
 }
 
-function markWorkerStartupFailure(error: Error, refused = false): Error {
+function markWorkerStartupFailure(
+  error: Error,
+  refused?: RefusedSocketOperation
+): Error {
   error[PLUGIN_WORKER_STARTUP_FAILURE] = true;
   if (refused) {
-    error[PLUGIN_WORKER_SOCKET_REFUSED] = true;
+    error[PLUGIN_WORKER_SOCKET_REFUSED] = refused;
   }
   return error;
 }
@@ -842,6 +876,12 @@ export function isPluginWorkerStartupFailure(error: unknown): boolean {
 
 export function isPluginWorkerSocketRefusal(error: unknown): boolean {
   return Boolean(error?.[PLUGIN_WORKER_SOCKET_REFUSED]);
+}
+
+export function getRefusedSocketOperation(
+  error: unknown
+): RefusedSocketOperation | undefined {
+  return error?.[PLUGIN_WORKER_SOCKET_REFUSED];
 }
 
 function getTypeName(u: unknown): string {

@@ -1,4 +1,4 @@
-import type { MockedFunction } from 'vitest';
+import type { MockedFunction, MockInstance } from 'vitest';
 
 vi.unmock('./project-graph');
 vi.mock('../daemon/client/client', () => ({
@@ -86,5 +86,44 @@ describe('daemon disable on an internal daemon error', () => {
 
     expect(markDaemonAsDisabled).toHaveBeenCalledWith('daemon blew up');
     expect(disableDaemonForThisProcess).not.toHaveBeenCalled();
+  });
+});
+
+describe('daemon disable on a refused daemon socket', () => {
+  let stdout: MockInstance<typeof process.stdout.write>;
+  let stderr: MockInstance<typeof process.stderr.write>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    mockGetGraph.mockRejectedValue(
+      Object.assign(new Error('connect EPERM /tmp/.nx/d.sock'), {
+        daemonPermissionError: true,
+      })
+    );
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  // The daemonless build globs through the daemon client, which would start
+  // the daemon again and throw the same refusal.
+  it('disables the daemon for this process only', async () => {
+    await buildAndIgnoreFallback();
+
+    expect(disableDaemonForThisProcess).toHaveBeenCalledWith(
+      'connect EPERM /tmp/.nx/d.sock'
+    );
+    expect(mockReset).toHaveBeenCalled();
+    expect(markDaemonAsDisabled).not.toHaveBeenCalled();
+  });
+
+  // The command still succeeds, so its own output on stdout must stay parseable
+  it('prints the notice on stderr, leaving stdout to the command', async () => {
+    await buildAndIgnoreFallback();
+
+    const written = (spy: MockInstance) => spy.mock.calls.join('');
+    expect(written(stderr)).toContain('Continuing without the daemon');
+    expect(written(stdout)).not.toContain('Continuing without the daemon');
   });
 });
