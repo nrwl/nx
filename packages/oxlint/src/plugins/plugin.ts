@@ -62,7 +62,7 @@ const LINTABLE_EXTENSIONS = [
 const LINTABLE_FILES_GLOB = `**/*.{${LINTABLE_EXTENSIONS.join(',')}}`;
 // Oxlint honours both, so both decide which files it lints.
 const IGNORE_FILENAMES = ['.eslintignore', '.gitignore'];
-// The bridge's rules look across projects; every other rule sees one file.
+// The boundaries bridge inspects imports and package metadata across projects.
 const BOUNDARIES_PLUGIN_SPECIFIER = '@nx/oxlint/boundaries-plugin';
 const PROJECT_CONFIG_FILENAMES = ['project.json', 'package.json'];
 const OXLINT_CONFIG_GLOB = combineGlobPatterns([
@@ -85,7 +85,7 @@ const internalCreateNodes = async (
   projectsCache: PluginCache<OxlintProjects>,
   hashByRoot: Map<string, string>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  rootConfig: string | undefined
+  rootConfig: WorkspaceLintConfig
 ): Promise<CreateNodesResult> => {
   const configDir = dirname(configFilePath);
 
@@ -179,24 +179,33 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
 
     // Workspace-global and invariant for the whole run, so it is resolved once
     // here rather than re-stat'ed for every project.
-    const rootConfig = OXLINT_CONFIG_FILENAMES.find((file) =>
+    const {
+      chains: configChainsByConfig,
+      jsPluginSpecifiersByConfig,
+      parsedConfigs,
+    } = collectConfigChains(oxlintConfigFiles, context.workspaceRoot);
+    const rootFile = OXLINT_CONFIG_FILENAMES.find((file) =>
       existsSync(join(context.workspaceRoot, file))
-    );
-
-    const { chains: configChainsByConfig, jsPluginSpecifiersByConfig } =
-      collectConfigChains(oxlintConfigFiles, context.workspaceRoot);
-    const tsconfigChainsByProjectRoot = collectTsconfigChainsByProjectRoot(
-      projectRoots,
-      context.workspaceRoot
     );
     // Stats the workspace root, so detect once for both uses below — and after
     // the bail, so a workspace with no Oxlint config never pays for it.
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFilePattern = getLockFileName(packageManager);
+    const rootConfig = {
+      file: rootFile,
+      lockFile: lockFilePattern,
+      typed:
+        !!rootFile &&
+        usesTypeInformation(parsedConfigs.get(rootFile), context.workspaceRoot),
+    };
+    const tsconfigChainsByProjectRoot = collectTsconfigChainsByProjectRoot(
+      projectRoots,
+      context.workspaceRoot
+    );
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
-      options,
+      { ...options, typed: rootConfig.typed },
       context,
       projectRoots.map((root) => {
         // Own directory and every ancestor. Configs below the root are already
@@ -468,15 +477,13 @@ function collectConfigChains(
 ): {
   chains: Map<string, string[]>;
   jsPluginSpecifiersByConfig: Map<string, string[]>;
+  parsedConfigs: Map<string, RawOxlintConfig | null>;
 } {
   const result = new Map<string, string[]>();
   const jsPluginSpecifiersByConfig = new Map<string, string[]>();
   // Shared across configs so the common root config is read once. `null` records
   // a failed read, so a bad file is not retried per referrer.
-  const jsonCache = new Map<
-    string,
-    { extends?: string[]; jsPlugins?: unknown[] } | null
-  >();
+  const jsonCache = new Map<string, RawOxlintConfig | null>();
   const existsCache = new Map<string, boolean>();
 
   const configExists = (relativeConfigPath: string): boolean => {
@@ -512,14 +519,12 @@ function collectConfigChains(
     jsPluginSpecifiersByConfig.set(relativeConfigPath, specifiers);
   };
 
-  const readConfig = (
-    relativeConfigPath: string
-  ): { extends?: string[]; jsPlugins?: unknown[] } | null => {
+  const readConfig = (relativeConfigPath: string): RawOxlintConfig | null => {
     if (jsonCache.has(relativeConfigPath)) {
       return jsonCache.get(relativeConfigPath);
     }
 
-    let json: { extends?: string[]; jsPlugins?: unknown[] } | null = null;
+    let json: RawOxlintConfig | null = null;
     if (configExists(relativeConfigPath)) {
       try {
         json = readJsonFile(join(workspaceRoot, relativeConfigPath), {
@@ -581,7 +586,11 @@ function collectConfigChains(
     result.set(configFile, extended);
   }
 
-  return { chains: result, jsPluginSpecifiersByConfig };
+  return {
+    chains: result,
+    jsPluginSpecifiersByConfig,
+    parsedConfigs: jsonCache,
+  };
 }
 
 /**
@@ -822,6 +831,53 @@ function getRootForDirectory(
   return roots.has(currentPath) ? currentPath : null;
 }
 
+interface WorkspaceLintConfig {
+  file?: string;
+  lockFile: string;
+  typed: boolean;
+}
+
+interface RawOxlintConfig {
+  options?: { typeAware?: boolean; typeCheck?: boolean };
+  extends?: string[];
+  jsPlugins?: unknown[];
+}
+
+function hasTypedOptions(config: RawOxlintConfig): boolean {
+  return (
+    config.options?.typeAware === true || config.options?.typeCheck === true
+  );
+}
+
+// The executor runs Oxlint from the workspace root, where Oxlint reads its
+// typed-mode options. Nested configs select the rules applied to each file.
+function usesTypeInformation(
+  config: RawOxlintConfig | null | undefined,
+  workspaceRoot: string
+): boolean {
+  if (config && !config.extends?.length) return hasTypedOptions(config);
+
+  // Let Oxlint apply inherited overrides or evaluate executable configs.
+  // If resolution fails, prefer a cache miss; lint reports the config error.
+  const bin = resolveOxlintBin(workspaceRoot);
+  if (!bin) return true;
+  try {
+    return hasTypedOptions(
+      JSON.parse(
+        execFileSync(process.execPath, [bin, '--print-config'], {
+          cwd: workspaceRoot,
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'ignore'],
+          timeout: 30_000,
+          windowsHide: true,
+        })
+      )
+    );
+  } catch {
+    return true;
+  }
+}
+
 function getProjectUsingOxlintConfig(
   configFilePath: string,
   projectRoot: string,
@@ -832,7 +888,7 @@ function getProjectUsingOxlintConfig(
   configChainsByConfig: Map<string, string[]>,
   jsPluginSpecifiersByConfig: Map<string, string[]>,
   tsconfigChainOutsideProjectRoot: string[],
-  rootConfig: string | undefined
+  rootConfig: WorkspaceLintConfig
 ): CreateNodesResult['projects'][string] | null {
   // Linter-agnostic on purpose: a nested ESLint project's files are still
   // its own.
@@ -856,8 +912,8 @@ function getProjectUsingOxlintConfig(
   }
 
   const oxlintConfigs = [configFilePath];
-  if (rootConfig && !oxlintConfigs.includes(rootConfig)) {
-    oxlintConfigs.unshift(rootConfig);
+  if (rootConfig.file && !oxlintConfigs.includes(rootConfig.file)) {
+    oxlintConfigs.unshift(rootConfig.file);
   }
 
   // Deduped: a project config that extends the root names it a second time.
@@ -894,15 +950,16 @@ function getProjectUsingOxlintConfig(
     }),
     cache: true,
     inputs: [
-      // Only what Oxlint can lint, so a README or JSON edit is not a re-lint.
+      // The project sources Oxlint can lint.
       { fileset: lintableFiles },
-      // The bridge checks the project graph, which a dependency's imports and
-      // package.json shape.
-      ...(usesBoundariesBridge
+      // Both the boundaries bridge and typed rules inspect project dependencies.
+      ...(usesBoundariesBridge || rootConfig.typed
         ? [
             { fileset: lintableFiles, dependencies: true as const },
             {
-              fileset: '{projectRoot}/package.json',
+              fileset: rootConfig.typed
+                ? '{projectRoot}/**/*.json'
+                : '{projectRoot}/package.json',
               dependencies: true as const,
             },
           ]
@@ -923,6 +980,14 @@ function getProjectUsingOxlintConfig(
       ...tsconfigChainOutsideProjectRoot.map(
         (file) => `{workspaceRoot}/${escapeGlob(file)}`
       ),
+      // Typed lint also reads imported JSON and the installed declarations
+      // and checker selected by the workspace's dependency resolution.
+      ...(rootConfig.typed
+        ? [
+            { fileset: '{projectRoot}/**/*.json' },
+            `{workspaceRoot}/${rootConfig.lockFile}`,
+          ]
+        : []),
       { externalDependencies: ['oxlint'] },
     ],
     metadata: {
