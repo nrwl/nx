@@ -121,7 +121,7 @@ A migration can be **generator-only**, **prompt-only**, or a **hybrid** (a gener
 
 Generator-only migrations run automatically. Without the agentic flow described below, Nx leaves the changes unstaged by default for you to review.
 
-When prompt-only or hybrid migrations are queued and a supported AI agent is installed (Claude Code, OpenAI Codex, OpenCode, or GitHub Copilot CLI), Nx asks whether to continue with an agentic flow.
+When prompt-only or hybrid migrations are queued and a supported AI agent is installed (Claude Code, OpenAI Codex, OpenCode, GitHub Copilot CLI, or Antigravity CLI), Nx asks whether to continue with an agentic flow.
 You can answer for this run only, or have Nx remember your choice in `nx.json`.
 With the agentic flow enabled, Nx starts one agent session in your terminal that drives the whole run:
 
@@ -194,6 +194,6 @@ As long as you run `nx migrate` instead of manually changing the version numbers
 
 ## Need more control?
 
-Sometimes you need to deviate from the defaults: skip optional package updates and catch them up later, pin a specific AI agent or disable the agentic flow, run migrations one at a time, or opt out of specific migrations by adjusting `migrations.json`.
+Sometimes you need to deviate from the defaults: skip optional package updates and catch them up later, prefer a specific AI agent or disable the agentic flow, run migrations one at a time, or opt out of specific migrations by adjusting `migrations.json`.
 
 Find all of these in our [Advanced Update Process](/docs/guides/tips-n-tricks/advanced-update) guide.

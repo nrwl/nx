@@ -491,7 +491,13 @@
             },
             {
               "type": "string",
-              "enum": ["claude-code", "codex", "opencode", "copilot"]
+              "enum": [
+                "claude-code",
+                "codex",
+                "opencode",
+                "copilot",
+                "antigravity"
+              ]
             }
           ],
           "description": "Default for the agentic flow used by `nx migrate --run-migrations`. Equivalent to the `--agentic` flag. `false` never uses the agentic flow, `true` uses it and resolves the installed agent, and an agent id uses that agent. If Nx can't find or identify the requested agent, it warns and selects from the other usable agents, and exits with an error when none is usable. A non-interactive run skips the agentic flow with a warning."

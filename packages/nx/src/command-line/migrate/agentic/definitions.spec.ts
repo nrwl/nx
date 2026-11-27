@@ -2,6 +2,7 @@ import { homedir } from 'os';
 import { join } from 'path';
 import { parse as parseToml } from 'smol-toml';
 import {
+  AGENT_DEFINITIONS,
   claudeCodeDefinition,
   claudeCodeHandoffAllowedTools,
   encodeTomlString,
@@ -129,4 +130,44 @@ describe('opencodeDefinition', () => {
     Object.defineProperty(process, 'platform', { value: 'win32' });
     expect(opencodeDefinition.wellKnownPaths()).toEqual([]);
   });
+});
+
+describe('antigravity definition', () => {
+  const antigravity = AGENT_DEFINITIONS.find((d) => d.id === 'antigravity')!;
+  const originalPlatform = process.platform;
+  const originalLocalAppData = process.env.LOCALAPPDATA;
+
+  afterEach(() => {
+    Object.defineProperty(process, 'platform', { value: originalPlatform });
+    if (originalLocalAppData === undefined) {
+      delete process.env.LOCALAPPDATA;
+    } else {
+      process.env.LOCALAPPDATA = originalLocalAppData;
+    }
+  });
+
+  it.each([
+    [
+      'darwin',
+      'C:\\Users\\Tester\\AppData\\Local',
+      [join(homedir(), '.local', 'bin', 'agy')],
+    ],
+    [
+      'win32',
+      'C:\\Users\\Tester\\AppData\\Local',
+      [join('C:\\Users\\Tester\\AppData\\Local', 'agy', 'bin', 'agy.exe')],
+    ],
+    ['win32', undefined, []],
+  ])(
+    'returns the well-known paths on %s with LOCALAPPDATA %s',
+    (platform, localAppData, expected) => {
+      Object.defineProperty(process, 'platform', { value: platform });
+      if (localAppData === undefined) {
+        delete process.env.LOCALAPPDATA;
+      } else {
+        process.env.LOCALAPPDATA = localAppData;
+      }
+      expect(antigravity.wellKnownPaths()).toEqual(expected);
+    }
+  );
 });

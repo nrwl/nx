@@ -7,8 +7,6 @@ import {
   MIGRATE_RUNS_RELATIVE_DIR,
 } from './types';
 
-// --- Claude Code ---------------------------------------------------------
-
 function claudeCodeWellKnownPaths(): string[] {
   if (process.platform === 'win32') {
     const home = process.env.USERPROFILE;
@@ -65,8 +63,6 @@ export const claudeCodeDefinition: AgentDefinition = {
   wellKnownPaths: claudeCodeWellKnownPaths,
 };
 
-// --- OpenAI Codex --------------------------------------------------------
-
 function codexWellKnownPaths(): string[] {
   return [];
 }
@@ -105,8 +101,6 @@ const codexDefinition: AgentDefinition = {
   wellKnownPaths: codexWellKnownPaths,
 };
 
-// --- OpenCode ------------------------------------------------------------
-
 function opencodeWellKnownPaths(): string[] {
   if (process.platform === 'win32') {
     return [];
@@ -132,8 +126,6 @@ export const opencodeDefinition: AgentDefinition = {
   binaryNames: ['opencode'],
   wellKnownPaths: opencodeWellKnownPaths,
 };
-
-// --- GitHub Copilot CLI --------------------------------------------------
 
 // The install script's default for a non-root user. On Windows the script
 // installs through WinGet instead.
@@ -165,11 +157,26 @@ const copilotCliDefinition: AgentDefinition = {
   versionOutputPrefix: 'GitHub Copilot CLI ',
 };
 
-// --- Registry ------------------------------------------------------------
+// The install scripts' default locations.
+function antigravityWellKnownPaths(): string[] {
+  if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA;
+    return localAppData ? [join(localAppData, 'agy', 'bin', 'agy.exe')] : [];
+  }
+  return [join(homedir(), '.local', 'bin', 'agy')];
+}
+
+const antigravityDefinition: AgentDefinition = {
+  id: 'antigravity',
+  displayName: 'Antigravity CLI',
+  binaryNames: ['agy'],
+  wellKnownPaths: antigravityWellKnownPaths,
+};
 
 export const AGENT_DEFINITIONS: readonly AgentDefinition[] = [
   claudeCodeDefinition,
   codexDefinition,
   opencodeDefinition,
   copilotCliDefinition,
+  antigravityDefinition,
 ];

@@ -1,3 +1,4 @@
+import { dirname, join } from 'path';
 import {
   buildMasterInvocation,
   masterBootstrapPrompt,
@@ -9,6 +10,7 @@ import { encodeTomlString } from '../definitions';
 const runId = '20260715T101530-3f9a1c02';
 const ctx: MasterInvocationContext = {
   runId,
+  runDirPath: join('/ws', '.nx', 'migrate-runs', runId),
   reconcileCommand: `pnpm exec nx migrate --run-id=${runId}`,
   runbookPath: `.nx/migrate-runs/${runId}/RUNBOOK.md`,
   sentinelPath: `.nx/migrate-runs/${runId}/handoffs/session-complete`,
@@ -123,5 +125,28 @@ describe('buildMasterInvocation', () => {
         COPILOT_CUSTOM_INSTRUCTIONS_DIRS: `/home/me/instructions,.nx/migrate-runs/${runId}/copilot`,
       });
     });
+  });
+
+  it('antigravity: adds the directory of its rules file by absolute path and pins the invariant', () => {
+    const spec = buildMasterInvocation('antigravity', ctx);
+
+    expect(spec.files).toEqual([
+      {
+        path: 'antigravity/AGENTS.md',
+        content: expect.stringContaining(masterInvariant(ctx)),
+      },
+    ]);
+    expect(spec.files[0].content).toContain(
+      'subagent, do not run nx migrate commands'
+    );
+    expect(spec.files[0].content).toContain(
+      "fails in the terminal sandbox because it can't find or run Node.js or the package manager, run every later nx command outside the sandbox"
+    );
+    expect(spec.args).toEqual([
+      '--add-dir',
+      join(ctx.runDirPath, dirname(spec.files[0].path)),
+      '--prompt-interactive',
+      masterBootstrapPrompt(ctx),
+    ]);
   });
 });

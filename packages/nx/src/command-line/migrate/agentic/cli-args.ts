@@ -11,6 +11,7 @@ export const AGENT_IDS = [
   'codex',
   'opencode',
   'copilot',
+  'antigravity',
 ] as const;
 
 export type AgentId = (typeof AGENT_IDS)[number];

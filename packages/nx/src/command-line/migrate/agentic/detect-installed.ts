@@ -47,8 +47,7 @@ async function findAllOnPath(
   const seen = new Set<string>();
   for (const name of binaryNames) {
     for (const entry of entries) {
-      // `{ nothrow: true }` avoids the throw-per-missing-binary overhead;
-      // EACCES on existing-but-unexecutable paths is handled by `isExecutable`.
+      // `{ nothrow: true }` avoids the throw-per-missing-binary overhead.
       const matches =
         (await which(resolve(entry, name), { all: true, nothrow: true })) ?? [];
       for (const binary of matches) {
