@@ -375,7 +375,7 @@ function rejectedBinaryLines({
 }: IdentifiedAgents['rejected'][number]): string[] {
   return binaries.map(
     ({ binary, reason }) =>
-      `  - ${binary} is not ${agent.displayName}: ${reason}`
+      `  - ${binary} cannot be launched as ${agent.displayName}: ${reason}`
   );
 }
 
@@ -431,6 +431,18 @@ async function selectAgent(
       ],
     });
     throw new Error('No installed AI agent available.');
+  }
+
+  // Only unsupported releases: the other rejections are another product or
+  // output nx can't read, and would warn on every run.
+  for (const { agent, binaries } of rejected) {
+    const unsupported = binaries.filter((b) => b.unsupported);
+    if (agent.id !== explicitId && unsupported.length > 0) {
+      output.warn({
+        title: `${agent.displayName} could not be used.`,
+        bodyLines: rejectedBinaryLines({ agent, binaries: unsupported }),
+      });
+    }
   }
 
   if (detected.length === 1) {

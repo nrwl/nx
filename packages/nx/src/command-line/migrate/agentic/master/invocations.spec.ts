@@ -44,7 +44,7 @@ describe('master invocation prompts', () => {
 
 describe('buildMasterInvocation', () => {
   it('claude-code pre-allows the run-scoped handoff write and appends the invariant ahead of the bootstrap', () => {
-    expect(buildMasterInvocation('claude-code', ctx)).toEqual({
+    expect(buildMasterInvocation({ id: 'claude-code' }, ctx)).toEqual({
       args: [
         '--allowedTools',
         `Edit(.nx/migrate-runs/${runId}/handoffs/**)`,
@@ -56,7 +56,7 @@ describe('buildMasterInvocation', () => {
   });
 
   it('codex carries the invariant as developer instructions', () => {
-    expect(buildMasterInvocation('codex', ctx)).toEqual({
+    expect(buildMasterInvocation({ id: 'codex' }, ctx)).toEqual({
       args: [
         '-c',
         `developer_instructions=${encodeTomlString(masterInvariant(ctx))}`,
@@ -65,8 +65,11 @@ describe('buildMasterInvocation', () => {
     });
   });
 
-  it('opencode carries the invariant through a transient agent config', () => {
-    const spec = buildMasterInvocation('opencode', ctx);
+  it('opencode 1.x carries the invariant through a transient agent config', () => {
+    const spec = buildMasterInvocation(
+      { id: 'opencode', opencodeMajor: 1 },
+      ctx
+    );
     expect(spec.args).toEqual([
       '--agent',
       'nx-migrate',
@@ -76,6 +79,30 @@ describe('buildMasterInvocation', () => {
     expect(JSON.parse(spec.env.OPENCODE_CONFIG_CONTENT)).toEqual({
       agent: { 'nx-migrate': { prompt: masterInvariant(ctx) } },
     });
+  });
+
+  it('opencode 2.x runs a standalone session whose default build agent carries the invariant', () => {
+    const spec = buildMasterInvocation(
+      { id: 'opencode', opencodeMajor: 2 },
+      ctx
+    );
+    expect(spec.args).toEqual([
+      '--standalone',
+      '--prompt',
+      masterBootstrapPrompt(ctx),
+    ]);
+    expect(JSON.parse(spec.env.OPENCODE_CONFIG_CONTENT)).toEqual({
+      default_agent: 'build',
+      agents: {
+        build: { system: masterInvariant(ctx), mode: 'primary', hidden: false },
+      },
+    });
+  });
+
+  it('refuses to launch opencode without its version', () => {
+    expect(() => buildMasterInvocation({ id: 'opencode' }, ctx)).toThrow(
+      'Unhandled OpenCode major version: undefined'
+    );
   });
 
   describe('copilot', () => {
@@ -92,7 +119,7 @@ describe('buildMasterInvocation', () => {
     it('pre-allows the run-scoped handoff write and pins the invariant through a run-scoped instructions file', () => {
       delete process.env.COPILOT_CUSTOM_INSTRUCTIONS_DIRS;
 
-      const spec = buildMasterInvocation('copilot', ctx);
+      const spec = buildMasterInvocation({ id: 'copilot' }, ctx);
 
       expect(spec).toEqual({
         args: [
@@ -119,7 +146,7 @@ describe('buildMasterInvocation', () => {
     it('keeps the instruction directories the user configured', () => {
       process.env.COPILOT_CUSTOM_INSTRUCTIONS_DIRS = '/home/me/instructions';
 
-      expect(buildMasterInvocation('copilot', ctx).env).toEqual({
+      expect(buildMasterInvocation({ id: 'copilot' }, ctx).env).toEqual({
         COPILOT_CUSTOM_INSTRUCTIONS_DIRS: `/home/me/instructions,.nx/migrate-runs/${runId}/copilot`,
       });
     });

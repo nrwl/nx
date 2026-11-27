@@ -1,10 +1,12 @@
 import { homedir } from 'os';
 import { join } from 'path';
+import { lt, prerelease, valid } from 'semver';
 import { parse as parseToml } from 'smol-toml';
 import {
   AgentDefinition,
   HANDOFFS_DIR_NAME,
   MIGRATE_RUNS_RELATIVE_DIR,
+  type VersionOutputReading,
 } from './types';
 
 // --- Claude Code ---------------------------------------------------------
@@ -131,7 +133,38 @@ export const opencodeDefinition: AgentDefinition = {
   displayName: 'OpenCode',
   binaryNames: ['opencode'],
   wellKnownPaths: opencodeWellKnownPaths,
+  readVersionOutput: readOpencodeVersionOutput,
 };
+
+// Earlier 2.x releases can leave `--prompt` unsent, and a prerelease's version
+// doesn't say whether it has the fix:
+// https://github.com/anomalyco/opencode/pull/51938
+const OPENCODE_2_MIN_VERSION = '2.0.19';
+
+// 1.x prints a bare version and 2.x `opencode v<version>`. 2.x prereleases
+// are versioned 0.0.0-*, so the shape tells the releases apart, not the number.
+function readOpencodeVersionOutput(stdout: string): VersionOutputReading {
+  const firstLine = stdout.split(/\r?\n/)[0].trim();
+  if (firstLine.startsWith('opencode v')) {
+    const version = firstLine.slice('opencode v'.length);
+    if (!valid(version) || prerelease(version) !== null) {
+      return {
+        kind: 'unsupported',
+        reason: `OpenCode ${version} is not a stable release, so Nx can't tell whether it sends its starting prompt; install a stable release of OpenCode, ${OPENCODE_2_MIN_VERSION} or later`,
+      };
+    }
+    if (lt(version, OPENCODE_2_MIN_VERSION)) {
+      return {
+        kind: 'unsupported',
+        reason: `OpenCode ${version} can leave its starting prompt unsent; update OpenCode to ${OPENCODE_2_MIN_VERSION} or later`,
+      };
+    }
+    return { kind: 'launchable', details: { opencodeMajor: 2 } };
+  }
+  return /^\d+\.\d+\.\d+/.test(firstLine)
+    ? { kind: 'launchable', details: { opencodeMajor: 1 } }
+    : { kind: 'unrecognized' };
+}
 
 // --- GitHub Copilot CLI --------------------------------------------------
 
@@ -162,7 +195,10 @@ const copilotCliDefinition: AgentDefinition = {
   binaryNames: ['copilot'],
   wellKnownPaths: copilotCliWellKnownPaths,
   // AWS Copilot CLI also installs a `copilot` binary.
-  versionOutputPrefix: 'GitHub Copilot CLI ',
+  readVersionOutput: (stdout) =>
+    stdout.startsWith('GitHub Copilot CLI ')
+      ? { kind: 'launchable', details: {} }
+      : { kind: 'unrecognized' },
 };
 
 // --- Registry ------------------------------------------------------------

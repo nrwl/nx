@@ -183,7 +183,7 @@ describe('detectInstalledAgents', () => {
     const copilotLike = makeDefinition({
       id: 'copilot',
       binaryNames: ['copilot'],
-      versionOutputPrefix: 'GitHub Copilot CLI ',
+      readVersionOutput: () => ({ kind: 'unrecognized' }),
     });
 
     beforeEach(() => {
@@ -230,6 +230,7 @@ describe('detectInstalledAgents', () => {
           binaries: expectedDirs.map((dir) => ({
             binary: join(dir, 'copilot.CMD'),
             reason: expect.any(String),
+            unsupported: false,
           })),
         });
       }

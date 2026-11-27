@@ -5,6 +5,7 @@ import {
 } from '../definitions';
 import {
   type AgentId,
+  type DetectedInstalledAgent,
   type InvocationSpec,
   MIGRATE_RUNS_RELATIVE_DIR,
 } from '../types';
@@ -53,10 +54,15 @@ function copilotInstructionsDirs(runId: string): string {
   return configured ? `${configured},${dir}` : dir;
 }
 
+type MasterInvocationAgent = Pick<
+  DetectedInstalledAgent,
+  'id' | 'opencodeMajor'
+>;
+
 // Keyed by agent id so a new agent fails to compile until it gets a builder.
 const builders: Record<
   AgentId,
-  (ctx: MasterInvocationContext) => InvocationSpec
+  (ctx: MasterInvocationContext, agent: MasterInvocationAgent) => InvocationSpec
 > = {
   'claude-code': (ctx) => {
     const allowedTools = claudeCodeHandoffAllowedTools(ctx.runId);
@@ -78,19 +84,53 @@ const builders: Record<
       masterBootstrapPrompt(ctx),
     ],
   }),
-  opencode: (ctx) => ({
-    args: [
-      '--agent',
-      OPENCODE_AGENT_NAME,
-      '--prompt',
-      masterBootstrapPrompt(ctx),
-    ],
-    env: {
-      OPENCODE_CONFIG_CONTENT: JSON.stringify({
-        agent: { [OPENCODE_AGENT_NAME]: { prompt: masterInvariant(ctx) } },
-      }),
-    },
-  }),
+  opencode: (ctx, { opencodeMajor }) => {
+    switch (opencodeMajor) {
+      case 1:
+        return {
+          args: [
+            '--agent',
+            OPENCODE_AGENT_NAME,
+            '--prompt',
+            masterBootstrapPrompt(ctx),
+          ],
+          env: {
+            OPENCODE_CONFIG_CONTENT: JSON.stringify({
+              agent: {
+                [OPENCODE_AGENT_NAME]: { prompt: masterInvariant(ctx) },
+              },
+            }),
+          },
+        };
+      case 2:
+        return {
+          // Without it the session joins OpenCode's shared server, which keeps
+          // the config of the session that started it.
+          args: ['--standalone', '--prompt', masterBootstrapPrompt(ctx)],
+          env: {
+            // This command has no `--agent`. Its UI submits `--prompt` with the
+            // first listed agent, which is `build` before config agents load
+            // and, as the default, after.
+            OPENCODE_CONFIG_CONTENT: JSON.stringify({
+              default_agent: 'build',
+              agents: {
+                build: {
+                  system: masterInvariant(ctx),
+                  // Build's defaults, which a user config can override to list
+                  // another agent first.
+                  mode: 'primary',
+                  hidden: false,
+                },
+              },
+            }),
+          },
+        };
+      default: {
+        const unhandled: never = opencodeMajor;
+        throw new Error(`Unhandled OpenCode major version: ${unhandled}`);
+      }
+    }
+  },
   copilot: (ctx) => {
     const allowTool = copilotCliHandoffAllowTool(ctx.runId);
     return {
@@ -113,8 +153,8 @@ const builders: Record<
 };
 
 export function buildMasterInvocation(
-  agentId: AgentId,
+  agent: MasterInvocationAgent,
   ctx: MasterInvocationContext
 ): InvocationSpec {
-  return builders[agentId](ctx);
+  return builders[agent.id](ctx, agent);
 }

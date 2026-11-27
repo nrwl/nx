@@ -57,6 +57,8 @@ export interface DetectedInstalledAgent {
   displayName: string;
   binary: string;
   source: 'path' | 'well-known';
+  /** Read from `--version`: OpenCode 2.x does not take the 1.x launch arguments. */
+  opencodeMajor?: 1 | 2;
 }
 
 /**
@@ -88,12 +90,23 @@ export interface AgentDefinition {
   /** Absolute paths to probe as a fallback when PATH lookup misses. */
   wellKnownPaths(): string[];
   /**
-   * How `<binary> --version` output starts for this agent, set when another
-   * product installs a binary under the same name. Nx runs that check only
-   * after the user opts in to the agentic flow.
+   * Reads `<binary> --version` output, set when another product installs a
+   * binary under the same name or when releases differ in how nx launches
+   * them. Nx runs that check only after the user opts in to the agentic flow.
    */
-  versionOutputPrefix?: string;
+  readVersionOutput?(stdout: string): VersionOutputReading;
 }
+
+/** A launchable binary's details are added to its detected agent. */
+export type VersionOutputReading =
+  | {
+      kind: 'launchable';
+      details: Pick<DetectedInstalledAgent, 'opencodeMajor'>;
+    }
+  // This agent at a release nx cannot launch. The reason tells the user what to do.
+  | { kind: 'unsupported'; reason: string }
+  // Another product, or output nx cannot read.
+  | { kind: 'unrecognized' };
 
 /**
  * Output of the agent's handoff file, written at the end of an agentic step.

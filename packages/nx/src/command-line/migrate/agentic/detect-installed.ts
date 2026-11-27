@@ -10,7 +10,11 @@ import { IS_WASM, killProcessTree } from '../../../native';
 import { logger } from '../../../utils/logger';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { singleLine } from '../text';
-import { AgentDefinition, DetectedInstalledAgent } from './types';
+import {
+  AgentDefinition,
+  DetectedInstalledAgent,
+  type VersionOutputReading,
+} from './types';
 import { adaptSpawnForWindowsShim } from './windows-cmd';
 
 const VERSION_PROBE_DEADLINE_MS = 5_000;
@@ -114,6 +118,8 @@ export async function detectInstalledAgents(
 export interface RejectedAgentBinary {
   binary: string;
   reason: string;
+  /** The agent at a release nx cannot launch, not another product. */
+  unsupported: boolean;
 }
 
 export type AgentIdentity =
@@ -121,33 +127,63 @@ export type AgentIdentity =
   | { kind: 'rejected'; binaries: RejectedAgentBinary[] };
 
 /**
- * Confirms a detected agent. When its definition sets `versionOutputPrefix`,
+ * Confirms a detected agent. When its definition sets `readVersionOutput`,
  * runs `<binary> --version` on each binary carrying its name, PATH first,
- * until one's output starts with the prefix. Call it only once the user has
- * opted in to the agentic flow, since it executes those binaries.
+ * until the definition reads one as launchable, and adds what it read to the
+ * agent. Call it only once the user has opted in to the agentic flow, since
+ * it executes those binaries.
  */
 export async function confirmAgentIdentity(
   definition: AgentDefinition,
   agent: DetectedInstalledAgent
 ): Promise<AgentIdentity> {
-  const prefix = definition.versionOutputPrefix;
-  if (prefix === undefined) {
+  if (definition.readVersionOutput === undefined) {
     return { kind: 'confirmed', agent };
   }
   const binaries: RejectedAgentBinary[] = [];
   for (const candidate of await findCandidates(definition)) {
     const probe = await probeVersion(candidate.binary);
-    if (probe.kind === 'ran' && probe.stdout.startsWith(prefix)) {
-      return {
-        kind: 'confirmed',
-        agent: { ...agent, binary: candidate.binary, source: candidate.source },
-      };
+    const reading: VersionOutputReading =
+      probe.kind === 'ran'
+        ? definition.readVersionOutput(probe.stdout)
+        : { kind: 'unrecognized' };
+    let rejected: RejectedAgentBinary;
+    switch (reading.kind) {
+      case 'launchable':
+        return {
+          kind: 'confirmed',
+          agent: {
+            ...agent,
+            ...reading.details,
+            binary: candidate.binary,
+            source: candidate.source,
+          },
+        };
+      case 'unsupported':
+        rejected = {
+          binary: candidate.binary,
+          reason: reading.reason,
+          unsupported: true,
+        };
+        break;
+      case 'unrecognized':
+        rejected = {
+          binary: candidate.binary,
+          reason: rejectionReason(probe),
+          unsupported: false,
+        };
+        break;
+      default: {
+        const unhandled: never = reading;
+        throw new Error(
+          `Unhandled \`--version\` reading: ${JSON.stringify(unhandled)}`
+        );
+      }
     }
-    const reason = rejectionReason(probe);
     logger.verbose(
-      `Agent detection: ${candidate.binary} is not ${definition.displayName}: ${reason}.`
+      `Agent detection: ${rejected.binary} cannot be launched as ${definition.displayName}: ${rejected.reason}.`
     );
-    binaries.push({ binary: candidate.binary, reason });
+    binaries.push(rejected);
   }
   return { kind: 'rejected', binaries };
 }
