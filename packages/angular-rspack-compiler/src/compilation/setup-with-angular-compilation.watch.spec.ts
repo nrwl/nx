@@ -41,6 +41,8 @@ it('should apply an edit to a tsconfig the project tsconfig extends indirectly',
         target: 'ES2022',
         module: 'ES2022',
         moduleResolution: 'bundler',
+        lib: ['ES2022'],
+        skipLibCheck: true,
         noUnusedLocals,
       },
     });
