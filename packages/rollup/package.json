@@ -34,6 +34,9 @@
       ],
       "internal": [
         "dist/internal.d.ts"
+      ],
+      "oxc-declarations": [
+        "dist/oxc-declarations.d.ts"
       ]
     }
   },
@@ -74,6 +77,11 @@
       "@nx/nx-source": "./internal.ts",
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.js"
+    },
+    "./oxc-declarations": {
+      "@nx/nx-source": "./oxc-declarations.ts",
+      "types": "./dist/oxc-declarations.d.ts",
+      "default": "./dist/oxc-declarations.js"
     }
   },
   "dependencies": {
@@ -95,16 +103,21 @@
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
-    "rollup": "^3.0.0 || ^4.0.0"
+    "rollup": "^3.0.0 || ^4.0.0",
+    "oxc-transform": "^0.144.0"
   },
   "peerDependenciesMeta": {
     "rollup": {
+      "optional": true
+    },
+    "oxc-transform": {
       "optional": true
     }
   },
   "devDependencies": {
     "nx": "workspace:*",
-    "source-map-js": "^1.2.0"
+    "source-map-js": "^1.2.0",
+    "oxc-transform": "^0.144.0"
   },
   "publishConfig": {
     "access": "public"
