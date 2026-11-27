@@ -209,6 +209,7 @@ describe('spawnMasterSession', () => {
           id: 'opencode',
           displayName: 'OpenCode',
           binary: '/usr/local/bin/opencode',
+          opencodeMajor: 1,
         }),
       })
     );

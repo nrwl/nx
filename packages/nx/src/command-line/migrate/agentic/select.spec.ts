@@ -488,7 +488,7 @@ describe('resolveAgentic', () => {
 
   describe('checking agent identity after opt-in', () => {
     const rejectedLine =
-      '  - /usr/local/bin/copilot is not copilot: `--version` printed "copilot version: v1.34.1"';
+      '  - /usr/local/bin/copilot cannot be launched as copilot: `--version` printed "copilot version: v1.34.1"';
 
     beforeEach(() => {
       mockConfirm.mockImplementation(async (_definition, agent) =>
@@ -570,6 +570,57 @@ describe('resolveAgentic', () => {
         bodyLines: expect.arrayContaining([rejectedLine]),
       });
     });
+
+    it.each([
+      [
+        'warns about an unsupported release',
+        true,
+        [
+          [
+            {
+              title: 'opencode could not be used.',
+              bodyLines: [
+                '  - /usr/local/bin/opencode cannot be launched as opencode: update OpenCode',
+              ],
+            },
+          ],
+        ],
+      ],
+      ['stays quiet about another product', false, []],
+    ])(
+      '%s it skips while another agent runs',
+      async (_label, unsupported, warnings) => {
+        mockConfirm.mockImplementation(async (_definition, agent) =>
+          agent.id === 'opencode'
+            ? {
+                kind: 'rejected',
+                binaries: [
+                  {
+                    binary: agent.binary,
+                    reason: 'update OpenCode',
+                    unsupported,
+                  },
+                ],
+              }
+            : { kind: 'confirmed', agent }
+        );
+        mockDetect.mockResolvedValue([
+          detected('claude-code'),
+          detected('opencode'),
+        ]);
+
+        const result = await resolveAgentic({
+          agentic: true,
+          migrations: [{ prompt: 'x.md' }],
+        });
+
+        expect(result).toMatchObject({
+          kind: 'enabled',
+          selectedAgent: { id: 'claude-code' },
+        });
+        expect(mockOutputWarn.mock.calls).toEqual(warnings);
+      }
+    );
 
     it('checks only the requested agent when it is usable', async () => {
       mockDetect.mockResolvedValue([

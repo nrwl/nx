@@ -15,6 +15,7 @@ import { confirmAgentIdentity } from './detect-installed';
 import type { DetectedInstalledAgent } from './types';
 
 const copilot = AGENT_DEFINITIONS.find((d) => d.id === 'copilot')!;
+const opencode = AGENT_DEFINITIONS.find((d) => d.id === 'opencode')!;
 
 const GITHUB = '#!/bin/sh\necho "GitHub Copilot CLI 1.0.114."\n';
 const AWS = '#!/bin/sh\necho "copilot version: v1.34.1"\n';
@@ -58,24 +59,27 @@ describe.skipIf(process.platform === 'win32')(
       rmSync(root, { recursive: true, force: true });
     });
 
-    function standIn(dir: string, script: string): string {
+    function standIn(dir: string, script: string, name = 'copilot'): string {
       mkdirSync(join(root, dir), { recursive: true });
-      const binary = join(root, dir, 'copilot');
+      const binary = join(root, dir, name);
       writeFileSync(binary, script, { mode: 0o755 });
       return binary;
     }
 
-    // Only the stand-ins' directories, so a `copilot` installed on the machine
+    // Only the stand-ins' directories, so an agent installed on the machine
     // can't become a candidate. An empty PATH would search the current directory.
     function putOnPath(...binaries: string[]): void {
       process.env.PATH = binaries.map(dirname).join(delimiter) || root;
     }
 
-    // Detection matches by name, so it hands over the first `copilot` found.
-    function detectedAt(binary: string): DetectedInstalledAgent {
+    // Detection matches by name, so it hands over the first binary found.
+    function detectedAt(
+      binary: string,
+      definition = copilot
+    ): DetectedInstalledAgent {
       return {
-        id: 'copilot',
-        displayName: copilot.displayName,
+        id: definition.id,
+        displayName: definition.displayName,
         binary,
         source: 'path',
       };
@@ -113,10 +117,88 @@ describe.skipIf(process.platform === 'win32')(
 
         expect(identity).toEqual({
           kind: 'rejected',
-          binaries: [{ binary: aws, reason: AWS_REASON }],
+          binaries: [{ binary: aws, reason: AWS_REASON, unsupported: false }],
         });
       }
     );
+
+    describe('opencode', () => {
+      // Both add well-known paths outside the stand-ins.
+      beforeEach(() => {
+        vi.stubEnv('OPENCODE_INSTALL_DIR', undefined);
+        vi.stubEnv('XDG_BIN_DIR', undefined);
+      });
+
+      afterEach(() => vi.unstubAllEnvs());
+
+      it.each([
+        ['1.19.6', 1],
+        ['opencode v2.0.19', 2],
+        ['opencode v2.4.1', 2],
+      ])(
+        'reads the release from `--version` printing "%s"',
+        async (printed, opencodeMajor) => {
+          const binary = standIn(
+            'opencode',
+            `#!/bin/sh\necho "${printed}"\n`,
+            'opencode'
+          );
+          putOnPath(binary);
+
+          const identity = await confirmAgentIdentity(
+            opencode,
+            detectedAt(binary, opencode)
+          );
+
+          expect(identity).toEqual({
+            kind: 'confirmed',
+            agent: { ...detectedAt(binary, opencode), opencodeMajor },
+          });
+        }
+      );
+
+      it.each([
+        ['matches no release', 'local', '`--version` printed "local"', false],
+        [
+          'predates 2.0.19',
+          'opencode v2.0.18',
+          'OpenCode 2.0.18 can leave its starting prompt unsent; update OpenCode to 2.0.19 or later',
+          true,
+        ],
+        [
+          'is a prerelease',
+          'opencode v0.0.0-beta-19507',
+          "OpenCode 0.0.0-beta-19507 is not a stable release, so Nx can't tell whether it sends its starting prompt; install a stable release of OpenCode, 2.0.19 or later",
+          true,
+        ],
+        [
+          'carries no version',
+          'opencode vlocal',
+          "OpenCode local is not a stable release, so Nx can't tell whether it sends its starting prompt; install a stable release of OpenCode, 2.0.19 or later",
+          true,
+        ],
+      ])(
+        'rejects an opencode whose `--version` output %s and says why',
+        async (_label, printed, reason, unsupported) => {
+          const binary = standIn(
+            'opencode',
+            `#!/bin/sh\necho "${printed}"\n`,
+            'opencode'
+          );
+          putOnPath(binary);
+
+          const identity = await confirmAgentIdentity(
+            opencode,
+            detectedAt(binary, opencode)
+          );
+
+          expect(identity).toEqual({
+            kind: 'rejected',
+            binaries: [{ binary, reason, unsupported }],
+          });
+        }
+      );
+    });
 
     it('stops a hung probe at its deadline, with its children, and moves on', async () => {
       const pidFile = join(root, 'hung-child.pid');

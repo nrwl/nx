@@ -130,7 +130,7 @@ export async function spawnMasterSession(
       policy
     );
     sentinelPath = sessionCompleteSentinel(runRoot, runId, broker.nonce);
-    const spec = buildMasterInvocation(agent.id, {
+    const spec = buildMasterInvocation(agent, {
       runId,
       reconcileCommand,
       runbookPath: prosePath(runRoot, runbookPath),
