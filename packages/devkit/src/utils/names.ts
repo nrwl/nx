@@ -37,11 +37,11 @@ function toClassName(str: string): string {
  */
 function toPropertyName(s: string): string {
   return s
-    .replace(/([^a-zA-Z0-9])+(.)?/g, (_, __, chr) =>
+    .replace(/([^\p{L}\p{N}])+(.)?/gu, (_, __, chr) =>
       chr ? chr.toUpperCase() : ''
     )
-    .replace(/[^a-zA-Z\d]/g, '')
-    .replace(/^([A-Z])/, (m) => m.toLowerCase());
+    .replace(/[^\p{L}\p{N}]/gu, '')
+    .replace(/^(\p{Lu})/u, (m) => m.toLowerCase());
 }
 
 /**
@@ -49,8 +49,9 @@ function toPropertyName(s: string): string {
  */
 function toConstantName(s: string): string {
   const normalizedS = s.toUpperCase() === s ? s.toLowerCase() : s;
-  return toFileName(toPropertyName(normalizedS))
-    .replace(/([^a-zA-Z0-9])/g, '_')
+  return toClassName(normalizedS)
+    .replace(/(\p{Lu}+)(\p{Lu}\p{Ll})/gu, '$1_$2')
+    .replace(/(\p{Ll}|\p{N})(\p{Lu})/gu, '$1_$2')
     .toUpperCase();
 }
 

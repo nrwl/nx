@@ -49,4 +49,21 @@ describe('names', () => {
     expect(names('_foo_bar').constantName).toEqual('FOO_BAR');
     expect(names('FOO_BAR').constantName).toEqual('FOO_BAR');
   });
+
+  it('should support non-ASCII names', () => {
+    expect(names('Écran').className).toEqual('Écran');
+    expect(names('Écran').propertyName).toEqual('écran');
+    expect(names('Écran').constantName).toEqual('ÉCRAN');
+    expect(names('café-menu').className).toEqual('CaféMenu');
+    expect(names('café-menu').propertyName).toEqual('caféMenu');
+    expect(names('café-menu').constantName).toEqual('CAFÉ_MENU');
+    expect(names('меню').className).toEqual('Меню');
+    expect(names('меню').propertyName).toEqual('меню');
+    expect(names('меню').constantName).toEqual('МЕНЮ');
+  });
+
+  it('should not split leading acronyms in constant names', () => {
+    expect(names('HTTPServer').constantName).toEqual('HTTP_SERVER');
+    expect(names('APIClient').constantName).toEqual('API_CLIENT');
+  });
 });
