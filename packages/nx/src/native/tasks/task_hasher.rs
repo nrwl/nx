@@ -18,7 +18,7 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        FileMap, FilesExpansion, FilesExpansionCache, JsonHashResult, OwnerFolderStateCache,
+        FilesExpansion, FilesExpansionCache, JsonHashResult, OwnerFolderStateCache,
         ProjectFileIndicesCache, ProjectFileSetCache, SettledFiles, Source, TrackedBatch,
         WorkspaceFileIndex, WorkspaceFileIndicesCache, WorkspaceFileSetCache,
         collect_project_file_paths_cached, collect_project_files,
@@ -1332,11 +1332,9 @@ impl TaskHasher {
             HashInstruction::OwnerFolderState(root) => {
                 let digest = hash_owner_folder_state_cached(
                     root,
-                    &FileMap {
-                        project_root_mappings,
-                        project_file_map: &self.project_file_map,
-                        all_workspace_files: &self.all_workspace_files,
-                    },
+                    project_root_mappings,
+                    &self.project_file_map,
+                    &self.all_workspace_files,
                     &self.owner_folder_state_cache,
                 );
                 trace!(parent: &span, "hash_project_folder_state: {:?}", now.elapsed());

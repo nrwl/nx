@@ -31,13 +31,6 @@ const FOLDER_STATE_VERSION: &[u8] = b"folder-state:v1";
 /// computed from is fixed for the hasher's lifetime.
 pub(crate) type OwnerFolderStateCache = OnceCache<String>;
 
-/// The file map, as the folder state reads it.
-pub(crate) struct FileMap<'a> {
-    pub project_root_mappings: &'a ProjectRootMappings,
-    pub project_file_map: &'a HashMap<String, Vec<FileData>>,
-    pub all_workspace_files: &'a [FileData],
-}
-
 /// The kind of a file, from its name: everything after the first dot, so
 /// `a.component.spec.ts` is `component.spec.ts` and `eslint.config.mjs` is
 /// `config.mjs`. A name without a dot, or one that starts with a dot
@@ -90,17 +83,20 @@ pub fn hash_folder_state<'a>(files: impl IntoIterator<Item = &'a str>) -> String
 /// folder (`.` for the workspace root), minus those of projects nested below
 /// it. The project owning `root` holds exactly those files; with no owning
 /// project, they are the files under it that no project owns.
-pub(crate) fn hash_owner_folder_state(root: &str, files: &FileMap) -> String {
+pub(crate) fn hash_owner_folder_state(
+    root: &str,
+    project_root_mappings: &ProjectRootMappings,
+    project_file_map: &HashMap<String, Vec<FileData>>,
+    all_workspace_files: &[FileData],
+) -> String {
     let prefix = match root {
         "." => String::new(),
         root => format!("{root}/"),
     };
     let under = |file: &&str| file.starts_with(&prefix);
-    let mappings = files.project_root_mappings;
-    match find_project_for_path(root, mappings) {
+    match find_project_for_path(root, project_root_mappings) {
         Some(owner) => hash_folder_state(
-            files
-                .project_file_map
+            project_file_map
                 .get(owner)
                 .into_iter()
                 .flatten()
@@ -108,23 +104,29 @@ pub(crate) fn hash_owner_folder_state(root: &str, files: &FileMap) -> String {
                 .filter(under),
         ),
         None => hash_folder_state(
-            files
-                .all_workspace_files
+            all_workspace_files
                 .iter()
                 .map(|file| file.file.as_str())
                 .filter(under)
-                .filter(|file| find_project_for_path(file, mappings).is_none()),
+                .filter(|file| find_project_for_path(file, project_root_mappings).is_none()),
         ),
     }
 }
 
 pub(crate) fn hash_owner_folder_state_cached(
     root: &str,
-    files: &FileMap,
+    project_root_mappings: &ProjectRootMappings,
+    project_file_map: &HashMap<String, Vec<FileData>>,
+    all_workspace_files: &[FileData],
     cache: &OwnerFolderStateCache,
 ) -> Arc<String> {
     let Ok(digest) = cache.get_or_try_init(root.to_string(), || {
-        Ok::<_, Infallible>(hash_owner_folder_state(root, files))
+        Ok::<_, Infallible>(hash_owner_folder_state(
+            root,
+            project_root_mappings,
+            project_file_map,
+            all_workspace_files,
+        ))
     });
     digest
 }
@@ -181,15 +183,17 @@ mod tests {
 
     impl Workspace {
         fn state(&self, root: &str) -> String {
-            hash_owner_folder_state(root, &self.files())
+            hash_owner_folder_state(root, &self.mappings, &self.project_files, &self.all)
         }
 
-        fn files(&self) -> FileMap<'_> {
-            FileMap {
-                project_root_mappings: &self.mappings,
-                project_file_map: &self.project_files,
-                all_workspace_files: &self.all,
-            }
+        fn state_cached(&self, root: &str, cache: &OwnerFolderStateCache) -> Arc<String> {
+            hash_owner_folder_state_cached(
+                root,
+                &self.mappings,
+                &self.project_files,
+                &self.all,
+                cache,
+            )
         }
     }
 
@@ -368,11 +372,8 @@ mod tests {
     fn the_cache_computes_once_per_folder() {
         let cache = OwnerFolderStateCache::new();
         let before = lib_a(&["libs/a/project.json"]);
-        let first = hash_owner_folder_state_cached("libs/a", &before.files(), &cache);
+        let first = before.state_cached("libs/a", &cache);
         let changed = lib_a(&["libs/a/project.json", "libs/a/x.ts"]);
-        assert_eq!(
-            hash_owner_folder_state_cached("libs/a", &changed.files(), &cache),
-            first
-        );
+        assert_eq!(changed.state_cached("libs/a", &cache), first);
     }
 }
