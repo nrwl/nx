@@ -44,6 +44,10 @@ enum BlockType {
     TryCatchFinally,
 }
 
+fn is_module_loader_name(name: &str) -> bool {
+    matches!(name, "module" | "parent" | "main" | "mainModule")
+}
+
 fn is_identifier(token: &Token) -> bool {
     matches!(token, Token::Word(Ident(_)))
 }
@@ -52,6 +56,9 @@ struct State<'a> {
     lexer: Lexer<'a>,
     pub current_token: Option<TokenAndSpan>,
     pub previous_token: Option<TokenAndSpan>,
+    pub receiver_is_module_loader: bool,
+    paren_groups_with_module_loader: Vec<bool>,
+    pub last_closed_paren_group_has_module_loader: bool,
     pub import_type: ImportType,
     open_brace_count: i128,
     open_bracket_count: i128,
@@ -68,6 +75,9 @@ impl<'a> State<'a> {
             lexer,
             current_token: None,
             previous_token: None,
+            receiver_is_module_loader: false,
+            paren_groups_with_module_loader: vec![],
+            last_closed_paren_group_has_module_loader: false,
             open_brace_count: 0,
             open_bracket_count: 0,
             open_angle_count: 0,
@@ -133,7 +143,34 @@ impl<'a> State<'a> {
                 Token::RBracket => {
                     self.open_bracket_count -= 1;
                 }
+                Token::LParen => {
+                    self.paren_groups_with_module_loader.push(false);
+                }
+                Token::RParen => {
+                    let has_module_loader =
+                        self.paren_groups_with_module_loader.pop().unwrap_or(false);
+                    self.last_closed_paren_group_has_module_loader = has_module_loader;
+                    if let Some(enclosing) = self.paren_groups_with_module_loader.last_mut() {
+                        *enclosing |= has_module_loader;
+                    }
+                }
+                Token::Word(Ident(ident)) if is_module_loader_name(ident.as_ref()) => {
+                    if let Some(group) = self.paren_groups_with_module_loader.last_mut() {
+                        *group = true;
+                    }
+                }
                 _ => {}
+            }
+
+            if !matches!(
+                &current.token,
+                Token::Dot | Token::QuestionMark | Token::Bang
+            ) {
+                self.receiver_is_module_loader = match &current.token {
+                    Token::Word(Ident(ident)) => is_module_loader_name(ident.as_ref()),
+                    Token::RParen => self.last_closed_paren_group_has_module_loader,
+                    _ => false,
+                };
             }
 
             // Keep track of when we are in an object declaration because colons mean different things
@@ -507,8 +544,18 @@ fn find_specifier_in_export(state: &mut State) -> Option<(String, ImportType)> {
 fn find_specifier_in_require(state: &mut State) -> Option<(String, ImportType)> {
     let mut import = None;
     let mut set = false;
+    let mut token_index = 0;
+    let mut previous_was_dot = false;
     while let Some(current) = state.next() {
+        token_index += 1;
+        let is_dot = matches!(current.token, Token::Dot);
+        let is_member_of_receiver = token_index == 2 && previous_was_dot;
+        previous_was_dot = is_dot;
+
         match &current.token {
+            Token::Word(Ident(ident)) if is_member_of_receiver && ident.as_ref() == "require" => {
+                return None;
+            }
             // This opens the require call
             Token::LParen |
             // Matches things like require.resolve
@@ -662,6 +709,14 @@ fn process_file(
     let mut dynamic_import_expressions: Vec<(String, BytePos)> = vec![];
 
     loop {
+        let follows_dot = matches!(
+            &state.current_token,
+            Some(TokenAndSpan {
+                token: Token::Dot,
+                ..
+            })
+        );
+        let follows_module_dot = follows_dot && state.receiver_is_module_loader;
         let current_token = state.next();
 
         // This is the end of the file
@@ -678,6 +733,11 @@ fn process_file(
                     continue;
                 }
             };
+            let is_module_require =
+                follows_module_dot && matches!(word, Ident(ident) if ident.as_ref() == "require");
+            if follows_dot && !is_module_require {
+                continue;
+            }
             let import = match word {
                 // This is an import keyword
                 Keyword(keyword) if *keyword == Import => {
@@ -1810,6 +1870,174 @@ import(myTag`react@${version}`);
             result.static_import_expressions,
             vec![String::from("path"), String::from("fs")]
         );
+    }
+
+    #[test]
+    fn should_not_treat_member_calls_named_import_or_require_as_module_imports() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child("test.ts")
+            .write_str(
+                r#"
+      const registry = {
+        import(name: string) { return name; },
+        require(name: string) { return name; },
+      };
+
+      registry.import("lodash");
+      registry.require("chalk");
+      registry?.import("left-pad");
+      registry?.require("is-odd");
+      registry
+        .import("multi-line");
+      this.require("on-this");
+      scope.child.import("Node");
+      registry.
+        import("dot-then-newline");
+
+      const chalk = require("real-require");
+      const lazy = import("real-dynamic");
+      const { require: renamed } = module;
+      const meta = import.meta.url;
+      const merged = Object.assign({}, ...require("spread-real"));
+      registry.use();
+      import("after-member-call");
+                "#,
+            )
+            .unwrap();
+
+        let test_file_path = temp_dir.display().to_string() + "/test.ts";
+
+        let results = find_imports(HashMap::from([(
+            String::from("a"),
+            vec![test_file_path.clone()],
+        )]))
+        .unwrap();
+
+        let result = results.get(0).unwrap();
+
+        assert_eq!(
+            result.static_import_expressions,
+            vec![String::from("real-require"), String::from("spread-real")]
+        );
+        assert_eq!(
+            result.dynamic_import_expressions,
+            vec![
+                String::from("real-dynamic"),
+                String::from("after-member-call")
+            ]
+        );
+    }
+
+    #[test]
+    fn should_treat_module_require_calls_as_module_imports() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child("test.ts")
+            .write_str(
+                r#"
+      const first = module.require("from-module");
+      const second = module?.require("from-optional-module");
+      const third = require.main.require("from-main");
+      const fourth = require.resolve("from-resolve");
+      const fifth = require("from-require");
+      const sixth = module.parent.require("from-parent");
+      const seventh = process.mainModule.require("from-main-module");
+      const eighth = require.main?.require("from-optional-main");
+      const ninth = module!.require("from-non-null");
+      const tenth = (module).require("from-grouped");
+      const eleventh = (module as any).require("from-assertion");
+      const twelfth = (<any>module).require("from-angle-assertion");
+      const thirteenth = (module.parent).require("from-grouped-parent");
+      const fourteenth = (require.main).require("from-grouped-main");
+      const fifteenth = (module as any)!.require("from-assertion-non-null");
+      const sixteenth = ((module)).require("from-nested-group");
+      const seventeenth = (module)?.require("from-grouped-optional");
+      const eighteenth = module!?.require("from-bang-optional");
+      const nineteenth = module.parent!?.require("from-parent-bang-optional");
+      const twentieth = (module as any)!?.require("from-assertion-bang-optional");
+      foo(module);
+      (registry).require("from-after-loader-group");
+      registry.require("from-registry");
+      (registry).require("from-grouped-registry");
+      (registry as any).require("from-asserted-registry");
+                "#,
+            )
+            .unwrap();
+
+        let test_file_path = temp_dir.display().to_string() + "/test.ts";
+
+        let results = find_imports(HashMap::from([(
+            String::from("a"),
+            vec![test_file_path.clone()],
+        )]))
+        .unwrap();
+
+        let result = results.get(0).unwrap();
+
+        assert_eq!(
+            result.static_import_expressions,
+            vec![
+                String::from("from-module"),
+                String::from("from-optional-module"),
+                String::from("from-main"),
+                String::from("from-resolve"),
+                String::from("from-require"),
+                String::from("from-parent"),
+                String::from("from-main-module"),
+                String::from("from-optional-main"),
+                String::from("from-non-null"),
+                String::from("from-grouped"),
+                String::from("from-assertion"),
+                String::from("from-angle-assertion"),
+                String::from("from-grouped-parent"),
+                String::from("from-grouped-main"),
+                String::from("from-assertion-non-null"),
+                String::from("from-nested-group"),
+                String::from("from-grouped-optional"),
+                String::from("from-bang-optional"),
+                String::from("from-parent-bang-optional"),
+                String::from("from-assertion-bang-optional"),
+            ]
+        );
+        assert!(result.dynamic_import_expressions.is_empty());
+    }
+
+    #[test]
+    fn should_not_treat_a_require_member_call_on_a_require_receiver_as_a_module_import() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child("test.mjs")
+            .write_str(
+                r#"
+      const require = { require: (name) => name };
+      require.require("chalk");
+      const kept = require("real-require");
+      const resolved = require.resolve("real-resolve");
+      const nested = require(require("real-nested"));
+                "#,
+            )
+            .unwrap();
+
+        let test_file_path = temp_dir.display().to_string() + "/test.mjs";
+
+        let results = find_imports(HashMap::from([(
+            String::from("a"),
+            vec![test_file_path.clone()],
+        )]))
+        .unwrap();
+
+        let result = results.get(0).unwrap();
+
+        assert_eq!(
+            result.static_import_expressions,
+            vec![
+                String::from("real-require"),
+                String::from("real-resolve"),
+                String::from("real-nested")
+            ]
+        );
+        assert!(result.dynamic_import_expressions.is_empty());
     }
 
     /// Based on `swc_ecma_dep_graph::analyze_dependencies`, which no longer builds against current swc.
