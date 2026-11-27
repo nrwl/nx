@@ -9,4 +9,9 @@ public record ProjectMetadata
     /// Technologies used by this project (e.g., "dotnet", "csharp", "test").
     /// </summary>
     public List<string> Technologies { get; init; } = new();
+
+    /// <summary>
+    /// Evaluated package identity and per-target-framework facts under <c>metadata.dotnet</c>.
+    /// </summary>
+    public DotnetProjectMetadata? Dotnet { get; init; }
 }
