@@ -56,6 +56,7 @@ import {
   processSyncGeneratorResultErrors,
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
+import { isConfigureAiAgentsEnabled } from '../ai/is-configure-ai-agents-enabled';
 import { createTaskGraph } from './create-task-graph';
 import type { TaskPlanningContext } from '../hasher/task-planning-context';
 
@@ -664,7 +665,7 @@ export async function runTasksForCommand(
       printSummary();
     }
 
-    await printConfigureAiAgentsDisclaimer();
+    await printConfigureAiAgentsDisclaimer(nxJson);
 
     const nxKey = await nxKeyPromise;
     if (nxKey) logger.log(createNxKeyLicenseeInformation(nxKey));
@@ -685,9 +686,14 @@ export async function runTasksForCommand(
   }
 }
 
-async function printConfigureAiAgentsDisclaimer(): Promise<void> {
+async function printConfigureAiAgentsDisclaimer(
+  nxJson: NxJsonConfiguration
+): Promise<void> {
   try {
     if (isCI()) {
+      return;
+    }
+    if (!isConfigureAiAgentsEnabled(nxJson)) {
       return;
     }
     if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
