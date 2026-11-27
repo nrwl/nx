@@ -1664,6 +1664,9 @@ fn deferred_tasks(
         all_outputs.sort_unstable();
         all_outputs.dedup();
         if !all_outputs.is_empty() {
+            // Groups share interned globs, so resolve each glob's root once.
+            let mut overlapping: hashbrown::HashMap<*const str, Option<String>> =
+                hashbrown::HashMap::new();
             for id in Plan::union_ids(&disk_plans) {
                 let instruction = pool.get(id);
                 if let HashInstruction::IgnoredFileSet {
@@ -1672,15 +1675,20 @@ fn deferred_tasks(
                     ..
                 } = instruction.value()
                 {
-                    let scope = ProjectScope::new(project_roots);
+                    let mut scope = None;
                     let roots: Vec<_> = globs
                         .iter()
                         .filter(|g| !g.starts_with('!'))
                         .filter_map(|g| {
-                            let root = walk_root(g);
-                            if !overlaps_any(&all_outputs, &root) {
-                                return None;
-                            }
+                            let root = overlapping
+                                .entry(Arc::as_ptr(g))
+                                .or_insert_with(|| {
+                                    let root = walk_root(g);
+                                    overlaps_any(&all_outputs, &root).then_some(root)
+                                })
+                                .clone()?;
+                            let scope =
+                                scope.get_or_insert_with(|| ProjectScope::new(project_roots));
                             let skipped = Positive::parse(g)
                                 .map(|p| scope.nested_below(&p))
                                 .unwrap_or_default();
