@@ -192,7 +192,7 @@ describe('bun min-release-age behavior', () => {
       );
     });
 
-    it('latest tag (too-new stable) degrades to the newest compliant stable (2.0.0 -> 1.2.0)', () => {
+    it('latest tag (too-new stable) degrades to the highest compliant stable (2.0.0 -> 1.2.0)', () => {
       expect(pickBunVersion('latest', pkgA, policy)).toEqual({
         version: '1.2.0',
         unconstrained: '2.0.0',

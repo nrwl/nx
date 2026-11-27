@@ -1,12 +1,4 @@
-import {
-  compare,
-  parse,
-  prerelease,
-  rcompare,
-  satisfies,
-  valid,
-  validRange,
-} from 'semver';
+import { prerelease, rcompare, satisfies, valid, validRange } from 'semver';
 import { pickBunVersion } from './behavior/bun';
 import { pickNpmVersion } from './behavior/npm';
 import { pickPnpmVersion } from './behavior/pnpm';
@@ -107,20 +99,6 @@ function prereleaseChannel(version: string): string | null {
   return pre && pre.length > 0 ? String(pre[0]) : null;
 }
 
-// The stable `major.minor.patch` of a version, ignoring any prerelease tag
-// (e.g. `23.0.0` for both `23.0.0-rc.0` and `23.0.0`).
-function releaseLine(version: string): string {
-  const parsed = parse(version);
-  return parsed ? `${parsed.major}.${parsed.minor}.${parsed.patch}` : version;
-}
-
-// Publish time in epoch ms; a version with no registry time sorts last.
-function publishedAtMs(metadata: RegistryMetadata, version: string): number {
-  const time = metadata.time?.[version];
-  const parsed = time ? Date.parse(time) : NaN;
-  return Number.isNaN(parsed) ? -Infinity : parsed;
-}
-
 // Prerelease channels with a conventional maturity order, least mature first.
 // A blocked target may descend to a lower rung of its own release line
 // (rc.0 -> beta.x); channels off the ladder (pr, canary, ...) have no implied
@@ -146,44 +124,28 @@ function channelAdmits(targetChannel: string | null, channel: string): boolean {
 
 /**
  * Degrades a too-new dist-tag target to a cooldown-compliant version "of the
- * same kind", shared by every package manager.
- *
- * The candidate pool is every version at or below the resolved target that is
- * stable, in the target's prerelease channel, or on a lower rung of the
- * channel ladder (alpha < beta < rc). It is ordered so that prereleases of
- * the target's exact release line come first - own channel, then lower rungs -
- * then everything else; within each group the most recently published version
- * comes first (semver breaks ties and orders versions with no publish time).
- * The first compliant version in that order wins.
- *
- * So a stable target degrades to the newest compliant stable, and a prerelease
- * target keeps a compliant prerelease of the release it points at when one
- * exists (an rc may fall to a same-line beta), otherwise drops to the newest
- * compliant version below it - never crossing into a channel with no place on
- * the ladder (e.g. an internal `pr` build) and never climbing up it. Returns
- * null when nothing in the pool is compliant; callers turn that into their
- * package manager's violation.
- *
- * `isCompliant` is the caller's per-PM maturity test (package managers differ
- * on missing publish times and excludes).
+ * same kind", shared by every package manager: the highest compliant version by
+ * semver, never by publish time, among those at or below the target that are
+ * stable or are prereleases of the target's own release line, in its channel
+ * or on a lower rung of the alpha < beta < rc ladder. Returns null when none is
+ * compliant.
  */
 export function degradeTagToCompliant(
   target: string,
   metadata: RegistryMetadata,
   isCompliant: (version: string) => boolean
 ): string | null {
-  // semver.compare throws on a non-semver string; a tag pointing at one has no
-  // channel or ordering to reason about, so report no candidate and let the
-  // caller raise its violation.
+  // A non-semver tag target has no channel or ordering to reason about.
   if (!valid(target)) {
     return null;
   }
   const targetChannel = prereleaseChannel(target);
-  const targetLine = releaseLine(target);
 
   const pool = metadata.versions.filter((version) => {
-    if (!valid(version) || compare(version, target) > 0) {
-      return false; // unparseable or newer than the target
+    // npm's `<=target`: a prerelease only qualifies on the target's own
+    // major.minor.patch, never from an older release line.
+    if (!valid(version) || !satisfies(version, `<=${target}`)) {
+      return false;
     }
     const channel = prereleaseChannel(version);
     // Stables always stay; a prerelease stays only in the target's channel or
@@ -191,31 +153,7 @@ export function degradeTagToCompliant(
     return channel === null || channelAdmits(targetChannel, channel);
   });
 
-  // Prereleases of the target's exact release line rank ahead of the rest -
-  // own channel before lower rungs - then everything else; within each tier,
-  // newest published first.
-  const tier = (version: string): number => {
-    if (releaseLine(version) !== targetLine) {
-      return 2;
-    }
-    const channel = prereleaseChannel(version);
-    if (channel === targetChannel) {
-      return 0;
-    }
-    return channel === null ? 2 : 1;
-  };
-  pool.sort((a, b) => {
-    const tierDelta = tier(a) - tier(b);
-    if (tierDelta !== 0) {
-      return tierDelta;
-    }
-    const publishedA = publishedAtMs(metadata, a);
-    const publishedB = publishedAtMs(metadata, b);
-    if (publishedA !== publishedB) {
-      return publishedB - publishedA;
-    }
-    return compare(b, a);
-  });
+  pool.sort(rcompare);
 
   return pool.find((version) => isCompliant(version)) ?? null;
 }
