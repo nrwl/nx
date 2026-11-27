@@ -106,6 +106,44 @@ describe('getTouchedProjectsFromLockFile', () => {
         expect(result).toStrictEqual(allNodes);
       });
     });
+
+    describe(`"${lockFile}" with a list of projects`, () => {
+      const listNxJson = {
+        pluginsConfig: {
+          '@nx/js': {
+            projectsAffectedByDependencyUpdates: ['proj*'],
+          },
+        },
+      };
+
+      it(`should not return changes when "${lockFile}" is not touched`, () => {
+        const result = getTouchedProjectsFromLockFile(
+          [
+            {
+              file: 'source.ts',
+              getChanges: () => [new WholeFileChange()],
+            },
+          ],
+          graph.nodes,
+          listNxJson
+        );
+        expect(result).toStrictEqual([]);
+      });
+
+      it(`should return the matching projects when "${lockFile}" is touched`, () => {
+        const result = getTouchedProjectsFromLockFile(
+          [
+            {
+              file: lockFile,
+              getChanges: () => [new WholeFileChange()],
+            },
+          ],
+          graph.nodes,
+          listNxJson
+        );
+        expect(result).toStrictEqual(['proj1', 'proj2']);
+      });
+    });
   });
 
   describe('auto mode', () => {
