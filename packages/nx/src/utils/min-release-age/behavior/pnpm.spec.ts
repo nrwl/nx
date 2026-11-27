@@ -206,7 +206,7 @@ describe('pnpm min-release-age behavior', () => {
       });
     });
 
-    it('latest tag (too-new stable) degrades to the newest compliant stable (2.0.0 -> 1.2.0)', () => {
+    it('latest tag (too-new stable) degrades to the highest compliant stable (2.0.0 -> 1.2.0)', () => {
       expect(pickPnpmVersion('latest', pkgA, v11StrictPolicy(24))).toEqual({
         version: '1.2.0',
         unconstrained: '2.0.0',

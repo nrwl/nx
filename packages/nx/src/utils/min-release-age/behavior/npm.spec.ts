@@ -215,7 +215,7 @@ describe('npm min-release-age behavior', () => {
       }
     });
 
-    it('latest tag degrades to newest mature (2.0.0 -> 1.2.0)', () => {
+    it('latest tag degrades to the highest mature version (2.0.0 -> 1.2.0)', () => {
       expect(pickNpmVersion('latest', pkgA, policy)).toEqual({
         version: '1.2.0',
         unconstrained: '2.0.0',

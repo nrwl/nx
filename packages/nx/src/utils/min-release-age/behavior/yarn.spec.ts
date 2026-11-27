@@ -152,14 +152,14 @@ describe('yarn min-release-age behavior', () => {
       );
     });
 
-    it('latest tag degrades to newest approved (tag-latest 2.0.0 -> 1.2.0)', () => {
+    it('latest tag degrades to the highest approved version (tag-latest 2.0.0 -> 1.2.0)', () => {
       expect(pickYarnVersion('latest', pkgA, p)).toEqual({
         version: '1.2.0',
         unconstrained: '2.0.0',
       });
     });
 
-    it('non-latest tag (hot) degrades to the newest approved stable (2.0.0 -> 1.2.0)', () => {
+    it('non-latest tag (hot) degrades to the highest approved stable (2.0.0 -> 1.2.0)', () => {
       expect(pickYarnVersion('hot', pkgA, p)).toEqual({
         version: '1.2.0',
         unconstrained: '2.0.0',
