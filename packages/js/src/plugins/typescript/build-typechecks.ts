@@ -4,6 +4,7 @@ const TYPECHECKING_EXECUTORS = new Set([
   '@nx/js:tsc',
   '@nx/angular:application',
   '@nx/angular:browser-esbuild',
+  '@nx/angular:library',
   '@nx/angular:ng-packagr-lite',
   '@nx/angular:package',
   '@angular-devkit/build-angular:application',
@@ -11,6 +12,7 @@ const TYPECHECKING_EXECUTORS = new Set([
   '@angular-devkit/build-angular:browser-esbuild',
   '@angular-devkit/build-angular:ng-packagr',
   '@angular/build:application',
+  '@angular/build:library',
   '@angular/build:ng-packagr',
 ]);
 
