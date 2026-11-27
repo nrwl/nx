@@ -6,12 +6,9 @@ import { Task } from '../config/task-graph';
 import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root';
 import {
   getEnvFilesForTask,
-  getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
   getForceColorForChild,
   getGraphTimeDotEnvForTask,
-  getInvocationAncestorPids,
-  getInvocationRootPid,
   loadAndExpandDotEnvFile,
 } from './task-env';
 
@@ -20,7 +17,7 @@ describe('invocation tracking env vars', () => {
 
   beforeEach(() => {
     process.env = { ...originalEnv };
-    delete process.env.NX_INVOCATION_ANCESTOR_PIDS;
+    delete process.env.NX_INVOCATION_ANCESTORS;
   });
 
   afterAll(() => {
@@ -45,19 +42,25 @@ describe('invocation tracking env vars', () => {
     } as any as Task;
   }
 
-  it('should append the current PID to NX_INVOCATION_ANCESTOR_PIDS', () => {
+  it('should append the task it spawns to NX_INVOCATION_ANCESTORS', () => {
     const task = makeTask('workspace', 'dev');
+    const ancestorsFor = () =>
+      JSON.parse(
+        getEnvVariablesForTask(task, {}, 'true', false, false, '', false)
+          .NX_INVOCATION_ANCESTORS
+      );
 
-    expect(
-      getEnvVariablesForTask(task, {}, 'true', false, false, '', false)
-        .NX_INVOCATION_ANCESTOR_PIDS
-    ).toBe(String(process.pid));
+    expect(ancestorsFor()).toEqual([
+      { taskId: 'workspace:dev', overridesHash: expect.any(String) },
+    ]);
 
-    process.env.NX_INVOCATION_ANCESTOR_PIDS = '123';
-    expect(
-      getEnvVariablesForTask(task, {}, 'true', false, false, '', false)
-        .NX_INVOCATION_ANCESTOR_PIDS
-    ).toBe(`123,${process.pid}`);
+    process.env.NX_INVOCATION_ANCESTORS = JSON.stringify([
+      { taskId: 'outer:build', overridesHash: 'h' },
+    ]);
+    expect(ancestorsFor()).toEqual([
+      { taskId: 'outer:build', overridesHash: 'h' },
+      { taskId: 'workspace:dev', overridesHash: expect.any(String) },
+    ]);
   });
 
   it('drops the readiness variables an outer Nx run set for its own task', () => {
@@ -82,40 +85,6 @@ describe('invocation tracking env vars', () => {
     expect(env).not.toHaveProperty('NX_READY_SIGNAL_TASK');
     expect(env).not.toHaveProperty('NX_READY_URL');
     expect(env.KEPT).toBe('yes');
-  });
-
-  it('should append the current PID for batch processes too', () => {
-    expect(getEnvVariablesForBatchProcess(false, false)).toMatchObject({
-      NX_INVOCATION_ANCESTOR_PIDS: String(process.pid),
-    });
-
-    process.env.NX_INVOCATION_ANCESTOR_PIDS = '12345';
-    expect(getEnvVariablesForBatchProcess(false, false)).toMatchObject({
-      NX_INVOCATION_ANCESTOR_PIDS: `12345,${process.pid}`,
-    });
-  });
-
-  it('should read the root pid off the front of the ancestor chain', () => {
-    expect(getInvocationRootPid()).toBe(process.pid);
-
-    process.env.NX_INVOCATION_ANCESTOR_PIDS = `12345,${process.pid}`;
-    expect(getInvocationRootPid()).toBe(12345);
-  });
-
-  it('should read back the ancestor chain it writes', () => {
-    process.env.NX_INVOCATION_ANCESTOR_PIDS = '123';
-    const child = getEnvVariablesForTask(
-      makeTask('workspace', 'dev'),
-      {},
-      'true',
-      false,
-      false,
-      '',
-      false
-    );
-
-    process.env.NX_INVOCATION_ANCESTOR_PIDS = child.NX_INVOCATION_ANCESTOR_PIDS;
-    expect(getInvocationAncestorPids()).toEqual([123, process.pid]);
   });
 });
 

@@ -17,5 +17,3 @@ pub mod readiness;
 pub mod running_tasks_service;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod task_history;
-#[cfg(not(target_arch = "wasm32"))]
-pub mod task_invocation_tracker;

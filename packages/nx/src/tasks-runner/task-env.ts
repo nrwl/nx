@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
 import { Task } from '../config/task-graph';
 import { workspaceRoot } from '../utils/workspace-root';
+import { serializeInvocationAncestors } from './invocation-ancestors';
 import { getEnvPathsForTask } from './task-env-paths';
 
 /**
@@ -33,7 +34,7 @@ export function getEnvVariablesForBatchProcess(
   skipNxCache: boolean,
   captureStderr: boolean
 ): NodeJS.ProcessEnv {
-  const res = {
+  const res: NodeJS.ProcessEnv = {
     // User Process Env Variables override Dotenv Variables
     ...process.env,
     // Nx Env Variables overrides everything
@@ -188,12 +189,6 @@ function getNxEnvVariablesForForkedProcess(
     FORCE_COLOR: forceColor,
     NX_WORKSPACE_ROOT: workspaceRoot,
     NX_SKIP_NX_CACHE: skipNxCache ? 'true' : undefined,
-    // pids of the forked process's ancestor nx processes, outermost first.
-    // Only an ancestor re-invoking a task is a loop — sibling nx processes
-    // running the same task are legitimate.
-    NX_INVOCATION_ANCESTOR_PIDS: appendAncestorPid(
-      process.env.NX_INVOCATION_ANCESTOR_PIDS
-    ),
   };
 
   if (outputPath) {
@@ -206,29 +201,6 @@ function getNxEnvVariablesForForkedProcess(
     }
   }
   return env;
-}
-
-function appendAncestorPid(inherited: string | undefined): string {
-  return inherited ? `${inherited},${process.pid}` : String(process.pid);
-}
-
-/**
- * Pids of the nx processes this one is nested inside, outermost first. Empty
- * for a root invocation.
- */
-export function getInvocationAncestorPids(): number[] {
-  return (process.env.NX_INVOCATION_ANCESTOR_PIDS ?? '')
-    .split(',')
-    .map((pid) => Number(pid))
-    .filter((pid) => Number.isInteger(pid) && pid > 0);
-}
-
-/**
- * Pid of the outermost nx process in this tree, which is this process when it
- * is the root.
- */
-export function getInvocationRootPid(): number {
-  return getInvocationAncestorPids()[0] ?? process.pid;
 }
 
 function getNxEnvVariablesForTask(
@@ -244,6 +216,7 @@ function getNxEnvVariablesForTask(
     NX_TASK_TARGET_TARGET: task.target.target,
     NX_TASK_TARGET_CONFIGURATION: task.target.configuration ?? undefined,
     NX_TASK_HASH: task.hash,
+    NX_INVOCATION_ANCESTORS: serializeInvocationAncestors([task]),
     // used when Nx is invoked via Lerna
     LERNA_PACKAGE_NAME: task.target.project,
   };
