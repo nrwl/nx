@@ -672,7 +672,7 @@ impl NxCache {
             // without the terminal output file would strand that file with
             // nothing left to point the GC at it.
             for hash in &evicted {
-                remove_items(&[
+                remove_evicted(&[
                     self.cache_path.join(hash),
                     self.get_task_outputs_path_internal(hash),
                 ])?;
@@ -756,7 +756,7 @@ impl NxCache {
             .flatten()
             .collect::<Vec<_>>();
 
-        remove_items(&outdated_cache)?;
+        remove_evicted(&outdated_cache)?;
 
         Ok(())
     }
@@ -863,6 +863,18 @@ fn get_default_max_cache_size(cache_path: String) -> i64 {
 
     // Default to 100gb
     100 * 1024 * 1024 * 1024
+}
+
+/// A path already gone counts as removed: caches sharing a database can evict
+/// the same entry at once.
+fn remove_evicted(paths: &[PathBuf]) -> anyhow::Result<()> {
+    for path in paths {
+        match remove_items(&[path]) {
+            Err(e) if matches!(e.kind, fs_extra::error::ErrorKind::NotFound) => {}
+            removed => removed?,
+        }
+    }
+    Ok(())
 }
 
 fn try_and_retry<T, F>(mut f: F) -> anyhow::Result<T>
