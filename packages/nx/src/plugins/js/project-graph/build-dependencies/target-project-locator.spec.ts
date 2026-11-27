@@ -1293,6 +1293,54 @@ describe('TargetProjectLocator', () => {
       ).toEqual('npm:exports-only@5.0.0');
     });
 
+    it('should prefer a workspace package entry point over an installed exports-only copy that does not export it', () => {
+      const name = 'exports-only-workspace';
+      vol.fromJSON(
+        {
+          [`node_modules/${name}/package.json`]: JSON.stringify({
+            name,
+            version: '1.0.0',
+            exports: { './exported': './exported.js' },
+          }),
+        },
+        '/root'
+      );
+      const locator = new TargetProjectLocator(
+        {
+          ...projects,
+          [name]: {
+            name,
+            type: 'lib',
+            data: {
+              root: `packages/${name}`,
+              metadata: {
+                js: {
+                  packageName: name,
+                  packageExports: { './unbuilt': './dist/unbuilt.js' },
+                  isInPackageManagerWorkspaces: true,
+                },
+              },
+            },
+          },
+        },
+        {
+          [`npm:${name}@1.0.0`]: {
+            type: 'npm',
+            name: `npm:${name}@1.0.0`,
+            data: { version: '1.0.0', packageName: name },
+          },
+        },
+        new Map()
+      );
+
+      expect(
+        locator.findProjectFromImport(`${name}/unbuilt`, 'libs/proj/index.ts')
+      ).toEqual(name);
+      expect(
+        locator.findProjectFromImport(`${name}/exported`, 'libs/proj/index.ts')
+      ).toEqual(`npm:${name}@1.0.0`);
+    });
+
     it('should not resolve an exports-only package linked from outside node_modules to a registry node', () => {
       const store = (name: string) =>
         `/root/node_modules/.pnpm/${name}@1.0.0/node_modules/${name}`;
@@ -1462,7 +1510,77 @@ describe('TargetProjectLocator', () => {
       ).toEqual('npm:exports-only-nested@2.0.0');
     });
 
-    it('should read a relinked exports-only manifest again when locators share the manifest cache', () => {
+    it.each([
+      ['a tarball path', '../vendor/exports-only-vendored.tgz'],
+      ['a folder path', 'vendor/exports-only-vendored'],
+      [
+        'an alias to a local tarball',
+        'npm:exports-only-vendored@file:../vendor/exports-only-vendored.tgz',
+      ],
+    ])(
+      'should not resolve an exports-only copy to a registry node when another node of the package has %s as its version',
+      (_, localPathVersion) => {
+        const name = 'exports-only-vendored';
+        vol.fromJSON(
+          {
+            [`node_modules/${name}/package.json`]: JSON.stringify({
+              name,
+              version: '2.0.0',
+            }),
+          },
+          '/root'
+        );
+        const node = (nodeName: `npm:${string}`, version: string) => ({
+          type: 'npm' as const,
+          name: nodeName,
+          data: { version, packageName: name },
+        });
+        const locator = new TargetProjectLocator(
+          projects,
+          {
+            [`npm:${name}`]: node(`npm:${name}`, localPathVersion),
+            [`npm:${name}@2.0.0`]: node(`npm:${name}@2.0.0`, '2.0.0'),
+          },
+          new Map()
+        );
+
+        expect(
+          locator.findNpmProjectFromImport(name, 'libs/proj/index.ts')
+        ).toEqual(`npm:${name}`);
+      }
+    );
+
+    it('should not resolve an exports-only copy with build metadata to the registry node of its base version', () => {
+      const name = 'exports-only-build-metadata';
+      vol.fromJSON(
+        {
+          [`node_modules/${name}/package.json`]: JSON.stringify({
+            name,
+            version: '2.0.0+local',
+          }),
+        },
+        '/root'
+      );
+      const node = (nodeName: `npm:${string}`, version: string) => ({
+        type: 'npm' as const,
+        name: nodeName,
+        data: { version, packageName: name },
+      });
+      const locator = new TargetProjectLocator(
+        projects,
+        {
+          [`npm:${name}`]: node(`npm:${name}`, '2.0.0+local'),
+          [`npm:${name}@2.0.0`]: node(`npm:${name}@2.0.0`, '2.0.0'),
+        },
+        new Map()
+      );
+
+      expect(
+        locator.findNpmProjectFromImport(name, 'libs/proj/index.ts')
+      ).toEqual(`npm:${name}`);
+    });
+
+    it('should read a relinked exports-only manifest again when locators share the package.json resolution cache', () => {
       const name = 'exports-only-relinked';
       const manifestLink = `/root/node_modules/${name}/package.json`;
       const versions = ['1.0.0', '2.0.0'];
@@ -1507,24 +1625,56 @@ describe('TargetProjectLocator', () => {
       expect(resolved).toEqual([`npm:${name}@1.0.0`, `npm:${name}@2.0.0`]);
     });
 
-    it('should remember a manifest that matches no external node only for its own graph and only when Node resolved neither lookup', () => {
+    it('should walk again when node_modules moves to a folder that no longer holds the linked exports-only copy', () => {
+      const name = 'exports-only-outside';
+      vol.fromJSON({
+        '/root/a/deps/store/package.json': JSON.stringify({
+          name,
+          version: '1.0.0',
+        }),
+      });
+      vol.mkdirSync('/root/b/deps', { recursive: true });
+      // memfs resolves a relative link target against the cwd
+      vol.symlinkSync('/root/a/deps/store', `/root/a/deps/${name}`);
+      vol.mkdirSync('/root/libs/outside', { recursive: true });
+      vol.symlinkSync('/root/a/deps', '/root/libs/outside/node_modules');
+      const npmResolutionCache = new Map();
+      const resolve = () =>
+        new TargetProjectLocator(
+          projects,
+          {
+            [`npm:${name}@1.0.0`]: {
+              type: 'npm',
+              name: `npm:${name}@1.0.0`,
+              data: { version: '1.0.0', packageName: name },
+            },
+          },
+          npmResolutionCache
+        ).findNpmProjectFromImport(name, 'libs/outside/index.ts');
+
+      const beforeMove = resolve();
+      vol.renameSync(`/root/a/deps/${name}`, `/root/b/deps/${name}`);
+      vol.unlinkSync('/root/libs/outside/node_modules');
+      vol.symlinkSync('/root/b/deps', '/root/libs/outside/node_modules');
+
+      expect([beforeMove, resolve()]).toEqual([`npm:${name}@1.0.0`, null]);
+    });
+
+    it('should remember a manifest that matches no external node only for its own graph', () => {
       const npmResolutionCache = new Map();
       const locator = new TargetProjectLocator(
         projects,
         {},
         npmResolutionCache
       );
-      const resolveTwice = (packageName: string) => {
-        expect(
-          locator.findNpmProjectFromImport(packageName, 'libs/proj/index.ts')
-        ).toBeNull();
-        vi.mocked(resolveRelativeToDir).mockClear();
-        expect(
-          locator.findNpmProjectFromImport(packageName, 'libs/proj/index.ts')
-        ).toBeNull();
-      };
 
-      resolveTwice('exports-only');
+      expect(
+        locator.findNpmProjectFromImport('exports-only', 'libs/proj/index.ts')
+      ).toBeNull();
+      vi.mocked(resolveRelativeToDir).mockClear();
+      expect(
+        locator.findNpmProjectFromImport('exports-only', 'libs/proj/index.ts')
+      ).toBeNull();
       expect(resolveRelativeToDir).not.toHaveBeenCalled();
       // A source import also reaches the fallback that caches unresolved imports
       expect(
@@ -1548,9 +1698,6 @@ describe('TargetProjectLocator', () => {
           'libs/proj/index.ts'
         )
       ).toEqual('npm:exports-only@5.0.0');
-
-      resolveTwice('npm-package');
-      expect(resolveRelativeToDir).toHaveBeenCalled();
     });
   });
 

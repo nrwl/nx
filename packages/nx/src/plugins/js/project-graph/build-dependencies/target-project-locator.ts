@@ -9,7 +9,7 @@ import {
   isAbsolute,
   resolve,
 } from 'node:path';
-import { clean, satisfies } from 'semver';
+import { clean, satisfies, valid } from 'semver';
 import type {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
@@ -76,6 +76,18 @@ let defaultLocalPathNpmResolutionCache:
   | { recordKey: string; cache: NpmResolutionCache }
   | undefined;
 
+// A plain x.y.z that semver's valid() accepts, which spares most nodes the
+// parse. The 15-digit cap keeps each number under Number.MAX_SAFE_INTEGER
+const plainSemverVersion =
+  /^(0|[1-9]\d{0,14})\.(0|[1-9]\d{0,14})\.(0|[1-9]\d{0,14})$/;
+
+// The version of an alias target, `npm:<target>@<version>`. The search starts
+// past the `@` of a scoped target
+function getAliasTargetVersion(version: string): string | undefined {
+  const separator = version.indexOf('@', 'npm:'.length + 1);
+  return separator === -1 ? undefined : version.slice(separator + 1);
+}
+
 const experimentalNodeModules = new Set(['node:sqlite']);
 
 /**
@@ -104,6 +116,16 @@ function isNestedPackageName(
   packageName: string
 ): boolean {
   return !!manifestName && manifestName.startsWith(`${packageName}/`);
+}
+
+function getNpmResolutionCacheKey(
+  packageName: string,
+  filePath: string
+): string {
+  const workspaceRelativeFilePath = filePath.startsWith(workspaceRoot)
+    ? filePath.replace(workspaceRoot, '')
+    : filePath;
+  return `${packageName}__${dirname(workspaceRelativeFilePath)}`;
 }
 
 function isInNodeModules(path: string): boolean {
@@ -139,9 +161,30 @@ export class TargetProjectLocator {
   // Resolutions of packageNamesWithLocalPathNodes depend on this locator's
   // installedLocalPathNodes, so they stay out of the shared cache
   private localPathNpmResolutionCache: NpmResolutionCache = new Map();
-  // Imports whose manifest matched no node after Node resolved neither lookup.
-  // A later graph can add the node, so they stay out of the shared cache
-  private readonly unmatchedNodeModulesWalks = new Set<string>();
+  // Nodes the node_modules walk resolved. They depend on this build's graph,
+  // so the shared caches never hold them
+  private readonly nodeModulesWalkResolutions = new Map<
+    string,
+    { nodeName: string; walkOnly: boolean }
+  >();
+  private readonly nodeModulesWalkManifestsByPath = new Map<
+    string,
+    PackageJson | null
+  >();
+  // The fallback result of imports whose walk manifest was not accepted. A
+  // later graph can accept it, so they stay out of the shared cache
+  private readonly declinedNodeModulesWalks = new Map<string, string | null>();
+  // The relative and absolute forms of an importer have their own resolution
+  // keys, so the walk result is also kept per package and importing directory
+  private readonly nodeModulesWalkManifestsByImporter = new Map<
+    string,
+    PackageJson | null
+  >();
+  // Set by findNpmProjectFromImport, so its callers need no second key lookup
+  private lastNpmResolutionWasWalkOnly = false;
+  private packageNamesWithLocalPathVersionNodes: Set<string> | undefined;
+  private readonly hasInstalledLocalPathNodes =
+    Object.keys(this.installedLocalPathNodes).length > 0;
   private readonly realPaths = new Map<string, string>();
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
@@ -282,15 +325,12 @@ export class TargetProjectLocator {
 
     // try to find npm package before using expensive typescript resolution
     const externalProject = this.findNpmProjectFromImport(importExpr, filePath);
-    if (externalProject) {
-      const project = this.findLinkedProject(
-        externalProject,
-        importExpr,
-        filePath
-      );
-      return project
-        ? { project, externalNode: externalProject }
-        : externalProject;
+    // A node only the node_modules walk found applies only when the lookups
+    // below, which run without the walk, find nothing
+    const walkOnlyResolution =
+      !!externalProject && this.lastNpmResolutionWasWalkOnly;
+    if (externalProject && !walkOnlyResolution) {
+      return this.withLinkedProject(externalProject, importExpr, filePath);
     }
 
     if (
@@ -308,35 +348,55 @@ export class TargetProjectLocator {
       }
     }
 
+    let resolvedWithRequire = false;
     try {
       const resolvedModule = this.resolveImportWithRequire(
         importExpr,
         filePath
       );
-
-      return this.findProjectOfResolvedModule(resolvedModule);
+      resolvedWithRequire = true;
+      const resolvedProject = this.findProjectOfResolvedModule(resolvedModule);
+      if (resolvedProject || !walkOnlyResolution) {
+        return resolvedProject;
+      }
     } catch {}
 
-    // fall back to see if it's a locally linked workspace project where the
-    // output might not exist yet
-    const localProject = this.findImportInWorkspaceProjects(importExpr);
-    if (localProject) {
-      return localProject;
+    if (!resolvedWithRequire) {
+      // fall back to see if it's a locally linked workspace project where the
+      // output might not exist yet
+      const localProject = this.findImportInWorkspaceProjects(importExpr);
+      if (localProject) {
+        return localProject;
+      }
     }
 
-    // nothing found, cache the negative result with the scoped key. Walk misses
-    // stay on the locator (see unmatchedNodeModulesWalks)
+    if (walkOnlyResolution) {
+      return this.withLinkedProject(externalProject, importExpr, filePath);
+    }
+
+    // nothing found, cache the negative result with the scoped key. Declined
+    // walks stay on the locator (see declinedNodeModulesWalks)
     const packageName = getPackageNameFromImportPath(importExpr);
-    const dirPath = dirname(
-      filePath.startsWith(workspaceRoot)
-        ? filePath.replace(workspaceRoot, '')
-        : filePath
-    );
-    const npmImportForProject = `${packageName}__${dirPath}`;
-    if (!this.unmatchedNodeModulesWalks.has(npmImportForProject)) {
+    const npmImportForProject = getNpmResolutionCacheKey(packageName, filePath);
+    if (!this.declinedNodeModulesWalks.has(npmImportForProject)) {
       this.getNpmResolutionCache(packageName).set(npmImportForProject, null);
     }
     return null;
+  }
+
+  private withLinkedProject(
+    externalProject: string,
+    importExpr: string,
+    filePath: string
+  ): string | LinkedProjectTarget {
+    const project = this.findLinkedProject(
+      externalProject,
+      importExpr,
+      filePath
+    );
+    return project
+      ? { project, externalNode: externalProject }
+      : externalProject;
   }
 
   /**
@@ -350,36 +410,54 @@ export class TargetProjectLocator {
     importExpr: string,
     fromFilePath: string
   ): string | null {
+    this.lastNpmResolutionWasWalkOnly = false;
     const packageName = getPackageNameFromImportPath(importExpr);
 
-    let fullFilePath = fromFilePath;
-    let workspaceRelativeFilePath = fromFilePath;
-    if (fromFilePath.startsWith(workspaceRoot)) {
-      workspaceRelativeFilePath = fromFilePath.replace(workspaceRoot, '');
-    } else {
-      fullFilePath = join(workspaceRoot, fromFilePath);
-    }
+    const fullDirPath = dirname(
+      fromFilePath.startsWith(workspaceRoot)
+        ? fromFilePath
+        : join(workspaceRoot, fromFilePath)
+    );
 
-    const fullDirPath = dirname(fullFilePath);
-    const workspaceRelativeDirPath = dirname(workspaceRelativeFilePath);
-
-    const npmImportForProject = `${packageName}__${workspaceRelativeDirPath}`;
+    const npmImportForProject = getNpmResolutionCacheKey(
+      packageName,
+      fromFilePath
+    );
     const npmResolutionCache = this.getNpmResolutionCache(packageName);
     if (npmResolutionCache.has(npmImportForProject)) {
       return npmResolutionCache.get(npmImportForProject);
     }
-    if (this.unmatchedNodeModulesWalks.has(npmImportForProject)) {
-      return null;
+    const walkResolution =
+      this.nodeModulesWalkResolutions.get(npmImportForProject);
+    if (walkResolution) {
+      this.lastNpmResolutionWasWalkOnly = walkResolution.walkOnly;
+      return walkResolution.nodeName;
+    }
+    if (this.declinedNodeModulesWalks.has(npmImportForProject)) {
+      return this.declinedNodeModulesWalks.get(npmImportForProject);
     }
 
     try {
       // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
       const manifestSource = { nodeModulesWalk: false };
-      const externalPackageJson = this.readPackageJson(
+      let externalPackageJson = this.readPackageJson(
         packageName,
         fullDirPath,
         manifestSource
       );
+      // A manifest only the node_modules walk read counts when the graph has
+      // the exact node for it. Otherwise the package stays unreadable
+      const walkNode = manifestSource.nodeModulesWalk
+        ? this.findNodeModulesWalkNode(
+            packageName,
+            externalPackageJson,
+            fullDirPath
+          )
+        : null;
+      const declinedWalk = manifestSource.nodeModulesWalk && !walkNode;
+      if (declinedWalk) {
+        externalPackageJson = null;
+      }
       // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
       if (!externalPackageJson) {
         // A local package whose target is missing, such as a `link:` to
@@ -396,8 +474,32 @@ export class TargetProjectLocator {
         const externalNode = this.npmProjects[`npm:${packageName}`];
         const externalNodeName =
           installedNodeName ?? (externalNode?.name || null);
-        npmResolutionCache.set(npmImportForProject, externalNodeName);
+        (declinedWalk ? this.declinedNodeModulesWalks : npmResolutionCache).set(
+          npmImportForProject,
+          externalNodeName
+        );
         return externalNodeName;
+      }
+
+      if (walkNode) {
+        // Without the walk the import resolves to null unless the graph has
+        // the unversioned node or the lockfile records a local package
+        const walkOnly =
+          !this.npmProjects[`npm:${packageName}`] &&
+          !(
+            this.packageNamesWithLocalPathNodes.has(packageName) &&
+            this.findUnreadableLocalPathNpmProjectFromDir(
+              packageName,
+              fullDirPath
+            )
+          );
+        const nodeName = walkNode.name;
+        this.nodeModulesWalkResolutions.set(npmImportForProject, {
+          nodeName,
+          walkOnly,
+        });
+        this.lastNpmResolutionWasWalkOnly = walkOnly;
+        return nodeName;
       }
 
       const version = clean(externalPackageJson.version);
@@ -450,9 +552,6 @@ export class TargetProjectLocator {
       }
 
       if (!matchingExternalNode) {
-        if (manifestSource.nodeModulesWalk) {
-          this.unmatchedNodeModulesWalks.add(npmImportForProject);
-        }
         return null;
       }
 
@@ -620,6 +719,87 @@ export class TargetProjectLocator {
     return this.packageNamesWithLocalPathNodes.has(packageName)
       ? this.localPathNpmResolutionCache
       : this.npmResolutionCache;
+  }
+
+  // Only the exact version node, or alias node, counts. A local-path node under
+  // either name rules it out, since the copy could then be that local package
+  private findNodeModulesWalkNode(
+    packageName: string,
+    packageJson: PackageJson | null,
+    fromDirPath: string
+  ): ProjectGraphExternalNode | null {
+    if (!packageJson) {
+      return null;
+    }
+    if (
+      this.isInstalledFromLocalPath(packageName, fromDirPath) ||
+      (packageName !== packageJson.name &&
+        this.isInstalledFromLocalPath(packageJson.name, fromDirPath))
+    ) {
+      return null;
+    }
+    const version = clean(packageJson.version);
+    // clean() would match a local 1.0.0+build copy to the registry 1.0.0 node
+    if (version !== packageJson.version) {
+      return null;
+    }
+    return (
+      this.npmProjects[
+        packageName === packageJson.name
+          ? `npm:${packageJson.name}@${version}`
+          : `npm:${packageName}@npm:${packageJson.name}@${version}`
+      ] ?? null
+    );
+  }
+
+  // A record tells which local copy this importer installs. A node without a
+  // record tells only that some importer installs one
+  private isInstalledFromLocalPath(
+    packageName: string,
+    fromDirPath: string
+  ): boolean {
+    return (
+      (this.hasInstalledLocalPathNodes &&
+        !!this.findInstalledLocalPathNpmProjectFromDir(
+          packageName,
+          fromDirPath
+        )) ||
+      this.hasLocalPathVersionNode(packageName)
+    );
+  }
+
+  // Built on first use, since only walk manifests need it
+  private hasLocalPathVersionNode(packageName: string): boolean {
+    if (!this.packageNamesWithLocalPathVersionNodes) {
+      this.packageNamesWithLocalPathVersionNodes = new Set();
+      const recorded = new Set<string>();
+      for (const installed of Object.values(this.installedLocalPathNodes)) {
+        for (const nodeName of Object.values(installed)) {
+          const node = this.externalNodes[nodeName];
+          if (node) {
+            recorded.add(`${node.data.packageName}@${node.data.version}`);
+          }
+        }
+      }
+      for (const node of Object.values(this.externalNodes)) {
+        if (node.type !== 'npm' || typeof node.data.version !== 'string') {
+          continue;
+        }
+        // Only a semver version, or an alias to one, is known to come from the
+        // registry. Others can be file:, link:, tarball paths, URLs or git
+        const version = node.data.version.startsWith('npm:')
+          ? getAliasTargetVersion(node.data.version)
+          : node.data.version;
+        if (
+          (version === undefined ||
+            (!plainSemverVersion.test(version) && valid(version) === null)) &&
+          !recorded.has(`${node.data.packageName}@${node.data.version}`)
+        ) {
+          this.packageNamesWithLocalPathVersionNodes.add(node.data.packageName);
+        }
+      }
+    }
+    return this.packageNamesWithLocalPathVersionNodes.has(packageName);
   }
 
   // Built on first use, since only names with a local-path node need it
@@ -867,6 +1047,11 @@ export class TargetProjectLocator {
       packagePath,
       filePath
     );
+    // A node only the node_modules walk found must not stop the lookups that
+    // follow, which can find a workspace project
+    if (externalProject && this.lastNpmResolutionWasWalkOnly) {
+      return undefined;
+    }
 
     return externalProject;
   }
@@ -973,6 +1158,15 @@ export class TargetProjectLocator {
     relativeToDir: string,
     manifestSource?: { nodeModulesWalk: boolean }
   ): PackageJson | null {
+    const walkManifestKey = `${packageName}__${relativeToDir}`;
+    if (this.nodeModulesWalkManifestsByImporter.has(walkManifestKey)) {
+      const walkManifest =
+        this.nodeModulesWalkManifestsByImporter.get(walkManifestKey);
+      if (walkManifest && manifestSource) {
+        manifestSource.nodeModulesWalk = true;
+      }
+      return walkManifest;
+    }
     // Package specifiers use `/` on every OS. path.join() would use `\` on Windows.
     const packageJsonPath = resolveRelativeToDir(
       `${packageName}/package.json`,
@@ -1001,41 +1195,62 @@ export class TargetProjectLocator {
         // An installed package can fail both lookups (exports hide them, or the
         // entry file is missing). Read its manifest from node_modules instead.
         for (let dir = relativeToDir; ; dir = dirname(dir)) {
-          const candidatePath = join(
-            dir,
-            'node_modules',
-            packageName,
-            'package.json'
-          );
+          const candidateDir = join(dir, 'node_modules', packageName);
+          const candidatePath = join(candidateDir, 'package.json');
           // Node never looks in node_modules/node_modules
-          if (basename(dir) !== 'node_modules' && existsSync(candidatePath)) {
+          const isLookupDir = basename(dir) !== 'node_modules';
+          if (isLookupDir && !existsSync(candidatePath)) {
+            // Node can serve subpaths from a nearer copy without a manifest,
+            // so the copy further up is not known to be the one it loads
+            if (existsSync(candidateDir)) {
+              return null;
+            }
+          } else if (isLookupDir) {
             // Keep a package whose real path stays in this node_modules or
             // another one. Any other is a linked copy, not a registry package.
             const realPackageDir = this.realPath(dirname(candidatePath));
+            const pathFromRealRoot = normalizePath(
+              relative(this.realPath(workspaceRoot), realPackageDir)
+            );
+            const outsideNodeModules = !isInNodeModules(pathFromRealRoot);
             if (
+              outsideNodeModules &&
               !isContainedRelativePath(
                 relative(
                   this.realPath(join(dir, 'node_modules')),
                   realPackageDir
                 )
-              ) &&
-              !isInNodeModules(
-                normalizePath(
-                  relative(this.realPath(workspaceRoot), realPackageDir)
-                )
               )
             ) {
               return null;
             }
-            // Key the shared manifest cache by the real file. A relink changes it.
-            const installed = this.readCompletePackageJson(
+            const installed = this.readNodeModulesWalkManifest(
               this.realPath(candidatePath)
             );
-            if (installed && manifestSource) {
+            // `clean()` throws on a version that is not a string, which
+            // would skip the lookup by name
+            if (!installed || typeof installed.version !== 'string') {
+              // Node loads the nearest copy, so an unusable manifest ends the walk
+              return null;
+            }
+            // A project's folder is not a registry copy, even when a symlinked
+            // node_modules holds it
+            const manifest =
+              outsideNodeModules &&
+              isContainedRelativePath(pathFromRealRoot) &&
+              this.findProjectHoldingLinkTarget(
+                join(workspaceRoot, pathFromRealRoot)
+              )
+                ? null
+                : installed;
+            this.nodeModulesWalkManifestsByImporter.set(
+              walkManifestKey,
+              manifest
+            );
+            if (manifest && manifestSource) {
               manifestSource.nodeModulesWalk = true;
             }
-            // Node loads the nearest copy, so an unusable manifest ends the walk
-            return installed;
+            return manifest;
           }
           if (dir === dirname(dir)) {
             return null;
@@ -1101,6 +1316,26 @@ export class TargetProjectLocator {
     } catch {
       return null;
     }
+  }
+
+  // Importers in many directories reach one manifest, read once per build
+  private readNodeModulesWalkManifest(
+    packageJsonPath: string
+  ): PackageJson | null {
+    let manifest = this.nodeModulesWalkManifestsByPath.get(packageJsonPath);
+    if (manifest === undefined) {
+      try {
+        const parsedPackageJson = readJsonFile(packageJsonPath);
+        manifest =
+          parsedPackageJson.name && parsedPackageJson.version
+            ? parsedPackageJson
+            : null;
+      } catch {
+        manifest = null;
+      }
+      this.nodeModulesWalkManifestsByPath.set(packageJsonPath, manifest);
+    }
+    return manifest;
   }
 
   private realPath(path: string): string {
