@@ -146,6 +146,84 @@ describe('commit-utils', () => {
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('fix');
     });
+
+    describe('reverted changes', () => {
+      const configWithRevert = (
+        hidden: boolean
+      ): NxReleaseConfig['conventionalCommits'] => ({
+        ...conventionalCommitsConfig,
+        types: {
+          ...conventionalCommitsConfig.types,
+          revert: {
+            semverBump: 'none',
+            changelog: { title: 'Revert', hidden },
+          },
+        },
+      });
+      const revertOf = (
+        shortHash: string,
+        revertedHash: string
+      ): ChangelogChange => ({
+        type: 'revert',
+        scope: '',
+        description: `Revert ${revertedHash}`,
+        affectedProjects: '*',
+        shortHash,
+        revertedHashes: [revertedHash],
+      });
+      const fix: ChangelogChange = {
+        type: 'fix',
+        scope: '',
+        description: 'Fix bug',
+        affectedProjects: '*',
+        shortHash: '1111aaa',
+        revertedHashes: [],
+      };
+      const otherFix: ChangelogChange = {
+        ...fix,
+        description: 'Fix other bug',
+        shortHash: '3333ccc',
+      };
+
+      it('should filter out a change reverted by a hidden revert', () => {
+        // Newest first, as git log returns them
+        const changes = [
+          otherFix,
+          revertOf('2222bbb', '1111aaa1111aaa1111aaa1111aaa1111aaa1111a'),
+          fix,
+        ];
+
+        const result = filterHiddenChanges(changes, configWithRevert(true));
+
+        expect(result).toEqual([otherFix]);
+      });
+
+      it('should keep a change reverted by a visible revert, for the changelog renderer to drop together with its revert', () => {
+        const revert = revertOf(
+          '2222bbb',
+          '1111aaa1111aaa1111aaa1111aaa1111aaa1111a'
+        );
+
+        const result = filterHiddenChanges(
+          [revert, fix],
+          configWithRevert(false)
+        );
+
+        expect(result).toEqual([revert, fix]);
+      });
+
+      it('should keep a change whose hidden revert was itself reverted', () => {
+        const changes = [
+          revertOf('3333ddd', '2222bbb2222bbb2222bbb2222bbb2222bbb2222b'),
+          revertOf('2222bbb', '1111aaa1111aaa1111aaa1111aaa1111aaa1111a'),
+          fix,
+        ];
+
+        const result = filterHiddenChanges(changes, configWithRevert(true));
+
+        expect(result).toEqual([fix]);
+      });
+    });
   });
 
   describe('getProjectsAffectedByCommit', () => {
