@@ -2,7 +2,8 @@
 //   node e2e/utils/play-cast.mts <file.cast>
 //   node e2e/utils/play-cast.mts --from-log <saved task log>
 //   node e2e/utils/play-cast.mts --run <runId> --task <taskId>   (fetches the log from Nx Cloud)
-// Options: --pick <n> (when a log holds several), --save <file.cast>, --speed <x>
+// Options: --pick <n> (when a log holds several), --save <file.cast>, --speed <x>,
+//   --idle <seconds> (cap on pauses; 0 plays in real time, default from the recording)
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
@@ -17,6 +18,7 @@ const { values, positionals } = parseArgs({
     pick: { type: 'string' },
     save: { type: 'string' },
     speed: { type: 'string', default: '1' },
+    idle: { type: 'string' },
   },
 });
 
@@ -91,7 +93,9 @@ function pickFromLog(log: string): string {
 async function play(cast: string, speed: number) {
   const [headerLine, ...eventLines] = cast.split('\n').filter(Boolean);
   const header = JSON.parse(headerLine);
-  const idleLimit: number = header.idle_time_limit ?? Infinity;
+  const idle =
+    values.idle === undefined ? header.idle_time_limit : Number(values.idle);
+  const idleLimit = idle > 0 ? idle : Infinity;
   process.stdout.write(
     `\x1b[2m▶ ${header.title ?? ''} (${header.width}x${header.height})\x1b[0m\r\n`
   );
