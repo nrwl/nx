@@ -69,9 +69,26 @@ describe('@nx/js/node', () => {
       serve: expect.objectContaining({
         command: 'node --watch src/main.ts',
         continuous: true,
+        dependsOn: ['watch-deps'],
         options: { cwd: 'apps/api' },
       }),
     });
+  });
+
+  it('should depend on the configured watch-deps target in watch mode only', async () => {
+    const files = {
+      'package.json': '{ "name": "root", "nx": {} }',
+      'scripts/a.js': '#!/usr/bin/env node\n',
+    };
+
+    const watching = await targetsFor(files, '.', {
+      watchDepsTargetName: 'watch-libs',
+    });
+    expect(watching.a.dependsOn).toEqual(['watch-libs']);
+
+    const once = await targetsFor(files, '.', { watch: false });
+    expect(once.a.command).toBe('node scripts/a.js');
+    expect(once.a.dependsOn).toBeUndefined();
   });
 
   it('should infer bin targets', async () => {
