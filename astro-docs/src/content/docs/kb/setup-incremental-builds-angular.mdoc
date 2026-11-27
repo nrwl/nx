@@ -383,6 +383,20 @@ Both executors write the library to the `dest` path in the `ng-package.json` fil
 and the generator sets the target's `outputs` to the same path.
 If you change `dest`, update `outputs` in the project configuration too.
 
+To move a library from the `@nx/angular:ng-packagr-lite` or `@nx/angular:package` executor to the
+`@nx/angular:library` executor once `@angular/core` and the Angular build package are at version 22.3
+or later, run the
+[`convert-to-library-executor` generator](/docs/technologies/angular/generators#convert-to-library-executor):
+
+```shell
+nx g @nx/angular:convert-to-library-executor my-lib
+```
+
+It moves the ng-packagr configuration to the target options and the library `package.json` `exports`.
+Targets that use the Angular CLI `ng-packagr` builder move to the `@angular/build:library` builder.
+Without a project name, it tries to convert each library that uses ng-packagr, and it skips and logs
+any library it can't convert.
+
 ## Example repository
 
 Check out the [nx-incremental-large-repo](https://github.com/nrwl/nx-incremental-large-repo) for a live example.
