@@ -1104,9 +1104,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   nxCloudEncryptionKey?: string;
 
   /**
-   * Specifies how many tasks can be run in parallel.
+   * Specifies how many tasks can be run in parallel, as a number or a percentage of the available cores (e.g. "50%").
    */
-  parallel?: number;
+  parallel?: number | string;
 
   /**
    * Changes the directory used by Nx to store its cache.

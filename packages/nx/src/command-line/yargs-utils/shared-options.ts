@@ -511,7 +511,7 @@ const coerceTuiAutoExit = (value: string) => {
   throw new Error(`Invalid value for --tui-auto-exit: ${value}`);
 };
 
-function concurrency(val: string | number) {
+export function concurrency(val: string | number) {
   let parallel = typeof val === 'number' ? val : parseInt(val);
 
   if (typeof val === 'string' && val.at(-1) === '%') {

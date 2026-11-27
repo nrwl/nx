@@ -24,6 +24,7 @@ import {
 } from '../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
+import { concurrency } from '../command-line/yargs-utils/shared-options';
 import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
@@ -1346,21 +1347,31 @@ export function getRunner(
 
   const modulePath: string = getTasksRunnerPath(runner, nxJson);
 
+  let tasksRunner: TasksRunner;
   try {
-    const tasksRunner = loadTasksRunner(modulePath);
-
-    return {
-      tasksRunner,
-      runnerOptions: getRunnerOptions(
-        runner,
-        nxJson,
-        nxArgs,
-        modulePath === 'nx-cloud'
-      ),
-    };
+    tasksRunner = loadTasksRunner(modulePath);
   } catch {
     throw new Error(`Could not find runner configuration for ${runner}`);
   }
+
+  const runnerOptions = getRunnerOptions(
+    runner,
+    nxJson,
+    nxArgs,
+    modulePath === 'nx-cloud'
+  );
+
+  if (typeof runnerOptions.parallel === 'string') {
+    const parallel = concurrency(runnerOptions.parallel);
+    if (Number.isNaN(parallel)) {
+      throw new Error(
+        `Invalid "parallel" value in nx.json: "${runnerOptions.parallel}". Use a number or a percentage of the available cores, such as "50%".`
+      );
+    }
+    runnerOptions.parallel = parallel;
+  }
+
+  return { tasksRunner, runnerOptions };
 }
 
 const defaultTasksRunnerPath = require.resolve('./default-tasks-runner');

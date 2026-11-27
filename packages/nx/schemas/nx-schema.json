@@ -172,8 +172,11 @@
       "description": "Setting this to true will cause all attempts to connect your workspace to Nx Cloud to fail. This value does not prevent using Nx Cloud if already connected. Use NX_NO_CLOUD=true env var to prevent using Nx Cloud when running commands."
     },
     "parallel": {
-      "type": "number",
-      "description": "Specifies how many tasks are ran in parallel by Nx for the default tasks runner."
+      "oneOf": [
+        { "type": "number" },
+        { "type": "string", "pattern": "^\\d+%$" }
+      ],
+      "description": "Specifies how many tasks are ran in parallel by Nx for the default tasks runner. Accepts a number or a percentage of the available cores, e.g. \"50%\"."
     },
     "cacheDirectory": {
       "type": "string",
@@ -987,8 +990,11 @@
               "description": "Defines whether the cache captures stderr or just stdout."
             },
             "parallel": {
-              "type": "number",
-              "description": "Defines the max number of targets ran in parallel."
+              "oneOf": [
+                { "type": "number" },
+                { "type": "string", "pattern": "^\\d+%$" }
+              ],
+              "description": "Defines the max number of targets ran in parallel. Accepts a number or a percentage of the available cores, e.g. \"50%\"."
             },
             "cacheableOperations": {
               "type": "array",

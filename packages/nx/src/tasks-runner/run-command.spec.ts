@@ -12,6 +12,11 @@ const {
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 import { resolveInstalledPackage } from '../utils/installation-directory';
 
+vi.mock('node:os', async () => ({
+  ...(await vi.importActual<typeof import('node:os')>('node:os')),
+  availableParallelism: () => 8,
+}));
+
 vi.mock('../utils/installation-directory', async (importActual) => {
   const actual =
     await importActual<typeof import('../utils/installation-directory')>();
@@ -135,6 +140,33 @@ describe('getRunner', () => {
         "useDaemonProcess": false,
       }
     `);
+  });
+
+  it('resolves a percentage parallel in nx.json against the available cores', () => {
+    const { runnerOptions } = getRunner({}, { parallel: '50%' });
+
+    expect(runnerOptions.parallel).toEqual(4);
+  });
+
+  it('resolves a percentage parallel in tasksRunnerOptions', () => {
+    const { runnerOptions } = getRunner(
+      {},
+      { tasksRunnerOptions: { default: { options: { parallel: '0%' } } } }
+    );
+
+    expect(runnerOptions.parallel).toEqual(1);
+  });
+
+  it('prefers --parallel over a percentage parallel in nx.json', () => {
+    const { runnerOptions } = getRunner({ parallel: 2 }, { parallel: '50%' });
+
+    expect(runnerOptions.parallel).toEqual(2);
+  });
+
+  it('throws when parallel in nx.json is not a number or a percentage', () => {
+    expect(() => getRunner({}, { parallel: 'half' })).toThrow(
+      'Invalid "parallel" value in nx.json: "half"'
+    );
   });
 });
 
