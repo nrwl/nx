@@ -245,6 +245,11 @@ public static class Analyzer
                         Name = projectName,
                         Root = projectRoot,
                         Tags = tags,
+                        ProjectType = ProjectUtilities.InferProjectType(
+                            innerBuilds
+                                .DefaultIfEmpty(primaryNode.ProjectInstance)
+                                .Select(CollectProperties),
+                            isTest),
                         Targets = targets,
                         Metadata = new Models.ProjectMetadata
                         {
