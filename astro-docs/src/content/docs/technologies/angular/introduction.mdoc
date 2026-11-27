@@ -197,7 +197,11 @@ nx lint my-lib
 ### Buildable and publishable libraries
 
 If you need libraries that build or publish, generate them with build output enabled and an import path. This creates build targets you can cache and run in CI.
-See [Set up incremental builds for Angular libraries](/docs/kb/setup-incremental-builds-angular) for details.
+When the workspace meets the Angular 22.3 requirements for the library builder, the generator sets the
+build target to run the Angular library builder (`@angular/build:library`) through the
+`@nx/angular:library` executor.
+Otherwise, it uses ng-packagr.
+See [Set up incremental builds for Angular libraries](/docs/kb/setup-incremental-builds-angular) for the requirements and other details.
 
 ```shell
 nx g @nx/angular:lib libs/my-lib --publishable --importPath=@my-org/my-lib

@@ -19,6 +19,12 @@ export function addFiles(
     }
   );
 
+  if (options.usesPackageExports) {
+    tree.delete(
+      joinPathFragments(options.entryPointDestination, 'ng-package.json')
+    );
+  }
+
   if (options.skipModule) {
     tree.delete(
       joinPathFragments(

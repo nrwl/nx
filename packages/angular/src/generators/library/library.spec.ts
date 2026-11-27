@@ -11,13 +11,18 @@ import {
   Tree,
   updateJson,
   updateNxJson,
+  writeJson,
 } from '@nx/devkit';
 import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
-import { angularDevkitVersion, angularVersion } from '../../utils/versions';
+import {
+  angularDevkitVersion,
+  angularVersion,
+  lessVersion,
+} from '../../utils/versions';
 import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { Schema } from './schema';
 
@@ -47,6 +52,14 @@ describe('lib', () => {
     });
   }
 
+  // Buildable libraries use ng-packagr below Angular 22.3.
+  function setAngularCoreVersion(version: string) {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { ...json.dependencies, '@angular/core': version },
+    }));
+  }
+
   beforeEach(() => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
@@ -67,7 +80,7 @@ describe('lib', () => {
   });
 
   describe('pnpm 11 build scripts', () => {
-    it('should record the decisions ng-packagr pulls in for a buildable library', async () => {
+    it('should record the decisions @angular/build pulls in for a buildable library', async () => {
       await withPnpm(tree, '11.2.2', () =>
         runLibraryGeneratorWithOpts({
           buildable: true,
@@ -177,6 +190,8 @@ describe('lib', () => {
 
   describe('not nested', () => {
     it('should update ng-package.json', async () => {
+      setAngularCoreVersion('~22.2.0');
+
       // ACT
       await runLibraryGeneratorWithOpts({
         publishable: true,
@@ -190,6 +205,8 @@ describe('lib', () => {
     });
 
     it('should update ng-package.json $schema to the correct folder', async () => {
+      setAngularCoreVersion('~22.2.0');
+
       // ACT
       await runLibraryGeneratorWithOpts({
         publishable: true,
@@ -216,6 +233,8 @@ describe('lib', () => {
     });
 
     it('should update package.json when publishable', async () => {
+      setAngularCoreVersion('~22.2.0');
+
       // ACT
       await runLibraryGeneratorWithOpts({
         publishable: true,
@@ -233,6 +252,8 @@ describe('lib', () => {
     });
 
     it('should update package.json when buildable', async () => {
+      setAngularCoreVersion('~22.2.0');
+
       // ACT
       await runLibraryGeneratorWithOpts({ buildable: true });
 
@@ -245,6 +266,170 @@ describe('lib', () => {
       const libPackageJson = readJson(tree, 'my-lib/package.json');
       expect(libPackageJson.dependencies?.['tslib']).toBeFalsy();
       expect(libPackageJson.private).toBe(true);
+    });
+
+    it('should build a buildable library with the library builder', async () => {
+      await runLibraryGeneratorWithOpts({
+        directory: 'my-dir/my-lib',
+        buildable: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, 'my-lib').targets.build
+      ).toStrictEqual({
+        executor: '@nx/angular:library',
+        outputs: ['{options.outputPath}'],
+        options: {
+          tsConfig: 'my-dir/my-lib/tsconfig.lib.json',
+          outputPath: 'dist/my-dir/my-lib',
+          compilationMode: 'full',
+        },
+        configurations: {
+          production: {},
+          development: { compilationMode: 'full', declarationMap: true },
+        },
+        defaultConfiguration: 'production',
+      });
+      const libPackageJson = readJson(tree, 'my-dir/my-lib/package.json');
+      expect(libPackageJson.private).toBe(true);
+      expect(libPackageJson.exports).toStrictEqual({ '.': './src/index.ts' });
+      expect(
+        readJson(tree, 'my-dir/my-lib/tsconfig.lib.json').compilerOptions
+          .declarationMap
+      ).toBeUndefined();
+      expect(tree.exists('my-dir/my-lib/ng-package.json')).toBe(false);
+      expect(tree.exists('my-dir/my-lib/tsconfig.lib.prod.json')).toBe(false);
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['@angular/build']).toBe(angularDevkitVersion);
+      expect(devDependencies['ng-packagr']).toBeUndefined();
+      expect(devDependencies['postcss']).toBeUndefined();
+      expect(devDependencies['autoprefixer']).toBeUndefined();
+      expect(devDependencies['less']).toBeUndefined();
+    });
+
+    it('should build a publishable library with the library builder in partial compilation mode', async () => {
+      await runLibraryGeneratorWithOpts({
+        publishable: true,
+        importPath: '@myorg/lib',
+      });
+
+      const { build } = readProjectConfiguration(tree, 'my-lib').targets;
+      expect(build.executor).toBe('@nx/angular:library');
+      expect(build.options).toStrictEqual({
+        tsConfig: 'my-lib/tsconfig.lib.json',
+        outputPath: 'dist/my-lib',
+        compilationMode: 'partial',
+      });
+      const libPackageJson = readJson(tree, 'my-lib/package.json');
+      expect(libPackageJson.private).toBeUndefined();
+      expect(libPackageJson.exports).toStrictEqual({ '.': './src/index.ts' });
+    });
+
+    it.each([
+      {
+        scenario: '@angular/build is declared below 22.3',
+        devDependencies: { '@angular/build': '22.2.3' },
+      },
+      {
+        scenario:
+          'the declared @angular/build range allows versions below 22.3',
+        devDependencies: { '@angular/build': '^22.3.0 || ~22.2.3' },
+        installedAngularBuild: '22.2.3',
+      },
+      {
+        scenario:
+          'it would add @angular/build below 22.3, even with 22.3 installed',
+        devDependencies: { '@angular-devkit/build-angular': '22.2.3' },
+        installedAngularBuild: '22.3.0',
+      },
+    ])(
+      'should build a buildable library with ng-packagr when $scenario',
+      async ({ devDependencies, installedAngularBuild }) => {
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          devDependencies: { ...json.devDependencies, ...devDependencies },
+        }));
+        if (installedAngularBuild) {
+          writeJson(tree, 'node_modules/@angular/build/package.json', {
+            name: '@angular/build',
+            version: installedAngularBuild,
+          });
+        }
+
+        await runLibraryGeneratorWithOpts({ buildable: true });
+
+        expect(
+          readProjectConfiguration(tree, 'my-lib').targets.build.executor
+        ).toBe('@nx/angular:ng-packagr-lite');
+      }
+    );
+
+    it.each([
+      {
+        scenario: '@angular/build is not declared',
+        angularBuild: undefined,
+        executor: '@nx/angular:ng-packagr-lite',
+      },
+      {
+        scenario: '@angular/build 22.3 is declared',
+        angularBuild: '~22.3.0',
+        executor: '@nx/angular:library',
+      },
+    ])(
+      'should use $executor with --skipPackageJson when $scenario',
+      async ({ angularBuild, executor }) => {
+        if (angularBuild) {
+          updateJson(tree, 'package.json', (json) => ({
+            ...json,
+            devDependencies: {
+              ...json.devDependencies,
+              '@angular/build': angularBuild,
+            },
+          }));
+        }
+
+        await runLibraryGeneratorWithOpts({
+          buildable: true,
+          skipPackageJson: true,
+        });
+
+        expect(
+          readProjectConfiguration(tree, 'my-lib').targets.build.executor
+        ).toBe(executor);
+      }
+    );
+
+    it('should build a buildable library with the library builder when the installed @angular/build satisfies its declared range', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: {
+          ...json.devDependencies,
+          '@angular/build': '^22.0.0',
+        },
+      }));
+      writeJson(tree, 'node_modules/@angular/build/package.json', {
+        name: '@angular/build',
+        version: '22.3.0',
+      });
+
+      await runLibraryGeneratorWithOpts({ buildable: true });
+
+      expect(
+        readProjectConfiguration(tree, 'my-lib').targets.build.executor
+      ).toBe('@nx/angular:library');
+    });
+
+    it('should add less for a library builder library styled with it', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        runLibraryGeneratorWithOpts({ buildable: true, style: 'less' })
+      );
+
+      expect(readJson(tree, 'package.json').devDependencies['less']).toBe(
+        lessVersion
+      );
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?less['"]?: false/
+      );
     });
 
     it('should create project configuration', async () => {
@@ -621,6 +806,8 @@ describe('lib', () => {
     });
 
     it('should update ng-package.json', async () => {
+      setAngularCoreVersion('~22.2.0');
+
       // ACT
       await runLibraryGeneratorWithOpts({
         directory: 'my-dir/my-lib',
@@ -704,6 +891,7 @@ describe('lib', () => {
 
         expect(lookupFn(content)).toEqual(expectedValue);
       };
+      setAngularCoreVersion('~22.2.0');
       await runLibraryGeneratorWithOpts({
         directory: 'my-dir/my-lib',
         publishable: true,

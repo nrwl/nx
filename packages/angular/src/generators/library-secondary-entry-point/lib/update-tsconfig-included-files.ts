@@ -75,6 +75,7 @@ function appendEntryPointGlobs(
 
 // Globs already rooted at a secondary entry point were derived from the
 // primary patterns. Prefixing them again yields `secondary2/secondary1/src`.
+// Package exports can't show that a glob was derived, so they aren't checked.
 function isSecondaryEntryPointGlob(
   tree: Tree,
   libraryRoot: string,

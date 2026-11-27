@@ -6,12 +6,13 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { getModuleTypeSeparator } from '../../utils/artifact-types';
+import { findNgPackagrTarget, usesLibraryBuilder } from '../../utils/project';
 import type { GeneratorOptions, NormalizedGeneratorOptions } from '../schema';
 
-export function normalizeOptions(
+export async function normalizeOptions(
   tree: Tree,
   options: GeneratorOptions
-): NormalizedGeneratorOptions {
+): Promise<NormalizedGeneratorOptions> {
   const name = names(options.name).fileName;
 
   const projects = getProjects(tree);
@@ -38,6 +39,19 @@ export function normalizeOptions(
     );
   }
 
+  const usesPackageExports = usesLibraryBuilder(tree, options.library);
+  if (usesPackageExports) {
+    const ngPackagrTarget = await findNgPackagrTarget(tree, options.library);
+    if (ngPackagrTarget) {
+      const { target, file } = ngPackagrTarget;
+      throw new Error(
+        `The "${options.library}" library uses the library builder, but the "${target}" target in "${file}" uses ng-packagr. ` +
+          `Generating secondary entry points for a library that uses both builders is not supported. ` +
+          `Migrate the "${target}" target to the library builder, or remove it if it's unused.`
+      );
+    }
+  }
+
   const { name: mainEntryPoint } = readJson(
     tree,
     joinPathFragments(libraryProject.root, 'package.json')
@@ -54,5 +68,6 @@ export function normalizeOptions(
     secondaryEntryPoint,
     skipModule: options.skipModule ?? false,
     moduleTypeSeparator,
+    usesPackageExports,
   };
 }

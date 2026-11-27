@@ -2,6 +2,10 @@ import type { MockInstance } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import type { Tree } from '@nx/devkit';
+import {
+  readProjectConfiguration,
+  updateProjectConfiguration,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestApplication } from '../utils/testing';
 import { webWorkerGenerator } from './web-worker';
@@ -56,6 +60,50 @@ describe('webWorker generator', () => {
 
     expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toContain(
       '"extends": "../tsconfig.json"'
+    );
+  });
+
+  it.each([
+    ['@angular/build:unit-test', undefined],
+    ['@nx/angular:unit-test', undefined],
+    ['@angular/build:karma', `${appName}/tsconfig.worker.json`],
+  ])(
+    'should set webWorkerTsConfig on a %s test target only when the executor accepts it',
+    async (executor, expected) => {
+      const project = readProjectConfiguration(tree, appName);
+      project.targets.test = { executor, options: {} };
+      updateProjectConfiguration(tree, appName, project);
+
+      await webWorkerGenerator(tree, {
+        name: 'test-worker',
+        project: appName,
+        skipFormat: true,
+      });
+
+      const { targets } = readProjectConfiguration(tree, appName);
+      expect(targets.build.options.webWorkerTsConfig).toBe(
+        `${appName}/tsconfig.worker.json`
+      );
+      expect(targets.test.options.webWorkerTsConfig).toBe(expected);
+    }
+  );
+
+  it('should keep an existing tsconfig.worker.json when adding another worker', async () => {
+    await webWorkerGenerator(tree, {
+      name: 'first-worker',
+      project: appName,
+      skipFormat: true,
+    });
+    tree.write(`${appName}/tsconfig.worker.json`, '{ "edited": true }');
+
+    await webWorkerGenerator(tree, {
+      name: 'second-worker',
+      project: appName,
+      skipFormat: true,
+    });
+
+    expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toBe(
+      '{ "edited": true }'
     );
   });
 
@@ -144,6 +192,26 @@ describe('webWorker generator', () => {
     );
     expect(workerContent).not.toContain('new Worker(');
     expect(workerContent).toContain("addEventListener('message'");
+  });
+
+  it.each([
+    'test-worker-other.ts',
+    'test-worker.tsx',
+    'test-worker.config.server.ts',
+    'test-worker.d.ts',
+  ])('should not add the snippet to %s', async (file) => {
+    tree.write(`${appName}/src/app/${file}`, '');
+
+    await webWorkerGenerator(tree, {
+      name: 'test-worker',
+      project: appName,
+      snippet: true,
+      skipFormat: true,
+    });
+
+    expect(tree.read(`${appName}/src/app/${file}`, 'utf-8')).not.toContain(
+      'new Worker('
+    );
   });
 
   it('should generate tsconfig.worker.json with correct outDir path', async () => {

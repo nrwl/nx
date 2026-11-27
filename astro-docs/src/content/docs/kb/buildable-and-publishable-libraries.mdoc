@@ -40,7 +40,17 @@ Buildable libraries are similar to "publishable libraries" described above. Thei
 Buildable libraries are mostly used for producing some pre-compiled output that can be directly referenced from an Nx workspace application without the need to again compile it. A typical scenario is to leverage Nx incremental building capabilities.
 
 {% aside type="caution" title="More details" %}
-In order for a buildable library to be pre-compiled, it can only depend on other buildable libraries. This allows you to take full advantage of incremental builds.
+To be pre-compiled, a buildable library can only depend on other buildable libraries, and incremental
+builds then reuse their outputs.
+Angular libraries built with the Angular library builder, which needs
+[`@angular/core` and the Angular build package at 22.3 or later](/docs/kb/setup-incremental-builds-angular#use-buildable-libraries),
+also build when they depend on a non-buildable library, and their output keeps its import.
+Applications in the workspace then compile that library from source, and every library build
+processes it again.
+A published library's consumers must be able to resolve each workspace library whose import stays in
+its output.
+The ESLint configuration that Nx generates sets the `enforceBuildableLibDependency` option of the
+`@nx/enforce-module-boundaries` rule, so the rule reports these imports.
 {% /aside %}
 
 For more details on the mechanics, remember that Nx is an open source project, so you can see the actual impact of the generator by looking at the source code (the best starting point is probably `packages/<framework>/src/generators/library/library.ts`).

@@ -3,7 +3,7 @@ import {
   getDeclaredPackageVersion,
   getInstalledPackageVersionFromTree,
 } from '@nx/devkit/internal';
-import { coerce, major, satisfies, subset, validRange } from 'semver';
+import { coerce, lt, major, satisfies, subset, validRange } from 'semver';
 import {
   backwardCompatibleVersions,
   type PackageCompatVersions,
@@ -44,6 +44,65 @@ export function getInstalledPackageVersionInfo(tree: Tree, pkgName: string) {
   const version = getDependencyVersionFromPackageJson(tree, pkgName);
 
   return version ? { major: major(coerce(version)), version } : null;
+}
+
+/**
+ * The `@angular/build` version range a workspace has once the library
+ * generator adds the package: a declared range is kept, otherwise it follows
+ * `@angular-devkit/build-angular`.
+ */
+export function getAngularBuildVersionRange(tree: Tree): string {
+  return (
+    getDependencyVersionFromPackageJson(tree, '@angular/build') ??
+    getDependencyVersionFromPackageJson(
+      tree,
+      '@angular-devkit/build-angular'
+    ) ??
+    versions(tree).angularDevkitVersion
+  );
+}
+
+const LIBRARY_BUILDER_MIN_VERSION = '22.3.0';
+
+/**
+ * Whether the workspace can build libraries with the Angular library builder,
+ * which needs both `@angular/core` and `@angular/build` at 22.3 or later.
+ */
+export function supportsLibraryBuilder(
+  tree: Tree,
+  options: { skipPackageJson?: boolean }
+): boolean {
+  return (
+    !lt(getInstalledAngularVersion(tree), LIBRARY_BUILDER_MIN_VERSION) &&
+    angularBuildSupportsLibraryBuilder(tree, options)
+  );
+}
+
+/**
+ * Whether the `@angular/build` version the workspace ends up with ships the
+ * library builder. The installed version only counts when the declared range
+ * keeps it, because the next install replaces anything else. Without
+ * package.json writes nothing adds `@angular/build`, so only a declared one
+ * counts.
+ */
+function angularBuildSupportsLibraryBuilder(
+  tree: Tree,
+  { skipPackageJson }: { skipPackageJson?: boolean }
+): boolean {
+  const declared = getDependencyVersionFromPackageJson(tree, '@angular/build');
+  if (!declared && skipPackageJson) {
+    return false;
+  }
+
+  const range = getAngularBuildVersionRange(tree);
+  const installed = getInstalledPackageVersionFromTree(tree, '@angular/build');
+  if (installed && declared && satisfies(installed, range)) {
+    return !lt(installed, LIBRARY_BUILDER_MIN_VERSION);
+  }
+
+  return (
+    !!validRange(range) && subset(range, `>=${LIBRARY_BUILDER_MIN_VERSION}`)
+  );
 }
 
 // Released in 20.3.17, 21.1.5 and 21.2.0, and never backported to 21.0.

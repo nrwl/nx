@@ -102,18 +102,27 @@ function validateOptions(options: UnitTestExecutorOptions): void {
       );
     }
   }
+
+  if (lt(angularVersion, '22.3.0')) {
+    if (options.polyfills !== undefined) {
+      throw new Error(
+        `The "polyfills" option requires Angular version 22.3.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+  }
 }
 
 /**
- * The Angular CLI unit-test builder only accepts the `@angular/build:application`
- * and `@angular/build:ng-packagr` builders. We need to patch the builder context
- * so that it accepts the `@nx/angular:*` executors.
+ * The Angular CLI unit-test builder only supports the `@angular/build:application`,
+ * `@angular/build:library` and `@angular/build:ng-packagr` builders. We need to
+ * patch the builder context so that it supports the `@nx/angular:*` executors.
  *
- * https://github.com/angular/angular-cli/blob/f9de11d67d3e0e0524372819583bc77756596d4f/packages/angular/build/src/builders/unit-test/builder.ts#L246-L262
+ * https://github.com/angular/angular-cli/blob/bdda8bbf1bfb80aaffdb1121e58c7dd97b5a2e4f/packages/angular/build/src/builders/unit-test/builder.ts#L246-L282
  */
 function patchBuilderContext(context: BuilderContext, buildTarget: Target) {
   const executorToBuilderMap = new Map<string, string>([
     ['@nx/angular:application', '@angular/build:application'],
+    ['@nx/angular:library', '@angular/build:library'],
     ['@nx/angular:ng-packagr-lite', '@angular/build:ng-packagr'],
     ['@nx/angular:package', '@angular/build:ng-packagr'],
   ]);

@@ -71,6 +71,7 @@ export {
 export { getTsConfigBaseOptions } from './src/utils/typescript/create-ts-config';
 export {
   createTreeParseConfigHost,
+  extendsResolutionFailed,
   type TreeParseConfigHost,
 } from './src/utils/typescript/ts-config';
 export { ensureTypescript } from './src/utils/typescript/ensure-typescript';
@@ -137,6 +138,11 @@ export {
   type AddLintingToProjectOptions,
 } from './src/utils/add-linting-to-project';
 export { createGlobPatternsForDependencies } from './src/utils/generate-globs';
+export {
+  isEntryPointDirectoryExport,
+  isLibraryBuilderEntryFile,
+  resolveExportTarget,
+} from './src/utils/package-json/export-entry-points';
 export { getImportPath } from './src/utils/get-import-path';
 export { stripGlobToBaseDir } from './src/utils/strip-glob-to-base-dir';
 export { addLocalRegistryScripts } from './src/utils/add-local-registry-scripts';

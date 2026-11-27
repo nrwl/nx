@@ -8,7 +8,10 @@ import {
   getComponentType,
   getModuleTypeSeparator,
 } from '../../utils/artifact-types';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import {
+  getInstalledAngularVersionInfo,
+  supportsLibraryBuilder,
+} from '../../utils/version-utils';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 import { normalizeLinterOption } from '@nx/js/internal';
@@ -84,6 +87,11 @@ export async function normalizeOptions(
       names(projectNames.projectSimpleName).className
     }Component`,
     moduleTypeSeparator,
+    useLibraryBuilder:
+      (options.buildable || options.publishable) &&
+      supportsLibraryBuilder(host, {
+        skipPackageJson: options.skipPackageJson,
+      }),
   };
 
   const {

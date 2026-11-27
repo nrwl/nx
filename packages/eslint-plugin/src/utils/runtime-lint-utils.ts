@@ -10,7 +10,10 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { getRootTsConfigFileName, resolveModuleByImport } from '@nx/js';
-import { TargetProjectLocator } from '@nx/js/internal';
+import {
+  isEntryPointDirectoryExport,
+  TargetProjectLocator,
+} from '@nx/js/internal';
 import { AST_NODE_TYPES, TSESLint, TSESTree } from '@typescript-eslint/utils';
 import * as path from 'node:path';
 import {
@@ -589,7 +592,9 @@ function getEntryPoint(file: string, projectRoot: string): string {
   let parent = joinPathFragments(file, '../');
   while (parent !== `${projectRoot}/`) {
     const entryPoint = packageEntryPoints.find(
-      (entry) => entry.path === parent
+      (entry) =>
+        `${entry.path}/` === parent &&
+        isEntryPointDirectoryExport(entry.path, entry.file)
     );
     if (entryPoint) {
       return entryPoint.file;

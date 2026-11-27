@@ -85,6 +85,14 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
     await move(tree, { oldProjectName, newProjectName });
   }
 
+  // Buildable libraries use ng-packagr below Angular 22.3.
+  function setAngularCoreVersion(version: string) {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { ...json.dependencies, '@angular/core': version },
+    }));
+  }
+
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
 
@@ -112,6 +120,7 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
   });
 
   it('should update ng-package.json dest property', async () => {
+    setAngularCoreVersion('~22.2.0');
     await generateTestLibrary(tree, {
       directory: 'mylib2',
       buildable: true,
@@ -126,6 +135,7 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
   });
 
   it('should update secondary entry points readme file', async () => {
+    setAngularCoreVersion('~22.2.0');
     await generateTestLibrary(tree, {
       directory: 'mylib2',
       buildable: true,
@@ -140,6 +150,46 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
 
     await runAngularPlugin('mylib2', 'mynewlib2', 'mynewlib2');
 
+    const readme = tree.read('mynewlib2/testing/README.md', 'utf-8');
+    expect(readme).toMatchInlineSnapshot(`
+      "# @proj/mynewlib2/testing
+
+      Secondary entry point of \`@proj/mynewlib2\`. It can be used by importing from \`@proj/mynewlib2/testing\`.
+      "
+    `);
+  });
+
+  it('should update the readme file of secondary entry points the library builder builds', async () => {
+    await generateTestLibrary(tree, {
+      directory: 'mylib2',
+      buildable: true,
+      skipFormat: true,
+    });
+    updateJson(tree, 'mylib2/project.json', (json) => {
+      json.targets.build.executor = '@nx/angular:library';
+      return json;
+    });
+    updateJson(tree, 'mylib2/package.json', (json) => {
+      json.exports = {
+        '.': './src/index.ts',
+        './styles': { sass: './styles/_index.scss' },
+      };
+      return json;
+    });
+    tree.write('mylib2/styles/README.md', 'Use the `.mylib2-theme` class.');
+    await librarySecondaryEntryPointGenerator(tree, {
+      library: 'mylib2',
+      name: 'testing',
+      skipFormat: true,
+    });
+    addProjectToGraph('mylib2');
+
+    await runAngularPlugin('mylib2', 'mynewlib2', 'mynewlib2');
+
+    expect(tree.exists('mynewlib2/testing/ng-package.json')).toBe(false);
+    expect(tree.read('mynewlib2/styles/README.md', 'utf-8')).toBe(
+      'Use the `.mylib2-theme` class.'
+    );
     const readme = tree.read('mynewlib2/testing/README.md', 'utf-8');
     expect(readme).toMatchInlineSnapshot(`
       "# @proj/mynewlib2/testing
@@ -366,6 +416,7 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
         return json;
       });
       addProjectToGraph('my-lib');
+      setAngularCoreVersion('~22.2.0');
       await generateTestLibrary(tree, {
         directory: 'my-lib',
         buildable: true,

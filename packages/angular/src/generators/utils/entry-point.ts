@@ -1,6 +1,139 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, readJson } from '@nx/devkit';
-import { dirname } from 'path';
+import {
+  isLibraryBuilderEntryFile,
+  resolveExportTarget,
+} from '@nx/js/internal';
+import * as posix from 'node:path/posix';
+import { dirname, parse } from 'path';
+
+export interface LibraryBuilderEntryPoint {
+  // "." for the primary entry point, otherwise "./<name>".
+  subpath: string;
+  entryFile: string;
+}
+
+// Reads the entry points that @angular/build:library builds from package.json
+// exports, as its normalizeEntryPoints does. Entries it rejects are skipped.
+export function readLibraryBuilderEntryPoints(
+  tree: Tree,
+  projectRoot: string
+): LibraryBuilderEntryPoint[] {
+  const packageJsonPath = joinPathFragments(projectRoot, 'package.json');
+  if (!tree.exists(packageJsonPath)) {
+    return [];
+  }
+
+  const { exports } = readJson(tree, packageJsonPath);
+  if (
+    !exports ||
+    (typeof exports !== 'string' && typeof exports !== 'object')
+  ) {
+    return [];
+  }
+  const exportsRecord: Record<string, unknown> =
+    typeof exports === 'string' ||
+    Array.isArray(exports) ||
+    !Object.keys(exports).some((key) => key.startsWith('.'))
+      ? { '.': exports }
+      : exports;
+
+  const rootDir = joinPathFragments(projectRoot);
+  const entryPoints: LibraryBuilderEntryPoint[] = [];
+  for (const [key, value] of Object.entries(exportsRecord)) {
+    const target = resolveExportTarget(value);
+    // Targets follow the host's path rules, as in the builder. A target with a
+    // root or drive is skipped, even one the builder resolves inside the project.
+    if (!target || !isLibraryBuilderEntryFile(target) || parse(target).root) {
+      continue;
+    }
+
+    const normalizedKey = key.replace(/\/+$/, '');
+    const isPrimary = normalizedKey === '.' || normalizedKey === '';
+    const name = isPrimary
+      ? '.'
+      : normalizedKey.startsWith('./')
+        ? normalizedKey.slice(2)
+        : normalizedKey;
+    if (
+      !isPrimary &&
+      (posix.isAbsolute(name) ||
+        name.includes('..') ||
+        posix.normalize(name) === '.')
+    ) {
+      continue;
+    }
+
+    const entryFile = joinPathFragments(rootDir, target);
+    const relativeEntryFile = posix.relative(rootDir, entryFile);
+    if (isOutsideDirectory(relativeEntryFile)) {
+      continue;
+    }
+
+    entryPoints.push({
+      subpath: isPrimary ? '.' : `./${name}`,
+      entryFile,
+    });
+  }
+
+  return entryPoints;
+}
+
+// The entry point whose entry file's directory is the closest one containing
+// the directory. The primary wins a tie and is the fallback when none does.
+export function locateLibraryBuilderEntryPoint(
+  tree: Tree,
+  directory: string,
+  projectRoot: string
+): string | null {
+  let primaryEntryFile: string | undefined;
+  let closest: { entryFile: string; distance: number } | undefined;
+  for (const { subpath, entryFile } of readLibraryBuilderEntryPoints(
+    tree,
+    projectRoot
+  )) {
+    if (subpath === '.') {
+      primaryEntryFile = entryFile;
+    }
+
+    const relativeDir = posix.relative(posix.dirname(entryFile), directory);
+    if (isOutsideDirectory(relativeDir)) {
+      continue;
+    }
+    const distance = relativeDir === '' ? 0 : relativeDir.split('/').length;
+    if (
+      !closest ||
+      distance < closest.distance ||
+      (distance === closest.distance && subpath === '.')
+    ) {
+      closest = { entryFile, distance };
+    }
+  }
+
+  const entryFile = closest?.entryFile ?? primaryEntryFile;
+  return entryFile && tree.exists(entryFile) ? entryFile : null;
+}
+
+// The entry file of the closest ng-package.json between the directory and the
+// project root whose entry file exists. The project root's own is left out.
+export function locateSecondaryNgPackageEntryPoint(
+  tree: Tree,
+  directory: string,
+  projectRoot: string
+): string | null {
+  let dir = directory;
+  let relativeDir = posix.relative(projectRoot, dir);
+  while (relativeDir !== '' && !isOutsideDirectory(relativeDir)) {
+    const entryFile = readNgPackageEntryFile(tree, dir);
+    if (entryFile && tree.isFile(entryFile)) {
+      return entryFile;
+    }
+    dir = posix.dirname(dir);
+    relativeDir = posix.relative(projectRoot, dir);
+  }
+
+  return null;
+}
 
 export function locateLibraryEntryPointFromDirectory(
   tree: Tree,
@@ -8,13 +141,9 @@ export function locateLibraryEntryPointFromDirectory(
   projectRoot: string,
   projectSourceRoot: string
 ): string | null {
-  const ngPackageJsonPath = joinPathFragments(directory, 'ng-package.json');
-  let entryPointFile = tree.exists(ngPackageJsonPath)
-    ? (readJson(tree, ngPackageJsonPath).lib?.entryFile ?? 'src/public_api.ts')
-    : null;
-
+  const entryPointFile = readNgPackageEntryFile(tree, directory);
   if (entryPointFile) {
-    return joinPathFragments(directory, entryPointFile);
+    return entryPointFile;
   }
 
   if (directory === projectRoot) {
@@ -29,4 +158,17 @@ export function locateLibraryEntryPointFromDirectory(
     projectRoot,
     projectSourceRoot
   );
+}
+
+function readNgPackageEntryFile(tree: Tree, directory: string): string | null {
+  const ngPackageJsonPath = joinPathFragments(directory, 'ng-package.json');
+  const entryFile = tree.exists(ngPackageJsonPath)
+    ? (readJson(tree, ngPackageJsonPath).lib?.entryFile ?? 'src/public_api.ts')
+    : null;
+
+  return entryFile ? joinPathFragments(directory, entryFile) : null;
+}
+
+function isOutsideDirectory(relativePath: string): boolean {
+  return relativePath === '..' || relativePath.startsWith('../');
 }

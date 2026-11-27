@@ -4,6 +4,7 @@ import {
   setupProjectsTest,
   resetProjectsTest,
   cleanupProjectsTest,
+  convertToNgPackagrLibrary,
   ProjectsTestSetup,
 } from './projects-setup';
 
@@ -38,6 +39,8 @@ describe('Angular Projects - Publishable Libraries', () => {
     runCLI(
       `generate @nx/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-standalone --no-interactive`
     );
+    // a library builder library depending on an ng-packagr one
+    convertToNgPackagrLibrary(childLib, '@nx/angular:package');
     runCLI(
       `generate @nx/angular:secondary-entry-point --name=sub --library=${childLib} --no-interactive`
     );
@@ -57,13 +60,21 @@ describe('Angular Projects - Publishable Libraries', () => {
     updateFile(`${lib}/src/lib/${lib}-module.ts`, moduleContent);
 
     // ACT
-    const buildOutput = runCLI(`build ${lib}`, { env: { CI: 'false' } });
+    // An explicit static keeps the child lib's build log, which the failures-only
+    // default would collapse to a single line.
+    const buildOutput = runCLI(`build ${lib} --output-style=static`, {
+      env: { CI: 'false' },
+    });
 
     // ASSERT
-    expect(buildOutput).toContain(`Building entry point '@${proj}/${lib}'`);
     expect(buildOutput).toContain(
-      `Building entry point '@${proj}/${lib}/${entryPoint}'`
+      `Building entry point '@${proj}/${childLib}'`
     );
+    expect(buildOutput).toContain(
+      `Building entry point '@${proj}/${childLib}/sub'`
+    );
+    expect(buildOutput).toContain(`Compiling @${proj}/${lib}...`);
+    expect(buildOutput).toContain(`Compiling @${proj}/${lib}/${entryPoint}...`);
     expect(buildOutput).toContain('Successfully ran target build');
 
     expect(() => runCLI(`lint ${lib} --fix`)).not.toThrow();

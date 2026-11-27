@@ -100,6 +100,21 @@ describe('Angular Crystal Plugin', () => {
     expect(runCLI(`build ${ngOrg1Lib1}`)).toContain(
       'Nx read the output from the cache instead of running the command for 1 out of 1 tasks'
     );
+    // only the project's own angular.json entry is an input
+    updateJson(`projects/${ngOrg1App1}/angular.json`, (json) => {
+      json.projects[ngOrg1App1].prefix = 'changed';
+      return json;
+    });
+    expect(runCLI(`build ${ngOrg1Lib1}`)).toContain(
+      'Nx read the output from the cache instead of running the command for 1 out of 1 tasks'
+    );
+    updateJson(`projects/${ngOrg1App1}/angular.json`, (json) => {
+      json.projects[ngOrg1Lib1].prefix = 'changed';
+      return json;
+    });
+    expect(runCLI(`build ${ngOrg1Lib1}`)).not.toContain(
+      'Nx read the output from the cache'
+    );
 
     // test
     expect(

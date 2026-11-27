@@ -1,6 +1,6 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { Tree, writeJson } from '@nx/devkit';
+import { Tree, updateJson, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
@@ -30,6 +30,29 @@ describe('angularStories generator: libraries', () => {
           })
       ).not.toThrow();
     });
+  });
+
+  it('should generate stories.ts files in a sibling directory whose name starts with a secondary entry point directory', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestLibrary(tree, { directory: libName, skipFormat: true });
+    updateJson(tree, `${libName}/project.json`, (json) => {
+      json.sourceRoot = libName;
+      return json;
+    });
+    writeJson(tree, `${libName}/testing/ng-package.json`, {});
+    tree.write(
+      `${libName}/testing-utils/helper-button.ts`,
+      `import { Component } from '@angular/core';
+@Component({ selector: 'lib-helper-button', template: '' })
+export class HelperButton {}
+`
+    );
+
+    await angularStoriesGenerator(tree, { name: libName });
+
+    expect(
+      tree.exists(`${libName}/testing-utils/helper-button.stories.ts`)
+    ).toBe(true);
   });
 
   describe('Stories for non-empty Angular library', () => {
@@ -83,6 +106,52 @@ describe('angularStories generator: libraries', () => {
           `${libName}/secondary-entry-point/src/lib/secondary-button/secondary-button.stories.ts`
         )
       ).toBeTruthy();
+    });
+
+    it('should generate stories.ts files for secondary entry points of a library using the library builder', async () => {
+      updateJson(tree, `${libName}/project.json`, (json) => {
+        json.targets = {
+          ...json.targets,
+          build: { executor: '@nx/angular:library' },
+        };
+        return json;
+      });
+      writeJson(tree, `${libName}/package.json`, {
+        name: libName,
+        exports: { '.': './src/index.ts' },
+      });
+      await librarySecondaryEntryPointGenerator(tree, {
+        library: libName,
+        name: 'secondary-entry-point',
+        skipFormat: true,
+      });
+      await componentGenerator(tree, {
+        name: 'secondary-button',
+        path: `${libName}/secondary-entry-point/src/lib/secondary-button/secondary-button`,
+        skipFormat: true,
+      });
+      writeJson(tree, `${libName}/legacy/ng-package.json`, {});
+      tree.write(
+        `${libName}/legacy/src/lib/legacy-button.ts`,
+        `import { Component } from '@angular/core';
+@Component({ selector: 'lib-legacy-button', template: '' })
+export class LegacyButton {}
+`
+      );
+
+      await angularStoriesGenerator(tree, { name: libName });
+
+      expect(
+        tree.exists(`${libName}/secondary-entry-point/ng-package.json`)
+      ).toBe(false);
+      expect(
+        tree.exists(
+          `${libName}/secondary-entry-point/src/lib/secondary-button/secondary-button.stories.ts`
+        )
+      ).toBe(true);
+      expect(
+        tree.exists(`${libName}/legacy/src/lib/legacy-button.stories.ts`)
+      ).toBe(true);
     });
 
     it('should generate stories.ts files for components generated with a type "component"', async () => {

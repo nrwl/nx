@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "version": 2,
+  "title": "Schema for Nx Library Executor",
+  "description": "Builds an Angular library producing an output following the Angular Package Format (APF), using the `@angular/build:library` builder.\n\nThis executor accepts the options of the `@angular/build:library` builder and adds support for incremental builds. Unlike the builder, it requires `outputPath`. _Note: this is only supported in Angular versions >= 22.3.0_.",
+  "outputCapture": "direct-nodejs",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "tsConfig": {
+      "type": "string",
+      "description": "The full path for the TypeScript configuration file, relative to the current workspace root."
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "Specify the output directory for the built package, relative to the workspace root."
+    },
+    "assets": {
+      "type": "array",
+      "description": "Define the assets to be copied to the output directory. These assets are copied as-is without any further processing or hashing.",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/assetPattern"
+      }
+    },
+    "inlineStyleLanguage": {
+      "description": "The stylesheet language to use for the library's inline component styles.",
+      "type": "string",
+      "default": "css",
+      "enum": ["css", "less", "sass", "scss"]
+    },
+    "stylePreprocessorOptions": {
+      "description": "Options to pass to style preprocessors.",
+      "type": "object",
+      "properties": {
+        "includePaths": {
+          "description": "Paths to include. Paths will be resolved to workspace root.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "sass": {
+          "description": "Options to pass to the sass preprocessor.",
+          "type": "object",
+          "properties": {
+            "fatalDeprecations": {
+              "description": "A set of deprecations to treat as fatal. If a deprecation warning of any provided type is encountered during compilation, the compiler will error instead. If a Version is provided, then all deprecations that were active in that compiler version will be treated as fatal.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "silenceDeprecations": {
+              "description": " A set of active deprecations to ignore. If a deprecation warning of any provided type is encountered during compilation, the compiler will ignore it instead.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "futureDeprecations": {
+              "description": "A set of future deprecations to opt into early. Future deprecations passed here will be treated as active by the compiler, emitting warnings as necessary.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "declarationMap": {
+      "type": "boolean",
+      "description": "Generates a sourcemap for each corresponding '.d.ts' file. Defaults to the `compilerOptions.declarationMap` value in the TypeScript configuration file."
+    },
+    "compilationMode": {
+      "type": "string",
+      "description": "Angular compilation mode. Use 'partial' when publishing to npm (APF requirement). Use 'full' only during development or for private, internal monorepo packages that are never published. Defaults to the `angularCompilerOptions.compilationMode` value in the TypeScript configuration file, or 'partial' if not set.",
+      "enum": ["partial", "full"]
+    },
+    "allowedNonPeerDependencies": {
+      "description": "A list of package names allowed in the 'dependencies' and 'optionalDependencies' sections of package.json. Values can be regular expression patterns.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "keepLifecycleScripts": {
+      "description": "Enable this to keep the 'scripts' section in the published package.json.",
+      "type": "boolean",
+      "default": false
+    },
+    "deleteOutputPath": {
+      "type": "boolean",
+      "description": "Delete the output path before building.",
+      "default": true
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Run build when files change.",
+      "default": false
+    },
+    "poll": {
+      "type": "number",
+      "description": "Enable and define the file watching poll time period in milliseconds."
+    },
+    "preserveSymlinks": {
+      "type": "boolean",
+      "description": "Do not use the real path when resolving modules. If unset then will default to `true` if NodeJS option --preserve-symlinks is set."
+    },
+    "progress": {
+      "type": "boolean",
+      "description": "Log progress to the console while building.",
+      "default": true
+    },
+    "clearScreen": {
+      "type": "boolean",
+      "default": false,
+      "description": "Automatically clear the terminal screen during rebuilds."
+    }
+  },
+  "additionalProperties": false,
+  "required": ["outputPath", "tsConfig"],
+  "definitions": {
+    "assetPattern": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "followSymlinks": {
+              "type": "boolean",
+              "default": false,
+              "description": "Allow glob patterns to follow symlink directories. This allows subdirectories of the symlink to be searched."
+            },
+            "glob": {
+              "type": "string",
+              "description": "The pattern to match."
+            },
+            "input": {
+              "type": "string",
+              "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+            },
+            "ignore": {
+              "description": "An array of globs to ignore.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "output": {
+              "type": "string",
+              "default": "",
+              "description": "Absolute path within the output."
+            }
+          },
+          "additionalProperties": false,
+          "required": ["glob", "input"]
+        },
+        {
+          "type": "string"
+        }
+      ]
+    }
+  }
+}

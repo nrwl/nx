@@ -1104,6 +1104,90 @@ export class LibModule {}
       );
       expect(indexSource).toBe('');
     });
+
+    it.each([
+      [
+        'the primary entry point, ahead of an entry point in the same directory',
+        'libs/lib1/src/lib/example/example',
+        'libs/lib1/src/public-api.ts',
+        './lib/example/example',
+      ],
+      [
+        'a secondary entry point',
+        'libs/lib1/testing/src/lib/example/example',
+        'libs/lib1/testing/src/index.ts',
+        './lib/example/example',
+      ],
+      [
+        'the closest entry point when entry points are nested',
+        'libs/lib1/src/utils/example/example',
+        'libs/lib1/src/utils/index.ts',
+        './example/example',
+      ],
+      [
+        'a secondary entry point with an ng-package.json',
+        'libs/lib1/legacy/src/lib/example/example',
+        'libs/lib1/legacy/src/index.ts',
+        './lib/example/example',
+      ],
+      [
+        'the primary entry point when no entry point contains the component',
+        'libs/lib1/other/example/example',
+        'libs/lib1/src/public-api.ts',
+        './../other/example/example',
+      ],
+    ])(
+      'should export the component from %s of a library using the library builder',
+      async (_, path, entryFile, importPath) => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'lib1', {
+          projectType: 'library',
+          sourceRoot: 'libs/lib1/src',
+          root: 'libs/lib1',
+          targets: { build: { executor: '@nx/angular:library' } },
+        });
+        writeJson(tree, 'libs/lib1/package.json', {
+          name: '@my-org/lib1',
+          exports: {
+            './helpers': './src/helpers.ts',
+            '.': './src/public-api.ts',
+            './testing': './testing/src/index.ts',
+            './utils': './src/utils/index.ts',
+          },
+        });
+        writeJson(tree, 'libs/lib1/ng-package.json', {
+          lib: { entryFile: 'src/public-api.ts' },
+        });
+        writeJson(tree, 'libs/lib1/legacy/ng-package.json', {
+          lib: { entryFile: 'src/index.ts' },
+        });
+        writeJson(tree, 'libs/lib1/testing/ng-package.json', {
+          lib: { entryFile: 'src/public-api.ts' },
+        });
+        const entryFiles = [
+          'libs/lib1/legacy/src/index.ts',
+          'libs/lib1/src/helpers.ts',
+          'libs/lib1/src/public-api.ts',
+          'libs/lib1/testing/src/index.ts',
+          'libs/lib1/src/utils/index.ts',
+        ];
+        for (const file of entryFiles) {
+          tree.write(file, '');
+        }
+
+        await componentGenerator(tree, {
+          path,
+          export: true,
+          skipFormat: true,
+        });
+
+        for (const file of entryFiles) {
+          expect(tree.read(file, 'utf-8').trim()).toBe(
+            file === entryFile ? `export * from '${importPath}';` : ''
+          );
+        }
+      }
+    );
   });
 
   describe('changeDetection', () => {

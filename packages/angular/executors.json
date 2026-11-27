@@ -8,12 +8,17 @@
     "ng-packagr-lite": {
       "implementation": "./dist/src/executors/ng-packagr-lite/ng-packagr-lite.impl",
       "schema": "./dist/src/executors/ng-packagr-lite/schema.json",
-      "description": "Builds an Angular library with support for incremental builds.\n\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nx/angular:package` executor but it only produces ESM2022 bundles."
+      "description": "Builds an Angular library with support for incremental builds.\n\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nx/angular:package` executor but it only produces ESM2022 bundles.\n\n_Note: this executor is deprecated once `package.json` requires `@angular/core` and the Angular build package at version 22.3.0 or later. Use the `@nx/angular:library` executor instead_."
+    },
+    "library": {
+      "implementation": "./dist/src/executors/library/library.impl",
+      "schema": "./dist/src/executors/library/schema.json",
+      "description": "Builds an Angular library producing an output following the Angular Package Format (APF), using the `@angular/build:library` builder. _Note: this is only supported in Angular versions >= 22.3.0_."
     },
     "package": {
       "implementation": "./dist/src/executors/package/package.impl",
       "schema": "./dist/src/executors/package/schema.json",
-      "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` and `@angular/build:ng-packagr` builders, with additional support for incremental builds."
+      "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` and `@angular/build:ng-packagr` builders, with additional support for incremental builds.\n\n_Note: this executor is deprecated once `package.json` requires `@angular/core` and the Angular build package at version 22.3.0 or later. Use the `@nx/angular:library` executor instead_."
     },
     "browser-esbuild": {
       "implementation": "./dist/src/executors/browser-esbuild/browser-esbuild.impl",

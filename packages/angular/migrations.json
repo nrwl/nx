@@ -400,6 +400,16 @@
       "description": "Removes the `@angular-devkit/build-angular:ssr-dev-server` targets of Rspack projects whose `serverTarget` values all name missing targets. Those targets can't run.",
       "implementation": "./dist/src/migrations/update-24-1-0/remove-rspack-ssr-dev-server-targets",
       "documentation": "./dist/src/migrations/update-24-1-0/remove-rspack-ssr-dev-server-targets.md"
+    },
+    "update-24-2-0-upgrade-to-angular-22-3": {
+      "version": "24.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=22.1.0 <22.2.0"
+      },
+      "optionalUpdate": true,
+      "description": "Update the Angular packages to 22.3 when the Angular 22.2 upgrade moved the workspace from 22.1 in the same run. The Angular 22.3 package updates apply only to workspaces that start on 22.2.",
+      "implementation": "./dist/src/migrations/update-24-2-0/upgrade-to-angular-22-3",
+      "documentation": "./dist/src/migrations/update-24-2-0/upgrade-to-angular-22-3.md"
     }
   },
   "packageJsonUpdates": {
@@ -2521,6 +2531,76 @@
         },
         "@angular-eslint/bundled-angular-compiler": {
           "version": "^21.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "24.2.0": {
+      "version": "24.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=22.2.0 <22.3.0"
+      },
+      "packages": {
+        "@angular/cli": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false,
+          "ignorePackageGroup": true,
+          "ignoreMigrations": true
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/build": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.2203.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.2203.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/google-maps": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~22.3.0",
           "alwaysAddToPackageJson": false
         }
       }

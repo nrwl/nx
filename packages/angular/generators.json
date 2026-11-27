@@ -38,6 +38,11 @@
       "schema": "./dist/src/generators/convert-to-application-executor/schema.json",
       "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder."
     },
+    "convert-to-library-executor": {
+      "factory": "./dist/src/generators/convert-to-library-executor/convert-to-library-executor",
+      "schema": "./dist/src/generators/convert-to-library-executor/schema.json",
+      "description": "Converts projects to use the `@nx/angular:library` executor or the `@angular/build:library` builder."
+    },
     "convert-to-rspack": {
       "factory": "./dist/src/generators/convert-to-rspack/convert-to-rspack",
       "schema": "./dist/src/generators/convert-to-rspack/schema.json",

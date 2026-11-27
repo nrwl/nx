@@ -195,6 +195,16 @@ export async function normalizeOptions(
     prerender = false;
     appShell = false;
   }
+  if (typeof prerender === 'object') {
+    prerender = {
+      ...prerender,
+      // Unlike Angular's builder, a route list keeps discovery off by default,
+      // so configs that list their routes prerender only those.
+      discoverRoutes:
+        prerender.discoverRoutes ??
+        (prerender.routes === undefined && prerender.routesFile === undefined),
+    };
+  }
 
   const normalizedOptimization = normalizeOptimization(optimization);
 
@@ -210,6 +220,18 @@ export async function normalizeOptions(
     outputMode,
     projectGraphCreation
   );
+
+  if (
+    hasServer &&
+    typeof prerender === 'object' &&
+    prerender.format === 'file'
+  ) {
+    // The '@angular/ssr' server runtime looks up prerendered pages as
+    // '<route>/index.html'.
+    warn(
+      'The "prerender.format" option is not considered when the build produces a server.'
+    );
+  }
 
   if (
     !projectGraphCreation &&

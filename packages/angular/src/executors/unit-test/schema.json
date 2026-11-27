@@ -275,6 +275,14 @@
       "description": "Specifies the path to a TypeScript file that provides an array of Angular providers for the test environment. The file must contain a default export of the provider array.",
       "minLength": 1
     },
+    "polyfills": {
+      "description": "A list of polyfills to include in the build. Can be a full path for a file, relative to the current workspace or module specifier. Example: 'zone.js'. If not specified, polyfills will be inherited from the build target. _Note: this is only supported in Angular versions >= 22.3.0_.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "uniqueItems": true
+      }
+    },
     "setupFiles": {
       "type": "array",
       "items": {

@@ -19,3 +19,11 @@ export function acknowledgeAngularBuildScripts(tree: Tree): void {
     angularBuildAllowBuilds
   );
 }
+
+// less's postinstall only installs Playwright browsers, which nothing that
+// consumes less needs.
+export function acknowledgeLessBuildScripts(tree: Tree): void {
+  acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+    less: false,
+  });
+}

@@ -15,7 +15,7 @@ import {
   Logger,
 } from '../../utilities';
 import type { BuilderMigrator, BuilderMigratorClassType } from '../builders';
-import { Migrator } from '../migrator';
+import { Migrator, replacePathPrefix } from '../migrator';
 
 export class ProjectMigrator<
   TargetType extends string = string,
@@ -44,14 +44,16 @@ export class ProjectMigrator<
   ) {
     super(tree, project.config, logger ?? new Logger(project.name));
 
+    const oldRoot = this.projectConfig.root ?? '';
+    const oldSourceRoot =
+      this.projectConfig.sourceRoot || joinPathFragments(oldRoot, 'src');
+    const newRoot = `${rootDir}/${project.name}`;
     this.project = {
       name: project.name,
-      oldRoot: this.projectConfig.root ?? '',
-      oldSourceRoot:
-        this.projectConfig.sourceRoot ||
-        joinPathFragments(this.projectConfig.root ?? '', 'src'),
-      newRoot: `${rootDir}/${project.name}`,
-      newSourceRoot: `${rootDir}/${project.name}/src`,
+      oldRoot,
+      oldSourceRoot,
+      newRoot,
+      newSourceRoot: getNewSourceRoot(oldRoot, oldSourceRoot, newRoot),
     };
 
     this.collectTargetNames();
@@ -208,21 +210,19 @@ export class ProjectMigrator<
   }
 
   protected convertPath(originalPath: string): string {
-    if (originalPath?.startsWith(this.project.oldSourceRoot)) {
-      return joinPathFragments(
-        this.project.newSourceRoot,
-        originalPath.replace(this.project.oldSourceRoot, '')
-      );
-    }
-
-    if (originalPath?.startsWith(this.project.oldRoot)) {
-      return joinPathFragments(
-        this.project.newRoot,
-        originalPath.replace(this.project.oldRoot, '')
-      );
-    }
-
-    return originalPath;
+    return (
+      replacePathPrefix(
+        originalPath,
+        this.project.oldSourceRoot,
+        this.project.newSourceRoot
+      ) ??
+      replacePathPrefix(
+        originalPath,
+        this.project.oldRoot,
+        this.project.newRoot
+      ) ??
+      originalPath
+    );
   }
 
   protected moveDir(from: string, to: string): void {
@@ -332,4 +332,21 @@ export class ProjectMigrator<
 
     this.skipMigration.push(targetType);
   }
+}
+
+// A nested project moves as a whole, so its source root keeps its place in it.
+// A root project's source root moves to `<newRoot>/src`.
+function getNewSourceRoot(
+  oldRoot: string,
+  oldSourceRoot: string,
+  newRoot: string
+): string {
+  if (oldRoot !== '') {
+    const sourceRootInProject = normalizePath(relative(oldRoot, oldSourceRoot));
+    if (!sourceRootInProject.startsWith('..')) {
+      return joinPathFragments(newRoot, sourceRootInProject);
+    }
+  }
+
+  return `${newRoot}/src`;
 }

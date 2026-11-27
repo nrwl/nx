@@ -13,6 +13,8 @@ describe('buildTypechecksProject', () => {
     '@nx/angular:application',
     '@angular-devkit/build-angular:browser',
     '@angular/build:ng-packagr',
+    '@nx/angular:library',
+    '@angular/build:library',
   ])('should detect %s', (executor) => {
     expect(buildTypechecksProject([], { build: { executor } })).toBe(true);
   });

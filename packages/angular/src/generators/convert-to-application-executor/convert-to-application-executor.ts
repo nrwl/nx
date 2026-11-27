@@ -4,12 +4,17 @@ import {
   installPackagesTask,
   logger,
   readJson,
+  readNxJson,
   readProjectConfiguration,
   updateProjectConfiguration,
   writeJson,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
+import {
+  mergeTargetConfigurations,
+  readApplicableTargetDefaults,
+} from '@nx/devkit/internal';
 import { dirname, join } from 'node:path/posix';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { allTargetOptions } from '../../utils/targets';
@@ -17,11 +22,11 @@ import { setupSsr } from '../setup-ssr/setup-ssr';
 import { validateProject } from '../utils/validations';
 import type { GeneratorOptions } from './schema';
 
-const executorsToConvert = new Set([
-  '@angular-devkit/build-angular:browser',
-  '@angular-devkit/build-angular:browser-esbuild',
-  '@nx/angular:webpack-browser',
-  '@nx/angular:browser-esbuild',
+const executorsToConvert = new Map<string, 'webpack' | 'esbuild'>([
+  ['@angular-devkit/build-angular:browser', 'webpack'],
+  ['@angular-devkit/build-angular:browser-esbuild', 'esbuild'],
+  ['@nx/angular:webpack-browser', 'webpack'],
+  ['@nx/angular:browser-esbuild', 'esbuild'],
 ]);
 const serverTargetExecutors = new Set([
   '@angular-devkit/build-angular:server',
@@ -110,6 +115,19 @@ async function convertProjectTargets(
   }
 
   const buildTarget = project.targets[buildTargetName];
+  // Target defaults keyed by the old executor stop applying after the
+  // conversion, so read the service worker options the old target ran with.
+  const targetDefaults = readApplicableTargetDefaults(
+    buildTargetName,
+    buildTarget.executor,
+    readNxJson(tree)?.targetDefaults,
+    projectName,
+    { name: projectName, type: 'app', data: project }
+  );
+  const effectiveBuildTarget = targetDefaults
+    ? mergeTargetConfigurations(buildTarget, targetDefaults)
+    : buildTarget;
+  const browserBuilder = executorsToConvert.get(buildTarget.executor);
   buildTarget.executor = newExecutor;
 
   if (buildTarget.outputs) {
@@ -118,7 +136,13 @@ async function convertProjectTargets(
     );
   }
 
-  for (const [, options] of allTargetOptions(buildTarget)) {
+  const baseServiceWorker = effectiveBuildTarget.options?.['serviceWorker'];
+  const baseNgswConfigPath = effectiveBuildTarget.options?.['ngswConfigPath'];
+  for (const [configurationName, options] of allTargetOptions(buildTarget)) {
+    const { serviceWorker, ngswConfigPath } =
+      (configurationName === undefined
+        ? effectiveBuildTarget.options
+        : effectiveBuildTarget.configurations?.[configurationName]) ?? options;
     if (options['index'] === '') {
       options['index'] = false;
     }
@@ -128,8 +152,29 @@ async function convertProjectTargets(
     if (serverTargetName && typeof options['browser'] === 'string') {
       options['server'] = dirname(options['browser']) + '/main.server.ts';
     }
-    options['serviceWorker'] =
-      options['ngswConfigPath'] ?? options['serviceWorker'];
+    if (serviceWorker === true) {
+      // The application builder only accepts a path. The webpack browser
+      // builder defaults it in code, and browser-esbuild builds no service
+      // worker without one.
+      options['serviceWorker'] =
+        ngswConfigPath ??
+        baseNgswConfigPath ??
+        (browserBuilder === 'webpack'
+          ? join(project.root, 'ngsw-config.json')
+          : false);
+    } else if (
+      serviceWorker === undefined &&
+      baseServiceWorker === true &&
+      typeof ngswConfigPath === 'string'
+    ) {
+      // A configuration that only changes the config path of the service
+      // worker enabled in the base options.
+      options['serviceWorker'] = ngswConfigPath;
+    } else if (serviceWorker === false) {
+      // An inherited `false` can stop applying with the old executor, which
+      // would leave the converted base path in effect.
+      options['serviceWorker'] = false;
+    }
 
     if (typeof options['polyfills'] === 'string') {
       options['polyfills'] = [options['polyfills']];

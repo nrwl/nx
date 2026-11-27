@@ -6,14 +6,9 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { basename, dirname } from 'path';
+import { readLibraryBuilderEntryPoints } from '../../utils/entry-point';
+import { usesLibraryBuilder, usesNgPackagr } from '../../utils/project';
 import type { MoveImplOptions } from './types';
-
-const libraryExecutors = [
-  '@angular-devkit/build-angular:ng-packagr',
-  '@angular/build:ng-packagr',
-  '@nx/angular:ng-packagr-lite',
-  '@nx/angular:package',
-];
 
 export function updateSecondaryEntryPoints(
   tree: Tree,
@@ -29,30 +24,34 @@ export function updateSecondaryEntryPoints(
     return;
   }
 
-  if (
-    !Object.values(project.targets ?? {}).some((target) =>
-      libraryExecutors.includes(target.executor)
-    )
-  ) {
-    return;
+  // The name replacement isn't idempotent, so each README is updated once even
+  // when both layouts list its directory.
+  const entryPointDirs = new Set<string>();
+  if (usesNgPackagr(project)) {
+    visitNotIgnoredFiles(tree, project.root, (filePath) => {
+      if (
+        basename(filePath) === 'ng-package.json' &&
+        normalizePath(filePath) !==
+          joinPathFragments(project.root, 'ng-package.json')
+      ) {
+        entryPointDirs.add(dirname(filePath));
+      }
+    });
+  }
+  if (usesLibraryBuilder(tree, schema.newProjectName)) {
+    for (const { subpath } of readLibraryBuilderEntryPoints(
+      tree,
+      project.root
+    )) {
+      if (subpath !== '.') {
+        entryPointDirs.add(joinPathFragments(project.root, subpath));
+      }
+    }
   }
 
-  visitNotIgnoredFiles(tree, project.root, (filePath) => {
-    if (
-      basename(filePath) !== 'ng-package.json' ||
-      normalizePath(filePath) ===
-        joinPathFragments(project.root, 'ng-package.json')
-    ) {
-      return;
-    }
-
-    updateReadme(
-      tree,
-      dirname(filePath),
-      schema.oldProjectName,
-      schema.newProjectName
-    );
-  });
+  for (const dir of entryPointDirs) {
+    updateReadme(tree, dir, schema.oldProjectName, schema.newProjectName);
+  }
 }
 
 function updateReadme(
