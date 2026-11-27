@@ -41,7 +41,8 @@ When you run the CI test target, Nx handles each test file as an independent tas
 Test runners offer their own parallelism, such as Playwright sharding (`--shard`) or Cypress parallelization, which split tests across dedicated CI jobs.
 Static shards still leave machines waiting on whichever shard gets the slowest specs, and dedicated test machines sit idle while builds run or after tests finish.
 Nx turns each test file into a regular task in the same graph as your builds, lints, and unit tests.
-[Nx Cloud assigns each task to the next free worker](/docs/features/ci-features/distribute-task-execution) and packs e2e tasks alongside lighter ones, and unaffected test files replay from cache instead of running.
+[Nx Cloud assigns each task to the next free worker](/docs/features/ci-features/distribute-task-execution) and packs e2e tasks alongside lighter ones.
+Unaffected test files replay from cache instead of running.
 
 This workflow builds on Nx Cloud workers, so make sure you [set up Nx Cloud workers](/docs/features/ci-features/distribute-task-execution#set-up-nx-cloud-workers) first.
 From there, first split your e2e targets into per-file tasks, then enable per-file caching so unaffected test files don't rerun.
