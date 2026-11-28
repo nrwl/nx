@@ -1,9 +1,9 @@
 //! The files under the directories the hasher registers, whether tracked or
 //! not, with their content hashes. A watching context keeps the members
 //! current from its events (see `WorkspaceContext`); a walk seeds a prefix
-//! and is the fallback wherever the watch does not reach. With no watch, a
-//! prefix is walked again every time it is registered, once per up-front
-//! batch, so the listing is what a walk at that moment would say.
+//! and is the fallback wherever the watch does not reach. With no watch,
+//! every listing is a fresh walk and none is kept, so it is what a walk at
+//! that moment would say.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -16,7 +16,9 @@ use parking_lot::RwLock;
 use tracing::{debug, trace};
 
 use crate::native::hasher::hash_file_path;
-use crate::native::walker::{PathPredicate, read_directory, seed_walk};
+use crate::native::walker::{
+    DiskWalkIgnores, PathPredicate, disk_relative_path, read_directory, seed_walk,
+};
 
 /// Whether the watch delivers events for a workspace-relative directory.
 pub(crate) type DeliversUnder = Arc<dyn Fn(&str) -> bool + Send + Sync>;
@@ -56,6 +58,8 @@ pub struct IgnoredIndex {
     /// Bumped by every change the watch reports under a prefix, so a seed or
     /// a read can tell whether something moved while it ran.
     generation: AtomicU64,
+    /// The walk's skip rules, so an event never lists what a walk leaves out.
+    walk_ignores: OnceLock<Option<DiskWalkIgnores>>,
     /// Test seam: makes every walk fail to settle, which is otherwise only
     /// reachable by racing the disk against the walk.
     #[cfg(test)]
@@ -176,9 +180,14 @@ impl IgnoredIndex {
             announced_whole_workspace: std::sync::atomic::AtomicBool::new(false),
             canonical_root: OnceLock::new(),
             generation: AtomicU64::new(0),
+            walk_ignores: OnceLock::new(),
             #[cfg(test)]
             never_settles: std::sync::atomic::AtomicBool::new(false),
         }
+    }
+
+    pub(crate) fn has_watch(&self) -> bool {
+        self.watch.is_some()
     }
 
     /// Whether a directory that has been walked holds `path`. Only then is
@@ -198,6 +207,25 @@ impl IgnoredIndex {
         self.canonical_root
             .get_or_init(|| dunce::canonicalize(workspace_root).ok())
             .as_deref()
+    }
+
+    fn resolves_in_place(
+        &self,
+        workspace_root: &Path,
+        dir: &str,
+        memo: Option<&DashMap<String, bool>>,
+    ) -> bool {
+        if let Some(hit) = memo.and_then(|memo| memo.get(dir).map(|hit| *hit)) {
+            return hit;
+        }
+        let resolved = self.canonical_root(workspace_root).is_some_and(|root| {
+            dunce::canonicalize(workspace_root.join(dir))
+                .is_ok_and(|resolved| resolved == root.join(dir))
+        });
+        if let Some(memo) = memo {
+            memo.insert(dir.to_owned(), resolved);
+        }
+        resolved
     }
 
     /// Whether `dir` resolves outside the workspace. Resolved, not walked: a
@@ -304,10 +332,18 @@ impl IgnoredIndex {
         if !self.is_tracked(dir) {
             return None;
         }
-        // Without a watch nothing keeps a listing current, so every ask walks.
-        if (self.watch.is_none() || !self.is_listed(dir))
-            && !self.walk_into_listing(workspace_root, dir)
-        {
+        if self.watch.is_none() {
+            // Nothing keeps an unwatched listing current, so every ask walks,
+            // and none is adopted: concurrent asks would rewrite each other's members.
+            if self.leaves_the_workspace(workspace_root, dir) {
+                return None;
+            }
+            let mut files = seed_walk(workspace_root, dir)?;
+            files.sort_unstable();
+            files.dedup();
+            return Some(files);
+        }
+        if !self.is_listed(dir) && !self.walk_into_listing(workspace_root, dir) {
             return None;
         }
         Some(members_under(&self.members.read(), dir))
@@ -329,7 +365,28 @@ impl IgnoredIndex {
         accept: PathPredicate,
         skip: &[String],
     ) -> Option<Vec<String>> {
-        if cached && self.is_tracked(dir) {
+        self.files_under_in(workspace_root, dir, cached, accept, skip, None)
+    }
+
+    /// `files_under`, remembering each `dir`'s resolve check in `in_place`,
+    /// which must not outlive one hash call.
+    pub(crate) fn files_under_in(
+        &self,
+        workspace_root: &Path,
+        dir: &str,
+        cached: bool,
+        accept: PathPredicate,
+        skip: &[String],
+        in_place: Option<&DashMap<String, bool>>,
+    ) -> Option<Vec<String>> {
+        let can_list = cached
+            && self.is_tracked(dir)
+            && self.watch.as_ref().is_none_or(|watch| {
+                // A listed ancestor can have skipped this explicit root,
+                // including a directory reached through a symlink.
+                !watch.may_miss_under(dir) && self.resolves_in_place(workspace_root, dir, in_place)
+            });
+        if can_list {
             // A listing that cannot settle, because the disk kept moving
             // under the walk, must not read as an empty directory: fall
             // through and read it the way an untracked one is read.
@@ -343,9 +400,9 @@ impl IgnoredIndex {
 
     /// A reported write or creation. Under a listed prefix a file becomes a
     /// member and a directory is re-listed from a walk, since its files may
-    /// have arrived without events of their own. A path that is gone, a
-    /// linked directory, or a linked file whose target is outside the
-    /// workspace is not a member, as a walk would not list it. Any kept hash
+    /// have arrived without events of their own. A path that is gone, one the
+    /// walk skips, a linked directory, or a linked file whose target is outside
+    /// the workspace is not a member, as a walk would not list it. Any kept hash
     /// for the path stops being trusted.
     pub(crate) fn note_written(&self, workspace_root: &Path, path: &str) {
         if !self.is_tracked(path) {
@@ -356,7 +413,7 @@ impl IgnoredIndex {
         if let Some(mut content) = self.contents.get_mut(path) {
             content.trusted = false;
         }
-        let listed = self.is_listed(path);
+        let listed = self.is_listed(path) && !self.walk_skips(workspace_root, path);
         let full_path = workspace_root.join(path);
         let Ok(link) = std::fs::symlink_metadata(&full_path) else {
             self.forget(path);
@@ -382,9 +439,26 @@ impl IgnoredIndex {
             self.forget(path);
             return;
         }
-        if listed {
+        if listed && disk_relative_path(workspace_root, &full_path).is_some() {
             self.members.write().insert(path.to_string());
         }
+    }
+
+    /// Whether the walk of the listed directory holding `path` skips it or a
+    /// directory between them, such as `.nx/workspace-data` under the root.
+    fn walk_skips(&self, workspace_root: &Path, path: &str) -> bool {
+        let Some(ignores) = self
+            .walk_ignores
+            .get_or_init(|| DiskWalkIgnores::new().ok())
+        else {
+            return false;
+        };
+        let listed = self.listed.read();
+        Path::new(path)
+            .ancestors()
+            .map_while(|level| level.to_str())
+            .take_while(|level| !listed.contains(*level))
+            .any(|level| ignores.skips(&workspace_root.join(level)))
     }
 
     /// Reported deletions applied together. A kept but unlisted directory
@@ -743,6 +817,14 @@ mod tests {
         let index = watched();
         assert!(!index.track(temp.path(), "node_modules/dep"));
         assert!(index.list(temp.path(), "node_modules/dep").is_none());
+        assert!(index.track(temp.path(), ""));
+        assert!(index.list(temp.path(), "").is_some());
+        assert_eq!(
+            index
+                .files_under(temp.path(), "node_modules/dep", true, &|_| true, &[])
+                .unwrap(),
+            ["node_modules/dep/index.js"]
+        );
         // Without a watch there is no gate: the seed stands for the run.
         let unwatched = IgnoredIndex::new(None);
         assert!(unwatched.track(temp.path(), "node_modules/dep"));
@@ -1096,6 +1178,31 @@ mod tests {
         );
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn one_call_remembers_whether_each_directory_resolves_in_place() {
+        let temp = workspace();
+        let elsewhere = TempDir::new().unwrap();
+        elsewhere.child("shared/out.js").write_str("one").unwrap();
+        std::os::unix::fs::symlink(
+            elsewhere.path().join("shared"),
+            temp.path().join("dist/cache"),
+        )
+        .unwrap();
+        let index = watched();
+        assert!(index.track(temp.path(), "dist"));
+        let in_place = DashMap::new();
+        for dir in ["dist", "dist/cache", "dist"] {
+            index
+                .files_under_in(temp.path(), dir, true, &|_| true, &[], Some(&in_place))
+                .unwrap();
+        }
+        let remembered = |dir: &str| in_place.get(dir).map(|hit| *hit);
+        assert_eq!(in_place.len(), 2);
+        assert_eq!(remembered("dist"), Some(true));
+        assert_eq!(remembered("dist/cache"), Some(false));
+    }
+
     /// A tracked ancestor must not adopt a directory that would be refused on
     /// its own. Reached through `dist`, a `dist/cache` linked out of the
     /// workspace would otherwise be walked into, its outside files listed, and
@@ -1116,6 +1223,13 @@ mod tests {
         assert!(index.track(temp.path(), "dist"));
         assert!(!index.track(temp.path(), "dist/cache"));
         assert!(index.list(temp.path(), "dist/cache").is_none());
+        assert!(index.list(temp.path(), "dist").is_some());
+        assert_eq!(
+            index
+                .files_under(temp.path(), "dist/cache", true, &|_| true, &[])
+                .unwrap(),
+            ["dist/cache/out.js"]
+        );
         index.hash_file(temp.path(), "dist/cache/out.js", None, RunStage::NothingRan);
         assert!(index.trusted_hash("dist/cache/out.js").is_none());
     }
@@ -1259,6 +1373,51 @@ mod tests {
         // A narrower directory is absorbed rather than listed on its own.
         assert!(index.track(temp.path(), "dist/gen"));
         assert_eq!(index.tracked.read().len(), 1);
+    }
+
+    #[test]
+    fn a_reported_path_a_walk_skips_does_not_join_a_listing() {
+        let temp = workspace();
+        let skipped = [
+            ".nx/workspace-data/d/server-process.json",
+            "node_modules/m/x.js",
+        ];
+        for path in skipped {
+            temp.child(path).write_str("{}").unwrap();
+        }
+        let index = watched_with(Arc::new(|_: &str| true));
+        assert!(index.track(temp.path(), ""));
+        let walked = index.list(temp.path(), "").unwrap();
+
+        for path in skipped {
+            index.note_written(temp.path(), path);
+        }
+        index.note_written(temp.path(), ".nx/workspace-data/d");
+        assert_eq!(index.list(temp.path(), "").unwrap(), walked);
+    }
+
+    #[test]
+    fn unwatched_listings_share_no_members_between_asks() {
+        let temp = workspace();
+        let inner = "node_modules/foo/x.js";
+        temp.child(inner).write_str("x").unwrap();
+        let index = IgnoredIndex::new(None);
+        assert!(index.track(temp.path(), ""));
+        assert_eq!(
+            index.list(temp.path(), "node_modules/foo"),
+            Some(vec![inner.to_string()])
+        );
+        index
+            .hash_file(temp.path(), inner, None, RunStage::NothingRan)
+            .unwrap();
+
+        let outer = index.list(temp.path(), "").unwrap();
+        assert!(!outer.contains(&inner.to_string()));
+        assert!(
+            index.remembered(inner),
+            "a walk of the root must not forget what an inner ask hashed"
+        );
+        assert!(index.members.read().is_empty());
     }
 
     #[test]

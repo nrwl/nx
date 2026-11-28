@@ -127,7 +127,7 @@ impl Positive {
 /// A `!` entry split at its literal prefix. The prefix is compared as text;
 /// only the remainder is a glob.
 pub(crate) struct Negation {
-    root: String,
+    pub(super) root: String,
     below: Below,
     /// Excludes `root` and everything under it.
     whole: bool,
@@ -135,19 +135,33 @@ pub(crate) struct Negation {
 
 impl Negation {
     pub(crate) fn parse(glob: &str) -> Result<Self> {
-        let normalized = normalize_glob(glob);
-        let body = normalized.strip_prefix('!').unwrap_or(&normalized);
-        let (root, remainder) = partition_glob(body);
+        let (root, remainder) = Self::split(glob);
         if root.is_empty() && remainder.is_none() {
             bail!("The fileset \"{glob}\" names nothing to exclude.");
         }
         // `**` and `**/*` match every path below, dotfiles included.
-        let whole = matches!(remainder.as_deref(), None | Some("**") | Some("**/*"));
+        let whole = Self::is_whole(remainder.as_deref());
         let below = match remainder {
             Some(rest) => Below::Pattern(build_glob_set(&[rest])?),
             None => Below::Tree,
         };
         Ok(Self { root, below, whole })
+    }
+
+    fn split(glob: &str) -> (String, Option<String>) {
+        let normalized = normalize_glob(glob);
+        partition_glob(normalized.strip_prefix('!').unwrap_or(&normalized))
+    }
+
+    fn is_whole(remainder: Option<&str>) -> bool {
+        matches!(remainder, None | Some("**") | Some("**/*"))
+    }
+
+    /// Identify possible traversal vetoes without compiling a matcher. The
+    /// group still validates its negations when it is expanded.
+    pub(super) fn possible_skip_root(glob: &str) -> Option<String> {
+        let (root, remainder) = Self::split(glob);
+        (Self::is_whole(remainder.as_deref()) && !root.is_empty()).then_some(root)
     }
 
     /// Excludes `path` as written: a file, or a directory and everything under it.

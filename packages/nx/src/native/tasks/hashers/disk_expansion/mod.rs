@@ -12,6 +12,7 @@
 mod entries;
 mod expansion;
 mod file_map;
+mod inventory;
 mod scope;
 
 pub(crate) use entries::{FileSet, Negation, Positive};
@@ -23,6 +24,7 @@ pub(crate) use expansion::{
 };
 pub(crate) use expansion::{parse_group, validate_files_glob, validate_files_globs};
 pub(crate) use file_map::{PathIndex, fold_files, match_file_map};
+pub(crate) use inventory::SettledFiles;
 pub(crate) use scope::{ProjectScope, ScopedMatcher, scope_roots};
 
 #[cfg(test)]

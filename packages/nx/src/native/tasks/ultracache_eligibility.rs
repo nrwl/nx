@@ -7,6 +7,8 @@ use crate::native::tasks::hashers::{parse_group, validate_files_glob};
 use crate::native::tasks::types::{TaskGraph, TaskUltracacheSettings, UltracacheMode};
 use crate::native::ultracache::set::SharedInputs;
 use crate::native::ultracache::{UltracacheConfigurationResolution, UltracacheConfigurations};
+use rayon::prelude::*;
+use std::sync::Arc;
 use xxhash_rust::xxh3::Xxh3;
 
 /// What the eligibility walk needs beyond each task's Ultracache settings.
@@ -50,7 +52,8 @@ impl From<UltracacheEligibilityOptions> for EligibilityInputs {
 /// marks the plan.
 #[derive(Clone, Debug)]
 pub(crate) struct UltracacheTask {
-    pub files: SharedInputs,
+    pub dictionary: SharedInputs,
+    pub files: Vec<u32>,
     pub digest: String,
 }
 
@@ -127,8 +130,6 @@ pub(crate) fn resolve<'a>(
 ) -> Resolved {
     let resolution = configurations.resolution_ref();
 
-    let mut tasks = HashMap::new();
-    let mut diagnostics = Vec::new();
     let ultracache_settings: Vec<_> = ultracache_settings.into_iter().collect();
     let task_ids: Vec<&str> = ultracache_settings.iter().map(|(id, _)| *id).collect();
     let entries = match configurations.entries_for(&task_ids) {
@@ -145,72 +146,113 @@ pub(crate) fn resolve<'a>(
         }
     };
 
-    // Tasks commonly share most of their recorded globs, even when their
-    // complete input lists differ. Validate each distinct string once.
-    let mut escaping_globs = HashMap::new();
-    let mut invalid_globs = HashMap::new();
-    for (task_id, ultracache) in ultracache_settings {
-        // `On` is the only mode that lets a recording stand in for what the
-        // target declared; `Warn` and `Error` still record, but report against
-        // the declaration rather than replacing it.
-        match ultracache.and_then(|ultracache| ultracache.mode.as_ref()) {
-            Some(UltracacheMode::Off) => {
-                diagnostics.push(UltracacheDiagnostic::task("disabled", task_id));
-                continue;
-            }
-            Some(UltracacheMode::Warn) | Some(UltracacheMode::Error) => {
-                diagnostics.push(UltracacheDiagnostic::task("autofix-disabled", task_id));
-                continue;
-            }
-            Some(UltracacheMode::On) | None => {}
-        }
-        if inputs.custom_hasher.contains(task_id) {
-            diagnostics.push(UltracacheDiagnostic::task("custom-hasher", task_id));
-            continue;
-        }
-        if inputs.continuous.contains(task_id) {
-            diagnostics.push(UltracacheDiagnostic::task("continuous", task_id));
-            continue;
-        }
-        let Some(files) = entries.get(task_id) else {
-            diagnostics.push(UltracacheDiagnostic::task("missing", task_id));
-            continue;
+    let mut diagnostics = Vec::new();
+    let mut eligible = Vec::new();
+    for (id, settings) in ultracache_settings {
+        let reason = match settings.and_then(|s| s.mode.as_ref()) {
+            Some(UltracacheMode::Off) => Some("disabled"),
+            Some(UltracacheMode::Warn | UltracacheMode::Error) => Some("autofix-disabled"),
+            _ if inputs.custom_hasher.contains(id) => Some("custom-hasher"),
+            _ if inputs.continuous.contains(id) => Some("continuous"),
+            _ => None,
         };
-        if let Some(glob) = files.iter().find(|&g| {
-            *escaping_globs.entry(g.as_ref()).or_insert_with(|| {
-                if g.contains('{') {
-                    expand_literal_braces(g)
-                        .iter()
-                        .any(|e| escapes_workspace(e))
-                } else {
-                    escapes_workspace(g)
-                }
-            })
-        }) {
-            let mut diagnostic = UltracacheDiagnostic::task("escapes-workspace", task_id);
-            diagnostic.glob = Some(glob.to_string());
-            diagnostics.push(diagnostic);
-            continue;
+        if let Some(reason) = reason {
+            diagnostics.push(UltracacheDiagnostic::task(reason, id));
+        } else if let Some(stored) = entries.get(id) {
+            eligible.push((id, settings, stored));
+        } else {
+            diagnostics.push(UltracacheDiagnostic::task("missing", id));
         }
-        // A read the hasher would reject fails the whole hash; fall back instead.
-        if let Some(glob) = files.iter().find(|&g| {
-            *invalid_globs.entry(g.as_ref()).or_insert_with(|| {
-                validate_files_glob(g).is_err() || parse_group(std::slice::from_ref(g)).is_err()
-            })
-        }) {
-            let mut diagnostic = UltracacheDiagnostic::task("invalid-glob", task_id);
-            diagnostic.glob = Some(glob.to_string());
-            diagnostics.push(diagnostic);
-            continue;
+    }
+    // Give repeated reads one small ID. IDs are in text order so each task can
+    // retain the diagnostic and grouping order using only its integer list.
+    let unique = eligible
+        .par_iter()
+        .map(|(_, _, entry)| entry)
+        .fold(hashbrown::HashSet::new, |mut row, e| {
+            row.extend(e.iter());
+            row
+        })
+        .reduce(hashbrown::HashSet::new, |mut a, mut b| {
+            if a.len() < b.len() {
+                std::mem::swap(&mut a, &mut b);
+            }
+            a.extend(b);
+            a
+        });
+    let mut sorted: Vec<&Arc<str>> = unique.into_iter().collect();
+    sorted.par_sort_unstable();
+    let dictionary: SharedInputs = sorted.into_iter().cloned().collect();
+    let ids: hashbrown::HashMap<&str, u32> = dictionary
+        .iter()
+        .enumerate()
+        .map(|(i, g)| (g.as_ref(), i as u32))
+        .collect();
+    #[derive(Clone, Copy, PartialEq)]
+    enum Issue {
+        Escapes,
+        Invalid,
+    }
+    let validation: Vec<_> = dictionary
+        .par_iter()
+        .map(|g| {
+            let escaping = if g.contains('{') {
+                expand_literal_braces(g)
+                    .iter()
+                    .any(|a| escapes_workspace(a))
+            } else {
+                escapes_workspace(g)
+            };
+            if escaping {
+                Some(Issue::Escapes)
+            } else if validate_files_glob(g).is_err()
+                || parse_group(std::slice::from_ref(g)).is_err()
+            {
+                Some(Issue::Invalid)
+            } else {
+                None
+            }
+        })
+        .collect();
+    let resolved: Vec<_> = eligible
+        .into_par_iter()
+        .map(|(task_id, ultracache, stored)| {
+            let mut files: Vec<u32> = stored.iter().map(|g| ids[g.as_ref()]).collect();
+            // Stored input lists and dictionary IDs are both in glob-text order.
+            files.dedup();
+            if let Some((&id, reason)) = [
+                (Issue::Escapes, "escapes-workspace"),
+                (Issue::Invalid, "invalid-glob"),
+            ]
+            .into_iter()
+            .find_map(|(kind, reason)| {
+                files
+                    .iter()
+                    .find(|&&i| validation[i as usize] == Some(kind))
+                    .map(|id| (id, reason))
+            }) {
+                let mut diagnostic = UltracacheDiagnostic::task(reason, task_id);
+                diagnostic.glob = Some(dictionary[id as usize].to_string());
+                return Err(diagnostic);
+            }
+            Ok((
+                task_id.to_string(),
+                UltracacheTask {
+                    dictionary: Arc::clone(&dictionary),
+                    files,
+                    digest: configuration_digest(ultracache),
+                },
+            ))
+        })
+        .collect();
+    let mut tasks = HashMap::new();
+    for task in resolved {
+        match task {
+            Ok((id, entry)) => {
+                tasks.insert(id, entry);
+            }
+            Err(diagnostic) => diagnostics.push(diagnostic),
         }
-
-        tasks.insert(
-            task_id.to_string(),
-            UltracacheTask {
-                files: files.clone(),
-                digest: configuration_digest(ultracache),
-            },
-        );
     }
 
     Resolved {
@@ -333,6 +375,13 @@ fn escapes_workspace(glob: &str) -> bool {
 /// Whether an observed read falls under a declared output of one of the task's
 /// direct or transitive dependencies.
 fn reads_dependency_outputs(task_id: &str, files: &SharedInputs, task_graph: &TaskGraph) -> bool {
+    if task_graph
+        .dependencies
+        .get(task_id)
+        .is_none_or(Vec::is_empty)
+    {
+        return false;
+    }
     let candidates: Vec<&str> = files
         .iter()
         .filter(|f| !f.starts_with('!'))
@@ -387,9 +436,7 @@ pub fn get_ultracache_deferred_task_ids(
     configurations: &UltracacheConfigurations,
     task_graph: TaskGraph,
 ) -> Vec<String> {
-    let ids: Vec<&str> = task_graph.tasks.keys().map(String::as_str).collect();
-    let entries = configurations.entries_for(&ids).unwrap_or_default();
-    let mut deferred: Vec<String> = task_graph
+    let ids: Vec<&str> = task_graph
         .tasks
         .iter()
         .filter(|(_, task)| {
@@ -398,13 +445,22 @@ pub fn get_ultracache_deferred_task_ids(
                 .and_then(|ultracache| ultracache.include_unstable_files)
                 .unwrap_or(true)
         })
-        .map(|(task_id, _)| task_id)
-        .filter(|task_id| {
+        .map(|(id, _)| id.as_str())
+        .collect();
+    if ids.is_empty() {
+        return Vec::new();
+    }
+    // An unreadable set makes the whole eligibility check fall back together.
+    let all_ids: Vec<_> = task_graph.tasks.keys().map(String::as_str).collect();
+    let entries = configurations.entries_for(&all_ids).unwrap_or_default();
+    let mut deferred: Vec<String> = ids
+        .into_par_iter()
+        .filter(|id| {
             entries
-                .get(*task_id)
-                .is_some_and(|stored| reads_dependency_outputs(task_id, stored, &task_graph))
+                .get(*id)
+                .is_some_and(|stored| reads_dependency_outputs(id, stored, &task_graph))
         })
-        .cloned()
+        .map(str::to_owned)
         .collect();
     deferred.sort();
     deferred

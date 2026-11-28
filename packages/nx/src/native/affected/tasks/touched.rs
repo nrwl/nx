@@ -301,7 +301,11 @@ pub(crate) fn compute_input_matches(
         .plans
         .par_iter()
         .filter_map(|(task_id, plan)| {
-            let mut indexes: Vec<u32> = plan.iter().filter_map(|&id| slot[id as usize]).collect();
+            let mut indexes: Vec<u32> = plan
+                .ids()
+                .iter()
+                .filter_map(|&id| slot[id as usize])
+                .collect();
             if indexes.is_empty() {
                 return None;
             }
@@ -987,12 +991,13 @@ mod tests {
         let id = pool.intern(HashInstruction::WorkspaceFileSet(strings(&[
             "{workspaceRoot}/x.txt",
         ])));
+        let plan = crate::native::tasks::plan::Plan::from_ids([id], &pool);
         let p = HashPlans {
             pool,
             plans: HashMap::from([
-                ("z:build".to_string(), vec![id]),
-                ("a:build".to_string(), vec![id]),
-                ("m:build".to_string(), vec![id]),
+                ("z:build".to_string(), plan.clone()),
+                ("a:build".to_string(), plan.clone()),
+                ("m:build".to_string(), plan),
             ]),
             deferred: Default::default(),
         };

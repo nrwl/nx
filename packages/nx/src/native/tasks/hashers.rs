@@ -11,6 +11,7 @@ mod hash_task_output;
 mod hash_tsconfig;
 mod hash_workspace_files;
 mod once_cache;
+mod tracked_batch;
 
 #[cfg(test)]
 mod fileset_characterization;
@@ -32,3 +33,7 @@ pub use hash_task_output::*;
 pub use hash_tsconfig::*;
 pub use hash_workspace_files::*;
 pub(crate) use once_cache::OnceCache;
+pub(crate) use tracked_batch::{TrackedBatch, TrackedFileIndices};
+
+// A handful of distinct filesets use the ordinary pruned matcher or disk walk.
+pub(crate) const MIN_BATCH_GROUPS: usize = 128;

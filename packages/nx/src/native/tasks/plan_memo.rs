@@ -3,6 +3,7 @@
 //! of everything it depends on, plus the Ultracache configurations, so it stays valid while
 //! none of those changed.
 
+use super::plan::Plan;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, MutexGuard};
 
@@ -20,7 +21,7 @@ struct Recorded {
     /// The Ultracache configurations' commit and fetch time; plans made against others are dropped.
     configurations: Option<(String, i64)>,
     tasks: HashMap<String, PlannedTask>,
-    plans: HashMap<String, Vec<u32>>,
+    plans: HashMap<String, Plan>,
 }
 
 /// What planning reads from one task graph node.
@@ -110,9 +111,9 @@ impl PlanMemoGuard<'_> {
     /// Keeps `planned` and returns the plans of `task_ids`.
     pub(super) fn finish(
         mut self,
-        planned: HashMap<String, Vec<u32>>,
+        planned: HashMap<String, Plan>,
         task_ids: &[&str],
-    ) -> HashMap<String, Vec<u32>> {
+    ) -> HashMap<String, Plan> {
         let plans = &mut self.recorded.plans;
         plans.extend(planned);
         task_ids
@@ -200,7 +201,10 @@ mod tests {
         let ids: Vec<&str> = graph.tasks.keys().map(String::as_str).collect();
         let guard = memo.begin(graph, configurations, custom_hasher);
         let mut missing = guard.missing(&ids);
-        let planned = missing.iter().map(|id| (id.to_string(), vec![0])).collect();
+        let planned = missing
+            .iter()
+            .map(|id| (id.to_string(), Plan::default()))
+            .collect();
         guard.finish(planned, &ids);
         missing.sort();
         missing.into_iter().map(String::from).collect()

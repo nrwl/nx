@@ -6,6 +6,7 @@ use tracing::{trace, trace_span};
 
 use super::disk_expansion::{PathIndex, fold_files, match_file_map};
 use super::once_cache::OnceCache;
+use super::tracked_batch::TrackedBatch;
 use crate::native::types::FileData;
 
 /// Compute-once cache for project fileset hashes. Holds only the hash, so
@@ -60,9 +61,14 @@ pub(crate) fn hash_project_files_cached(
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
     cache: &ProjectFileSetCache,
+    batch: Option<&TrackedBatch>,
 ) -> Result<Arc<String>> {
     cache.get_or_try_init(project_file_set_cache_key(project_name, file_sets), || {
-        hash_project_files(project_name, file_sets, project_file_map)
+        let selected = batch.map(|b| b.select_indices(Some(project_name), file_sets));
+        match selected.transpose()?.flatten() {
+            Some((files, ids)) => Ok(fold_files(ids.iter().map(|&i| &files[i as usize]))),
+            None => hash_project_files(project_name, file_sets, project_file_map),
+        }
     })
 }
 
@@ -113,9 +119,14 @@ fn collect_project_file_indices_cached(
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
     cache: &ProjectFileIndicesCache,
+    batch: Option<&TrackedBatch>,
 ) -> Result<Arc<Vec<u32>>> {
     cache.get_or_try_init(project_file_set_cache_key(project_name, file_sets), || {
-        collect_project_file_indices(project_name, file_sets, project_file_map)
+        let selected = batch.map(|b| b.select_indices(Some(project_name), file_sets));
+        match selected.transpose()?.flatten() {
+            Some((_, ids)) => Ok(ids),
+            None => collect_project_file_indices(project_name, file_sets, project_file_map),
+        }
     })
 }
 
@@ -127,9 +138,15 @@ pub(crate) fn collect_project_file_paths_cached(
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
     cache: &ProjectFileIndicesCache,
+    batch: Option<&TrackedBatch>,
 ) -> Result<Vec<String>> {
-    let indices =
-        collect_project_file_indices_cached(project_name, file_sets, project_file_map, cache)?;
+    let indices = collect_project_file_indices_cached(
+        project_name,
+        file_sets,
+        project_file_map,
+        cache,
+        batch,
+    )?;
     let files = project_files(project_name, project_file_map)?;
     Ok(indices
         .iter()
@@ -470,9 +487,10 @@ mod tests {
 
         let cache = ProjectFileSetCache::new();
         let first =
-            hash_project_files_cached(proj_name, first_file_sets, &file_map, &cache).unwrap();
+            hash_project_files_cached(proj_name, first_file_sets, &file_map, &cache, None).unwrap();
         let second =
-            hash_project_files_cached(proj_name, second_file_sets, &file_map, &cache).unwrap();
+            hash_project_files_cached(proj_name, second_file_sets, &file_map, &cache, None)
+                .unwrap();
 
         assert_eq!(cache.len(), 1);
         assert!(Arc::ptr_eq(&first, &second));
@@ -483,6 +501,7 @@ mod tests {
             first_file_sets,
             &file_map,
             &indices_cache,
+            None,
         )
         .unwrap();
         let second = collect_project_file_indices_cached(
@@ -490,6 +509,7 @@ mod tests {
             second_file_sets,
             &file_map,
             &indices_cache,
+            None,
         )
         .unwrap();
 
@@ -502,6 +522,7 @@ mod tests {
             first_file_sets,
             &file_map,
             &indices_cache,
+            None,
         )
         .unwrap();
         let paths_second = collect_project_file_paths_cached(
@@ -509,6 +530,7 @@ mod tests {
             second_file_sets,
             &file_map,
             &indices_cache,
+            None,
         )
         .unwrap();
         assert_eq!(paths_first, paths_second);

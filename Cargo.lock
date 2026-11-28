@@ -2467,6 +2467,7 @@ dependencies = [
  "ratatui",
  "rayon",
  "regex",
+ "regex-automata",
  "reqwest",
  "rkyv",
  "rusqlite",

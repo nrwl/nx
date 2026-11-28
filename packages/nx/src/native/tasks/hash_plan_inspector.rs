@@ -54,7 +54,12 @@ impl HashPlanInspector {
         let results: Vec<(&String, Vec<String>)> = hash_plans
             .plans
             .iter()
-            .flat_map(|(task_id, ids)| ids.iter().map(move |id| (task_id, *id)))
+            .flat_map(|(task_id, ids)| {
+                ids.ids()
+                    .into_owned()
+                    .into_iter()
+                    .map(move |id| (task_id, id))
+            })
             .par_bridge()
             .map(|(task_id, id)| {
                 let instruction_ref = pool.get(id);
@@ -104,7 +109,12 @@ impl HashPlanInspector {
         let results: Vec<(&String, HashInputsBuilder)> = hash_plans
             .plans
             .iter()
-            .flat_map(|(task_id, ids)| ids.iter().map(move |id| (task_id, *id)))
+            .flat_map(|(task_id, ids)| {
+                ids.ids()
+                    .into_owned()
+                    .into_iter()
+                    .map(move |id| (task_id, id))
+            })
             .par_bridge()
             .map(|(task_id, id)| {
                 let instruction_ref = pool.get(id);
@@ -151,6 +161,7 @@ impl HashPlanInspector {
                     file_sets,
                     &self.project_file_map,
                     project_file_indices_cache,
+                    None,
                 )?;
                 Ok(HashInputsBuilder {
                     files: files.into_iter().collect(),

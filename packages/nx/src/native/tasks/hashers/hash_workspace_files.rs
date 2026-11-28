@@ -3,6 +3,7 @@ use std::sync::Arc;
 use super::disk_expansion::{fold_files, match_file_map};
 use super::hash_ignored_files::WorkspaceFileIndex;
 use super::once_cache::OnceCache;
+use super::tracked_batch::TrackedBatch;
 use anyhow::*;
 use tracing::{trace, warn};
 
@@ -82,9 +83,14 @@ pub(crate) fn hash_workspace_files_cached(
     workspace_file_sets: &[String],
     workspace_files: &WorkspaceFileIndex,
     cache: &WorkspaceFileSetCache,
+    batch: Option<&TrackedBatch>,
 ) -> Result<Arc<String>> {
     cache.get_or_try_init(workspace_file_set_cache_key(workspace_file_sets), || {
-        hash_workspace_files(workspace_file_sets, workspace_files)
+        let selected = batch.map(|b| b.select_indices(None, workspace_file_sets));
+        match selected.transpose()?.flatten() {
+            Some((files, ids)) => Ok(fold_files(ids.iter().map(|&i| &files[i as usize]))),
+            None => hash_workspace_files(workspace_file_sets, workspace_files),
+        }
     })
 }
 
@@ -107,9 +113,14 @@ fn collect_workspace_file_indices_cached(
     workspace_file_sets: &[String],
     workspace_files: &WorkspaceFileIndex,
     cache: &WorkspaceFileIndicesCache,
+    batch: Option<&TrackedBatch>,
 ) -> Result<Arc<Vec<u32>>> {
     cache.get_or_try_init(workspace_file_set_cache_key(workspace_file_sets), || {
-        collect_workspace_file_indices(workspace_file_sets, workspace_files)
+        let selected = batch.map(|b| b.select_indices(None, workspace_file_sets));
+        match selected.transpose()?.flatten() {
+            Some((_, ids)) => Ok(ids),
+            None => collect_workspace_file_indices(workspace_file_sets, workspace_files),
+        }
     })
 }
 
@@ -120,9 +131,10 @@ pub(crate) fn collect_workspace_file_paths_cached(
     workspace_file_sets: &[String],
     workspace_files: &WorkspaceFileIndex,
     cache: &WorkspaceFileIndicesCache,
+    batch: Option<&TrackedBatch>,
 ) -> Result<Vec<String>> {
     let indices =
-        collect_workspace_file_indices_cached(workspace_file_sets, workspace_files, cache)?;
+        collect_workspace_file_indices_cached(workspace_file_sets, workspace_files, cache, batch)?;
     let files = workspace_files.files();
     Ok(indices
         .iter()
@@ -364,9 +376,11 @@ mod test {
 
         let cache = WorkspaceFileSetCache::new();
         let first =
-            hash_workspace_files_cached(first_file_sets, &all_workspace_files, &cache).unwrap();
+            hash_workspace_files_cached(first_file_sets, &all_workspace_files, &cache, None)
+                .unwrap();
         let second =
-            hash_workspace_files_cached(second_file_sets, &all_workspace_files, &cache).unwrap();
+            hash_workspace_files_cached(second_file_sets, &all_workspace_files, &cache, None)
+                .unwrap();
 
         assert_eq!(cache.len(), 1);
         assert!(Arc::ptr_eq(&first, &second));
@@ -376,12 +390,14 @@ mod test {
             first_file_sets,
             &all_workspace_files,
             &indices_cache,
+            None,
         )
         .unwrap();
         let second = collect_workspace_file_indices_cached(
             second_file_sets,
             &all_workspace_files,
             &indices_cache,
+            None,
         )
         .unwrap();
 
@@ -393,12 +409,14 @@ mod test {
             first_file_sets,
             &all_workspace_files,
             &indices_cache,
+            None,
         )
         .unwrap();
         let paths_second = collect_workspace_file_paths_cached(
             second_file_sets,
             &all_workspace_files,
             &indices_cache,
+            None,
         )
         .unwrap();
         assert_eq!(paths_first, paths_second);

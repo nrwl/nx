@@ -61,7 +61,19 @@ fn producers_by_consumer(
         .plans
         .par_iter()
         .map_init(HashSet::new, |seen, (consumer, plan)| {
-            let producers = producers_read_by(consumer, plan, reads, patterns_of, task_graph, seen);
+            let producers = producers_read_by(
+                consumer,
+                &plan
+                    .only(
+                        crate::native::tasks::plan::kind::DISK
+                            | crate::native::tasks::plan::kind::OUTPUT,
+                    )
+                    .ids(),
+                reads,
+                patterns_of,
+                task_graph,
+                seen,
+            );
             (!producers.is_empty()).then(|| (consumer.clone(), producers))
         })
         .flatten()

@@ -9,7 +9,6 @@ use napi::{
     bindgen_prelude::{ToNapiValue, check_status},
     sys,
 };
-use parking_lot::RwLock;
 
 /// A representation of the invocation of an Executor
 #[napi(object)]
@@ -249,6 +248,26 @@ pub enum HashInstruction {
     UltracacheConfiguration(String),
 }
 
+pub type InstructionFlags = u16;
+
+/// See `HashInstruction::flags`. The low byte holds exactly one of these, the
+/// instruction's class in a `Plan`.
+pub(crate) mod flag {
+    use super::InstructionFlags;
+
+    pub const OTHER: InstructionFlags = 1;
+    pub const TRACKED: InstructionFlags = 2;
+    pub const TS: InstructionFlags = 4;
+    pub const JSON: InstructionFlags = 8;
+    pub const OUTPUT: InstructionFlags = 16;
+    pub const DECLARED_DISK: InstructionFlags = 32;
+    pub const RECORDED_DISK: InstructionFlags = 64;
+    pub const ABSOLUTE_CWD: InstructionFlags = 128;
+    pub const ULTRACACHE_CONFIGURATION: InstructionFlags = 256;
+    /// Hashes to a value that depends on the task's env.
+    pub const ENV_DEPENDENT: InstructionFlags = 512;
+}
+
 /// Hashed into every task regardless of its inputs (see `HashPlanner::get_plans_internal`).
 pub(crate) const ALWAYS_ON_WORKSPACE_FILES: [&str; 3] = [
     "{workspaceRoot}/nx.json",
@@ -268,10 +287,8 @@ pub struct InstructionPool {
     disk_globs: DashMap<Arc<str>, ()>,
     /// Compact display labels shared by every task that references the instruction.
     labels: DashMap<u32, Arc<str>>,
+    flags: DashMap<u32, InstructionFlags>,
     next_id: AtomicU32,
-    // Id-indexed `HashInstruction::lists_ignored_files`. Grows only when such an
-    // instruction is interned, so an id past the end does not list them.
-    lists_ignored_files: RwLock<Vec<bool>>,
 }
 
 impl InstructionPool {
@@ -302,14 +319,7 @@ impl InstructionPool {
                 let id = self.next_id.fetch_add(1, Ordering::Relaxed);
                 self.items.insert(id, vacant.key().clone());
                 self.labels.insert(id, Arc::from(vacant.key().label()));
-                if vacant.key().lists_ignored_files() {
-                    // Before the id is published below, so whoever holds it sees the mark.
-                    let mut marks = self.lists_ignored_files.write();
-                    if marks.len() <= id as usize {
-                        marks.resize(id as usize + 1, false);
-                    }
-                    marks[id as usize] = true;
-                }
+                self.flags.insert(id, vacant.key().flags());
                 vacant.insert(id);
                 id
             }
@@ -325,24 +335,33 @@ impl InstructionPool {
         keep_tsconfig: bool,
         read: impl Fn(&str) -> bool,
     ) -> bool {
+        let flags = self.flags(id);
         // The configuration's own reads are filesets too; the caller keeps those.
-        match &*self.get(id) {
-            HashInstruction::ProjectFileSet(..)
-            | HashInstruction::WorkspaceFileSet(_)
-            | HashInstruction::IgnoredFileSet { .. } => true,
-            HashInstruction::TsConfiguration(_) => !keep_tsconfig,
-            HashInstruction::JsonFileSet(json) => {
-                let glob = json
-                    .json_path
-                    .strip_prefix("{workspaceRoot}/")
-                    .unwrap_or(&json.json_path);
-                match partition_glob(glob) {
-                    (path, None) => !read(&path),
-                    _ => !read(glob),
-                }
-            }
-            _ => false,
+        if flags & (flag::TRACKED | flag::DECLARED_DISK | flag::RECORDED_DISK) != 0 {
+            return true;
         }
+        if flags & flag::TS != 0 {
+            return !keep_tsconfig;
+        }
+        if flags & flag::JSON == 0 {
+            return false;
+        }
+        let instruction = self.get(id);
+        let HashInstruction::JsonFileSet(json) = &*instruction else {
+            unreachable!("only a JsonFileSet is flagged JSON")
+        };
+        let glob = json
+            .json_path
+            .strip_prefix("{workspaceRoot}/")
+            .unwrap_or(&json.json_path);
+        match partition_glob(glob) {
+            (path, None) => !read(&path),
+            _ => !read(glob),
+        }
+    }
+
+    pub(super) fn id_of(&self, instruction: &HashInstruction) -> Option<u32> {
+        self.ids.get(instruction).map(|id| *id)
     }
 
     pub fn get(&self, id: u32) -> dashmap::mapref::one::Ref<'_, u32, HashInstruction> {
@@ -358,13 +377,15 @@ impl InstructionPool {
             .clone()
     }
 
-    pub fn len(&self) -> usize {
-        self.items.len()
+    pub fn flags(&self, id: u32) -> InstructionFlags {
+        *self
+            .flags
+            .get(&id)
+            .expect("instruction ids are only handed out by intern()")
     }
 
-    pub fn any_list_ignored_files(&self, mut ids: impl Iterator<Item = u32>) -> bool {
-        let marks = self.lists_ignored_files.read();
-        !marks.is_empty() && ids.any(|id| marks.get(id as usize).is_some_and(|&lists| lists))
+    pub fn len(&self) -> usize {
+        self.items.len()
     }
 }
 
@@ -372,7 +393,7 @@ impl InstructionPool {
 /// them. This is what crosses from the HashPlanner to the TaskHasher.
 pub struct HashPlans {
     pub pool: Arc<InstructionPool>,
-    pub plans: HashMap<String, Vec<u32>>,
+    pub plans: HashMap<String, super::plan::Plan>,
     /// Tasks the up-front batch leaves out: they read a dependent task's
     /// outputs, the directory a disk-backed fileset of theirs reads from
     /// contains, or sits inside, an output a task they depend on declares, or
@@ -394,24 +415,28 @@ impl HashInstruction {
         }
     }
 
-    /// Whether hashing it lists directories through the ignored-file index,
-    /// which then has to catch up before the parallel section.
-    pub fn lists_ignored_files(&self) -> bool {
-        match self {
-            HashInstruction::IgnoredFileSet { .. } => true,
-            HashInstruction::WorkspaceFileSet(_)
-            | HashInstruction::Runtime(_)
-            | HashInstruction::Environment(_)
-            | HashInstruction::Cwd(_)
-            | HashInstruction::ProjectFileSet(_, _)
-            | HashInstruction::ProjectConfiguration(_)
-            | HashInstruction::TsConfiguration(_)
-            | HashInstruction::TaskOutput(_, _)
-            | HashInstruction::External(_)
-            | HashInstruction::AllExternalDependencies
-            | HashInstruction::JsonFileSet(_)
-            | HashInstruction::UltracacheConfiguration(_) => false,
-        }
+    /// No wildcard arm, so a new variant does not compile until it is classified.
+    pub fn flags(&self) -> InstructionFlags {
+        use HashInstruction::*;
+        let (class, extra) = match self {
+            WorkspaceFileSet(_) | ProjectFileSet(..) => (flag::TRACKED, 0),
+            TsConfiguration(_) => (flag::TS, 0),
+            JsonFileSet(_) => (flag::JSON, 0),
+            TaskOutput(..) => (flag::OUTPUT, 0),
+            Cwd(CwdMode::Absolute) => (flag::ABSOLUTE_CWD, 0),
+            IgnoredFileSet {
+                from_ultracache: true,
+                ..
+            } => (flag::RECORDED_DISK, 0),
+            IgnoredFileSet { .. } => (flag::DECLARED_DISK, 0),
+            Runtime(_) | Environment(_) => (flag::OTHER, flag::ENV_DEPENDENT),
+            UltracacheConfiguration(_) => (flag::OTHER, flag::ULTRACACHE_CONFIGURATION),
+            Cwd(CwdMode::Relative)
+            | ProjectConfiguration(_)
+            | AllExternalDependencies
+            | External(_) => (flag::OTHER, 0),
+        };
+        class | extra
     }
 
     /// What hash details name this instruction: its Display, except that a

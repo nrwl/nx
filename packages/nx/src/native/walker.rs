@@ -404,52 +404,84 @@ fn transient_skips() -> Result<Arc<NxGlobSet>> {
         .context("the transient-file globs always build")
 }
 
-/// Files under `start`, workspace-relative, with the stamp read on the way
-/// for anything the context does not vouch for. The walker skips what it
-/// skips for every walk, but never the root it is given, so a glob rooted at
-/// `node_modules` reads it. A linked file is read where it points; a linked
-/// directory is not entered.
-pub(crate) fn walk_files(
-    start: &Path,
-    workspace_root: &Path,
-    accept: PathPredicate,
-    skip: &[String],
-) -> Result<Vec<String>> {
-    let relative_of = |path: &Path| -> Option<String> {
-        Some(
-            path.strip_prefix(workspace_root)
-                .ok()?
-                .to_string_lossy()
-                .replace('\\', "/"),
-        )
-    };
-    let visit = |path: &Path, file_type: std::fs::FileType| -> Option<String> {
-        let relative = relative_of(path)?;
-        if file_type.is_symlink() {
-            // Read where a linked file points, but never enter a linked
-            // directory.
-            let target = std::fs::metadata(path).ok()?;
-            if target.is_dir() || !accept(&relative) {
-                return None;
-            }
-            return Some(relative);
-        }
-        if !file_type.is_file() || !accept(&relative) {
-            return None;
-        }
-        Some(relative)
-    };
+pub(crate) struct DiskWalkIgnores {
+    hardcoded: Arc<NxGlobSet>,
+    transient: Arc<NxGlobSet>,
+}
 
+impl DiskWalkIgnores {
+    pub(crate) fn new() -> Result<Self> {
+        Ok(Self {
+            hardcoded: build_glob_set(HARDCODED_IGNORE_PATTERNS)?,
+            transient: transient_skips()?,
+        })
+    }
+
+    pub(crate) fn skips(&self, path: &Path) -> bool {
+        self.hardcoded.is_match(path) || self.transient.is_match(path)
+    }
+}
+
+/// Whether a walk root can be used as a slash-separated index prefix.
+/// Other spellings, such as a dot segment, can change the paths a walk emits.
+pub(crate) fn is_normalized_disk_root(root: &str) -> bool {
+    root.is_empty()
+        || (!root.contains('\\')
+            && !(cfg!(windows) && root.contains(':'))
+            && root.split('/').all(|part| !matches!(part, "" | "." | "..")))
+}
+
+/// The slash-separated path must still identify this exact entry when rejoined.
+pub(crate) fn disk_relative_path<'a>(
+    workspace_root: &Path,
+    path: &'a Path,
+) -> Option<std::borrow::Cow<'a, str>> {
+    let relative = path.strip_prefix(workspace_root).ok()?.to_str()?;
+    if cfg!(windows) {
+        Some(relative.replace('\\', "/").into())
+    } else if relative.contains('\\') {
+        None
+    } else {
+        Some(relative.into())
+    }
+}
+
+/// A file or directory a disk walk reached, and how far below its start.
+pub(crate) struct DiskEntry<'a> {
+    pub(crate) path: std::borrow::Cow<'a, str>,
+    pub(crate) depth: usize,
+    pub(crate) is_dir: bool,
+}
+
+/// What `visit` makes of each file and directory at or under `starts`, walked
+/// together. The walker skips what it skips for every walk, but never a
+/// start, so a glob rooted at `node_modules` reads it. A linked file is read
+/// where it points; a linked directory is not entered unless it is a start.
+/// Directories in `skip` are not entered.
+pub(crate) fn walk_disk<T: Send>(
+    starts: &[PathBuf],
+    workspace_root: &Path,
+    skip: &[String],
+    threads: usize,
+    visit: impl Fn(DiskEntry<'_>) -> Option<T> + Sync,
+) -> Result<Vec<T>> {
+    let Some((first, rest)) = starts.split_first() else {
+        return Ok(Vec::new());
+    };
     let found = Mutex::new(Vec::new());
     let skip = skip.iter().map(|dir| workspace_root.join(dir)).collect();
-    create_walker_vetoing(start, false, Some(transient_skips()?), skip)
+    let mut walker = create_walker_vetoing(first, false, Some(transient_skips()?), skip);
+    for start in rest {
+        walker.add(start);
+    }
+    walker
         .follow_links(false)
+        .threads(threads)
         .build_parallel()
         .run(|| {
             Box::new(|entry| {
                 if let Ok(entry) = entry
-                    && let Some(file_type) = entry.file_type()
-                    && let Some(one) = visit(entry.path(), file_type)
+                    && let Some(one) = disk_entry(&entry, workspace_root).and_then(&visit)
                 {
                     found.lock().push(one);
                 }
@@ -459,14 +491,39 @@ pub(crate) fn walk_files(
     Ok(found.into_inner())
 }
 
+fn disk_entry<'a>(entry: &'a ignore::DirEntry, workspace_root: &Path) -> Option<DiskEntry<'a>> {
+    let file_type = entry.file_type()?;
+    let path = disk_relative_path(workspace_root, entry.path())?;
+    let is_dir = file_type.is_dir();
+    let is_file = file_type.is_file()
+        || (file_type.is_symlink()
+            && std::fs::metadata(entry.path()).is_ok_and(|target| !target.is_dir()));
+    (is_dir || is_file).then_some(DiskEntry {
+        path,
+        depth: entry.depth(),
+        is_dir,
+    })
+}
+
+/// The files under `start` that `accept` admits, as `walk_disk` finds them.
+pub(crate) fn walk_files(
+    start: &Path,
+    workspace_root: &Path,
+    accept: PathPredicate,
+    skip: &[String],
+) -> Result<Vec<String>> {
+    walk_disk(&[start.to_path_buf()], workspace_root, skip, 0, |entry| {
+        (!entry.is_dir && accept(&entry.path)).then(|| entry.path.into_owned())
+    })
+}
+
 /// A question asked about one path: does this glob admit it, does the
 /// workspace context already track it. Borrowed and shared across the walk's
 /// threads, so it is always behind a reference and `Sync`.
 pub(crate) type PathPredicate<'a> = &'a (dyn Fn(&str) -> bool + Sync);
 
 /// The files under `dir` that `accept` admits, workspace-relative, read from
-/// disk. The one implementation of "what does this directory hold"; the
-/// ignored index caches on top of it, and everything else calls it directly.
+/// disk by `walk_disk`'s rules. The ignored index caches on top of it.
 /// A path is read wherever it points, so an entry or a linked file may lead
 /// out of the workspace. `None` when `dir` cannot be read at all. The order
 /// is the walk's, not sorted. Directories in `skip` are not entered.

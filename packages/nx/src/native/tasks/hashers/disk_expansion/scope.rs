@@ -28,6 +28,9 @@ impl ProjectScope {
 
     /// The deepest root that is `directory` or holds it.
     fn owner_of_directory(&self, directory: &str) -> Option<&str> {
+        if self.roots.is_empty() {
+            return None;
+        }
         std::iter::once(directory)
             .chain(parent_dirs(directory))
             .find_map(|dir| self.roots.get(dir).map(String::as_str))
@@ -41,12 +44,25 @@ impl ProjectScope {
     /// The roots below where `entry` reads from: projects it cannot match,
     /// so a walk need not enter them. Empty when `entry` is unscoped.
     pub(crate) fn nested_below(&self, entry: &Positive) -> Vec<String> {
-        if self.roots.is_empty() || self.owner_of_directory(&entry.root).is_none() {
-            return vec![];
-        }
-        roots_below(&self.roots, &entry.root)
-            .map(str::to_string)
-            .collect()
+        self.nested_roots(&entry.root).map(str::to_string).collect()
+    }
+
+    pub(super) fn nested_roots<'a>(
+        &'a self,
+        root: &str,
+    ) -> impl Iterator<Item = &'a str> + use<'a> {
+        self.owner_of_directory(root)
+            .map(|_| roots_below(&self.roots, root))
+            .into_iter()
+            .flatten()
+    }
+
+    /// A file already matched below a scoped walk root is vetoed by any
+    /// project root between its parent and the walk root.
+    pub(super) fn crosses_nested_root(&self, root: &str, file: &str) -> bool {
+        parent_dirs(file)
+            .take_while(|parent| parent.len() > root.len())
+            .any(|parent| self.roots.contains(parent))
     }
 
     /// Whether `entry` may match `path`.
@@ -64,12 +80,12 @@ impl ProjectScope {
 /// The roots `ProjectScope` needs for `positives`, from every project root in
 /// the workspace except the workspace root's own (`.`), sorted.
 pub(crate) fn scope_roots(positives: &[Positive], project_roots: &BTreeSet<String>) -> Vec<String> {
-    let all = ProjectScope {
-        roots: project_roots.clone(),
-    };
     let mut needed: BTreeSet<&str> = BTreeSet::new();
     for entry in positives {
-        let Some(owner) = all.owner_of_directory(&entry.root) else {
+        let Some(owner) = std::iter::once(entry.root.as_str())
+            .chain(parent_dirs(&entry.root))
+            .find_map(|dir| project_roots.get(dir).map(String::as_str))
+        else {
             continue;
         };
         needed.insert(owner);
@@ -79,7 +95,10 @@ pub(crate) fn scope_roots(positives: &[Positive], project_roots: &BTreeSet<Strin
 }
 
 /// The roots strictly below `dir`, in order.
-fn roots_below<'a>(roots: &'a BTreeSet<String>, dir: &str) -> impl Iterator<Item = &'a str> {
+fn roots_below<'a>(
+    roots: &'a BTreeSet<String>,
+    dir: &str,
+) -> impl Iterator<Item = &'a str> + use<'a> {
     let below = format!("{dir}/");
     roots
         .range(below.clone()..)
