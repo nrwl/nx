@@ -15,10 +15,11 @@ export async function execCommand(
 
     let stdout = '';
     let stderr = '';
-    child.stdout.on('data', (chunk) => {
+    // Decode as a stream: a chunk can end inside a multi-byte character
+    child.stdout.setEncoding('utf-8').on('data', (chunk) => {
       stdout += chunk;
     });
-    child.stderr.on('data', (chunk) => {
+    child.stderr.setEncoding('utf-8').on('data', (chunk) => {
       stderr += chunk;
     });
 
