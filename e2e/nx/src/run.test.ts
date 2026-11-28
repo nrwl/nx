@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   cleanupProject,
   fileExists,
+  getE2ERecorder,
   getStrippedEnvironmentVariables,
   isWindows,
   killProcessAndPorts,
@@ -1578,6 +1579,12 @@ describe('Nx Running Tests', () => {
         ...(useTui ? { NX_TUI_SKIP_CAPABILITY_CHECK: 'true' } : {}),
       });
 
+      const recorder = getE2ERecorder();
+      const recorded = recorder?.startCommand(`nx ${args.join(' ')}`);
+      if (recorder) {
+        childProcess.onOutput((chunk) => recorder.output(chunk));
+      }
+
       const nxPid = childProcess.getPid();
       console.log(`[sigint-test] started PID=${nxPid}, useTui=${!!useTui}`);
 
@@ -1587,6 +1594,11 @@ describe('Nx Running Tests', () => {
       const exitPromise = new Promise<boolean>((r) => (exitResolve = r));
       childProcess.onExit((msg) => {
         console.log(`[sigint-test] onExit: ${msg}`);
+        if (recorded) {
+          recorder.endCommand(recorded, msg);
+          // Releases the onOutput thread, which otherwise keeps jest from exiting.
+          childProcess.cleanup();
+        }
         exited = true;
         exitResolve(true);
       });
@@ -1622,6 +1634,7 @@ describe('Nx Running Tests', () => {
 
       // Send SIGINT — identical to Ctrl+C in a real terminal
       console.log(`[sigint-test] sending SIGINT`);
+      recorder?.marker('SIGINT');
       childProcess.kill('SIGINT');
 
       // Nx should exit promptly. Cleanup hangs if discrete tasks are

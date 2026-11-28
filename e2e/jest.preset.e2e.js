@@ -15,6 +15,10 @@ module.exports = {
   // their own.
   testTimeout: 120_000,
   setupFilesAfterEnv: ['../utils/jest-setup-after-env.ts'],
+  testEnvironment: require('path').join(
+    __dirname,
+    'utils/recording-environment.ts'
+  ),
   haste: {
     hasteMapModulePath: require.resolve('./jest-haste-map.e2e.js'),
   },

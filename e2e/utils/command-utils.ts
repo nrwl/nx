@@ -9,6 +9,7 @@ import { existsSync } from 'fs-extra';
 import * as isCI from 'is-ci';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
+import { recordCommand } from './cast-recorder';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   ensureCypressInstallation,
@@ -75,6 +76,7 @@ export function runCommand(
     env: optionsEnv,
     ...childProcessOptions
   } = options ?? {};
+  const recording = recordCommand(command);
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
@@ -90,6 +92,9 @@ export function runCommand(
       ...childProcessOptions,
     });
 
+    recording?.output(r as string);
+    recording?.end(0);
+
     if (isVerboseE2ERun()) {
       output.log({
         title: `Command: ${command}`,
@@ -100,6 +105,8 @@ export function runCommand(
 
     return stripVTControlCharacters(r as string);
   } catch (e) {
+    recording?.output(`${e.stdout ?? ''}${e.stderr ?? ''}`);
+    recording?.end(e.status ?? e.signal ?? 1);
     // Intentional: some commands (e.g. `npm ls`) exit non-zero but still produce useful output.
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     if (!failOnError && (e.stdout || e.stderr)) {
@@ -260,6 +267,7 @@ export function runCommandAsync(
     silenceError: false,
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
+  const recording = recordCommand(command);
   return new Promise((resolve, reject) => {
     exec(
       command,
@@ -277,6 +285,8 @@ export function runCommandAsync(
         encoding: 'utf-8',
       },
       (err, stdout, stderr) => {
+        recording?.output(`${stdout}${stderr}`);
+        recording?.end(err ? (err.code ?? err.signal ?? 1) : 0);
         if (!opts.silenceError && err) {
           logError(`Original command: ${command}`, `${stdout}\n\n${stderr}`);
           reject(err);
@@ -355,6 +365,10 @@ export function runCommandUntil(
     windowsHide: false,
   });
   startedCommands.set(p, undefined);
+  const recording = recordCommand(`nx ${command}`);
+  p.stdout?.on('data', (c) => recording?.output(c.toString()));
+  p.stderr?.on('data', (c) => recording?.output(c.toString()));
+  p.on('close', (code, signal) => recording?.end(code ?? signal ?? 1));
   return new Promise((res, rej) => {
     let output = '';
     let complete = false;
@@ -517,12 +531,14 @@ export function runCLI(
   }
 ): string {
   const timeoutMs = opts.timeout ?? 5 * 60 * 1000;
+  let recording: ReturnType<typeof recordCommand>;
   try {
     const pm = getPackageManagerCommand();
     const commandToRun = `${pm.runNxSilent} ${command} ${
       (opts.verbose ?? isVerboseE2ERun()) ? ' --verbose' : ''
     }${opts.redirectStderr ? ' 2>&1' : ''}`;
     logInfo(`Run Command: ${command}`);
+    recording = recordCommand(`nx ${command}`);
     const startTime = performance.now();
     const result = execSync(commandToRun, {
       cwd: opts.cwd || tmpProjPath(),
@@ -542,6 +558,8 @@ export function runCLI(
       timeout: timeoutMs,
     });
     logInfo(`Run Command: ${command} (${secondsSince(startTime)}s)`);
+    recording?.output(result);
+    recording?.end(0);
 
     if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
@@ -556,6 +574,8 @@ export function runCLI(
     runCLI.lastExitCode = 0;
     return r;
   } catch (e) {
+    recording?.output(`${e.stdout ?? ''}${e.stderr ?? ''}`);
+    recording?.end(e.killed || e.signal ? 'timeout' : (e.status ?? 1));
     if (e.killed || e.signal) {
       const timeoutSec = Math.round(timeoutMs / 1000);
       const processOutput = stripVTControlCharacters(

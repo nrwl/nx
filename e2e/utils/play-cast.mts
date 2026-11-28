@@ -1,0 +1,142 @@
+// Replays an e2e recording in this terminal.
+//   node e2e/utils/play-cast.mts <file.cast>
+//   node e2e/utils/play-cast.mts --from-log <saved task log>
+//   node e2e/utils/play-cast.mts --run <runId> --task <taskId>   (fetches the log from Nx Cloud)
+// Options: --pick <n | part of the test name> (when a log holds several), --save <file.cast>, --speed <x>,
+//   --idle <seconds> (cap on pauses; 0 plays in real time, default from the recording)
+import { execFileSync } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
+import { parseArgs } from 'node:util';
+
+const { values, positionals } = parseArgs({
+  allowPositionals: true,
+  options: {
+    'from-log': { type: 'string' },
+    run: { type: 'string' },
+    task: { type: 'string' },
+    pick: { type: 'string' },
+    save: { type: 'string' },
+    speed: { type: 'string', default: '1' },
+    idle: { type: 'string' },
+  },
+});
+
+const cast = loadCast();
+if (values.save) {
+  writeFileSync(values.save, cast);
+  console.log(`Saved ${values.save}`);
+} else {
+  await play(cast, Number(values.speed) || 1);
+}
+
+function loadCast(): string {
+  if (positionals[0]) return readFileSync(positionals[0], 'utf-8');
+  if (values['from-log']) {
+    return pickFromLog(readFileSync(values['from-log'], 'utf-8'));
+  }
+  if (values.run && values.task) return pickFromLog(fetchTaskLog());
+  console.error(
+    readFileSync(new URL(import.meta.url), 'utf-8')
+      .split('\n')
+      .slice(0, 6)
+      .join('\n')
+  );
+  process.exit(1);
+}
+
+function fetchTaskLog(): string {
+  const query = `task=${encodeURIComponent(`${values.run}:${values.task}`)}`;
+  const response = execFileSync(
+    'pnpm',
+    ['nx-cloud', 'api', `/nx-cloud/data/batch/v0/task-logs?${query}`],
+    { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'inherit'] }
+  );
+  const item = JSON.parse(response.slice(response.indexOf('{'))).items[0];
+  if (!item?.url) {
+    console.error(`No log for ${values.task}: ${item?.error?.message}`);
+    process.exit(1);
+  }
+  return execFileSync('sh', ['-c', 'curl -sf "$0" | tar -xzO', item.url], {
+    encoding: 'utf-8',
+    maxBuffer: 512 * 1024 * 1024,
+  });
+}
+
+// Matches the block written by embedCastForLog in cast-embed.ts.
+function pickFromLog(log: string): string {
+  const text = log.replace(/\x1b\[[0-9;]*m/g, '');
+  const blocks = [
+    ...text.matchAll(
+      /^----- BEGIN NX E2E RECORDING[^\n]*\n([A-Za-z0-9+/=\s]+?)\n----- END NX E2E RECORDING -----/gm
+    ),
+  ].map((m) =>
+    gunzipSync(Buffer.from(m[1].replace(/\s+/g, ''), 'base64')).toString(
+      'utf-8'
+    )
+  );
+  if (blocks.length === 0) {
+    console.error('No e2e recordings in this log.');
+    process.exit(1);
+  }
+  const titles = blocks.map((b) => JSON.parse(b.split('\n')[0]).title ?? '');
+  const query = values.pick;
+  let matches = blocks.map((_, i) => i);
+  if (query && /^\d+$/.test(query)) {
+    matches = blocks[Number(query) - 1] ? [Number(query) - 1] : [];
+  } else if (query) {
+    matches = matches.filter((i) =>
+      titles[i].toLowerCase().includes(query.toLowerCase())
+    );
+  }
+  if (matches.length !== 1) {
+    console.log(
+      query && matches.length === 0
+        ? `No recording matches "${query}". Recordings in this log:`
+        : 'Recordings in this log (choose one with --pick <n or part of the test name>):'
+    );
+    (matches.length ? matches : blocks.map((_, i) => i)).forEach((i) =>
+      console.log(`  ${i + 1}. ${titles[i]}`)
+    );
+    process.exit(query ? 1 : 0);
+  }
+  return blocks[matches[0]];
+}
+
+async function play(cast: string, speed: number) {
+  const [headerLine, ...eventLines] = cast.split('\n').filter(Boolean);
+  const header = JSON.parse(headerLine);
+  const idle =
+    values.idle === undefined ? header.idle_time_limit : Number(values.idle);
+  const idleLimit = idle > 0 ? idle : Infinity;
+  process.stdout.write(
+    `\x1b[2m▶ ${header.title ?? ''} (${header.width}x${header.height})\x1b[0m\r\n`
+  );
+  let previous = 0;
+  let atLineStart = true;
+  for (const line of eventLines) {
+    const [time, code, data] = JSON.parse(line) as [number, string, string];
+    const gap = time - previous;
+    previous = time;
+    if (gap > idleLimit) {
+      // Inline, so it can smear a full-screen TUI until its next redraw.
+      process.stdout.write(
+        `${atLineStart ? '' : '\r\n'}\x1b[2m⏸ ${formatDuration(gap)} pause, shortened to ${formatDuration(idleLimit)}\x1b[0m\r\n`
+      );
+      atLineStart = true;
+    }
+    const wait = Math.min(gap, idleLimit) / speed;
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait * 1000));
+    if (code === 'o') {
+      process.stdout.write(data);
+      atLineStart = data.endsWith('\n');
+    }
+  }
+  process.stdout.write('\x1b[0m\r\n\x1b[2m■ end of recording\x1b[0m\r\n');
+}
+
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds.toFixed(1)}s`;
+  const whole = Math.round(seconds);
+  return `${Math.floor(whole / 60)}m ${whole % 60}s`;
+}

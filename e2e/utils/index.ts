@@ -3,6 +3,7 @@ import { e2eCwd } from './get-env-info';
 
 ensureDirSync(e2eCwd);
 
+export * from './cast-recorder';
 export * from './command-utils';
 export * from './create-project-utils';
 export * from './file-utils';
