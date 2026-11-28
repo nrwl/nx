@@ -16,7 +16,9 @@ use parking_lot::RwLock;
 use tracing::{debug, trace};
 
 use crate::native::hasher::hash_file_path;
-use crate::native::walker::{PathPredicate, disk_relative_path, read_directory, seed_walk};
+use crate::native::walker::{
+    DiskWalkIgnores, PathPredicate, disk_relative_path, read_directory, seed_walk,
+};
 
 /// Whether the watch delivers events for a workspace-relative directory.
 pub(crate) type DeliversUnder = Arc<dyn Fn(&str) -> bool + Send + Sync>;
@@ -56,6 +58,8 @@ pub struct IgnoredIndex {
     /// Bumped by every change the watch reports under a prefix, so a seed or
     /// a read can tell whether something moved while it ran.
     generation: AtomicU64,
+    /// The walk's skip rules, so an event never lists what a walk leaves out.
+    walk_ignores: OnceLock<Option<DiskWalkIgnores>>,
     /// Test seam: makes every walk fail to settle, which is otherwise only
     /// reachable by racing the disk against the walk.
     #[cfg(test)]
@@ -176,6 +180,7 @@ impl IgnoredIndex {
             announced_whole_workspace: std::sync::atomic::AtomicBool::new(false),
             canonical_root: OnceLock::new(),
             generation: AtomicU64::new(0),
+            walk_ignores: OnceLock::new(),
             #[cfg(test)]
             never_settles: std::sync::atomic::AtomicBool::new(false),
         }
@@ -395,9 +400,9 @@ impl IgnoredIndex {
 
     /// A reported write or creation. Under a listed prefix a file becomes a
     /// member and a directory is re-listed from a walk, since its files may
-    /// have arrived without events of their own. A path that is gone, a
-    /// linked directory, or a linked file whose target is outside the
-    /// workspace is not a member, as a walk would not list it. Any kept hash
+    /// have arrived without events of their own. A path that is gone, one the
+    /// walk skips, a linked directory, or a linked file whose target is outside
+    /// the workspace is not a member, as a walk would not list it. Any kept hash
     /// for the path stops being trusted.
     pub(crate) fn note_written(&self, workspace_root: &Path, path: &str) {
         if !self.is_tracked(path) {
@@ -408,7 +413,7 @@ impl IgnoredIndex {
         if let Some(mut content) = self.contents.get_mut(path) {
             content.trusted = false;
         }
-        let listed = self.is_listed(path);
+        let listed = self.is_listed(path) && !self.walk_skips(workspace_root, path);
         let full_path = workspace_root.join(path);
         let Ok(link) = std::fs::symlink_metadata(&full_path) else {
             self.forget(path);
@@ -437,6 +442,23 @@ impl IgnoredIndex {
         if listed && disk_relative_path(workspace_root, &full_path).is_some() {
             self.members.write().insert(path.to_string());
         }
+    }
+
+    /// Whether the walk of the listed directory holding `path` skips it or a
+    /// directory between them, such as `.nx/workspace-data` under the root.
+    fn walk_skips(&self, workspace_root: &Path, path: &str) -> bool {
+        let Some(ignores) = self
+            .walk_ignores
+            .get_or_init(|| DiskWalkIgnores::new().ok())
+        else {
+            return false;
+        };
+        let listed = self.listed.read();
+        Path::new(path)
+            .ancestors()
+            .map_while(|level| level.to_str())
+            .take_while(|level| !listed.contains(*level))
+            .any(|level| ignores.skips(&workspace_root.join(level)))
     }
 
     /// Reported deletions applied together. A kept but unlisted directory
@@ -1351,6 +1373,27 @@ mod tests {
         // A narrower directory is absorbed rather than listed on its own.
         assert!(index.track(temp.path(), "dist/gen"));
         assert_eq!(index.tracked.read().len(), 1);
+    }
+
+    #[test]
+    fn a_reported_path_a_walk_skips_does_not_join_a_listing() {
+        let temp = workspace();
+        let skipped = [
+            ".nx/workspace-data/d/server-process.json",
+            "node_modules/m/x.js",
+        ];
+        for path in skipped {
+            temp.child(path).write_str("{}").unwrap();
+        }
+        let index = watched_with(Arc::new(|_: &str| true));
+        assert!(index.track(temp.path(), ""));
+        let walked = index.list(temp.path(), "").unwrap();
+
+        for path in skipped {
+            index.note_written(temp.path(), path);
+        }
+        index.note_written(temp.path(), ".nx/workspace-data/d");
+        assert_eq!(index.list(temp.path(), "").unwrap(), walked);
     }
 
     #[test]
