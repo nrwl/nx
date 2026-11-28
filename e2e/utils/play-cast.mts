@@ -113,12 +113,30 @@ async function play(cast: string, speed: number) {
     `\x1b[2m▶ ${header.title ?? ''} (${header.width}x${header.height})\x1b[0m\r\n`
   );
   let previous = 0;
+  let atLineStart = true;
   for (const line of eventLines) {
     const [time, code, data] = JSON.parse(line) as [number, string, string];
-    const wait = Math.min(time - previous, idleLimit) / speed;
+    const gap = time - previous;
     previous = time;
+    if (gap > idleLimit) {
+      // Inline, so it can smear a full-screen TUI until its next redraw.
+      process.stdout.write(
+        `${atLineStart ? '' : '\r\n'}\x1b[2m⏸ ${formatDuration(gap)} pause, shortened to ${formatDuration(idleLimit)}\x1b[0m\r\n`
+      );
+      atLineStart = true;
+    }
+    const wait = Math.min(gap, idleLimit) / speed;
     if (wait > 0) await new Promise((r) => setTimeout(r, wait * 1000));
-    if (code === 'o') process.stdout.write(data);
+    if (code === 'o') {
+      process.stdout.write(data);
+      atLineStart = data.endsWith('\n');
+    }
   }
   process.stdout.write('\x1b[0m\r\n\x1b[2m■ end of recording\x1b[0m\r\n');
+}
+
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds.toFixed(1)}s`;
+  const whole = Math.round(seconds);
+  return `${Math.floor(whole / 60)}m ${whole % 60}s`;
 }
