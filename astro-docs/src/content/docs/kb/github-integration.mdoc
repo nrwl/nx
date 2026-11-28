@@ -80,6 +80,10 @@ Two pieces of the workflow above make this work:
   On a push to `main`, the action sets `NX_BASE` to the commit of the last successful workflow
   run, so commits that land while CI is red still get verified.
 
+If you run your pipeline on Nx Cloud CI instead of GitHub Actions, it sets `NX_BASE` and `NX_HEAD`
+automatically before your first step, so you don't need `nrwl/nx-set-shas` or `fetch-depth: 0`.
+For the exact rules, see [set the affected base commit in CI](/docs/kb/affected-base-commit).
+
 ## Add remote caching and task distribution
 
 Affected pruning skips projects that didn't change.

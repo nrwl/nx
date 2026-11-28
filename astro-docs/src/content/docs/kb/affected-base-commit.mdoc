@@ -1,6 +1,6 @@
 ---
 title: Set the Affected Base Commit in CI
-description: How GitHub Actions, CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket Pipelines pass the base and head commits to nx affected.
+description: How Nx Cloud CI, GitHub Actions, CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket Pipelines pass the base and head commits to nx affected.
 filter: 'type:Guides'
 topics:
   - 'Continuous integration'
@@ -14,6 +14,33 @@ Each CI provider exposes that commit differently.
 For complete workflows per provider, see [CI workflow examples](/docs/kb/ci-workflow-examples).
 
 {% tabs syncKey="ci-provider" %}
+{% tabitem label="Nx Cloud CI" %}
+
+Before your first step in each job, Nx Cloud CI runs a platform step named **Resolve affected range** that writes `NX_BASE` and `NX_HEAD` to `$NX_CLOUD_ENV`, so every following step sees them.
+The resolution matches `nrwl/nx-set-shas`, so you don't need that action or `fetch-depth: 0`.
+
+Nx Cloud picks `NX_HEAD` from the event:
+
+- On a push or tag event, `NX_HEAD` is the event commit.
+- On a pull request, `NX_HEAD` is the merge commit GitHub creates for the pull request head and target branch, after verifying that it merges that exact head commit.
+- If the checkout isn't at the expected commit, the step fails instead of guessing.
+
+On a pull request, Nx Cloud fetches the target branch, deepens `HEAD` up to 500 commits, and sets `NX_BASE` with `git merge-base origin/<target> HEAD`.
+If Git can't find a merge base within 500 commits, the step fails.
+
+On a push or tag, Nx Cloud tries three sources for `NX_BASE` in order:
+
+1. The newest commit from the last 5 successful Nx Cloud CI builds of the same workflow file on the default branch that exists in the fetched history.
+1. `HEAD~1`, when none of those commits exist in the fetched history.
+1. The Git empty tree, marking everything affected and logging that no previous build was found.
+
+Edge cases:
+
+- A [launch template](/docs/kb/launch-templates) without a checkout step logs a warning, leaves both variables unset, and lets the run continue.
+- A push run fails if the event has no default branch recorded.
+- When the step sets `NX_BASE`, the value is never empty.
+
+{% /tabitem %}
 {% tabitem label="GitHub" %}
 
 The [nrwl/nx-set-shas](https://github.com/marketplace/actions/nx-set-shas) action finds the last successful run on the main branch and sets `NX_BASE` and `NX_HEAD`.

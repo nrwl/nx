@@ -160,6 +160,9 @@ For CircleCI, you can reference our custom orb as a step:
 # ...other steps including the use of `nx release plan:check`
 ```
 
+Nx Cloud CI sets `NX_BASE` and `NX_HEAD` automatically before your first step, so you don't need an extra step.
+For the resolution rules, see [set the affected base commit in CI](/docs/kb/affected-base-commit).
+
 You can read more about these utilities and why they are needed on their respective READMEs:
 
 - https://github.com/nrwl/nx-set-shas?tab=readme-ov-file#background

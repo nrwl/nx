@@ -126,7 +126,9 @@ jobs:
 ```
 
 `linux-medium-js` is a pre-built [launch template](/docs/kb/launch-templates) that checks out your repository and installs its dependencies.
-Before your first step, Nx Cloud sets `NX_BASE` and `NX_HEAD`, so `nx affected` needs no extra setup.
+Before your first step, Nx Cloud sets `NX_BASE` and `NX_HEAD` to the target branch merge base on pull requests and to the last successful build on pushes, so you don't need `nrwl/nx-set-shas` or `fetch-depth: 0`.
+For the full rules, see [set the affected base commit in CI](/docs/kb/affected-base-commit).
+
 For the triggers, see the [complete example](#complete-example).
 To turn it on, see [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud).
 
