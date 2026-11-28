@@ -1,9 +1,9 @@
 //! The files under the directories the hasher registers, whether tracked or
 //! not, with their content hashes. A watching context keeps the members
 //! current from its events (see `WorkspaceContext`); a walk seeds a prefix
-//! and is the fallback wherever the watch does not reach. With no watch, a
-//! prefix is walked again every time it is registered, once per up-front
-//! batch, so the listing is what a walk at that moment would say.
+//! and is the fallback wherever the watch does not reach. With no watch,
+//! every listing is a fresh walk and none is kept, so it is what a walk at
+//! that moment would say.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -327,10 +327,18 @@ impl IgnoredIndex {
         if !self.is_tracked(dir) {
             return None;
         }
-        // Without a watch nothing keeps a listing current, so every ask walks.
-        if (self.watch.is_none() || !self.is_listed(dir))
-            && !self.walk_into_listing(workspace_root, dir)
-        {
+        if self.watch.is_none() {
+            // Nothing keeps an unwatched listing current, so every ask walks,
+            // and none is adopted: concurrent asks would rewrite each other's members.
+            if self.leaves_the_workspace(workspace_root, dir) {
+                return None;
+            }
+            let mut files = seed_walk(workspace_root, dir)?;
+            files.sort_unstable();
+            files.dedup();
+            return Some(files);
+        }
+        if !self.is_listed(dir) && !self.walk_into_listing(workspace_root, dir) {
             return None;
         }
         Some(members_under(&self.members.read(), dir))
@@ -1343,6 +1351,30 @@ mod tests {
         // A narrower directory is absorbed rather than listed on its own.
         assert!(index.track(temp.path(), "dist/gen"));
         assert_eq!(index.tracked.read().len(), 1);
+    }
+
+    #[test]
+    fn unwatched_listings_share_no_members_between_asks() {
+        let temp = workspace();
+        let inner = "node_modules/foo/x.js";
+        temp.child(inner).write_str("x").unwrap();
+        let index = IgnoredIndex::new(None);
+        assert!(index.track(temp.path(), ""));
+        assert_eq!(
+            index.list(temp.path(), "node_modules/foo"),
+            Some(vec![inner.to_string()])
+        );
+        index
+            .hash_file(temp.path(), inner, None, RunStage::NothingRan)
+            .unwrap();
+
+        let outer = index.list(temp.path(), "").unwrap();
+        assert!(!outer.contains(&inner.to_string()));
+        assert!(
+            index.remembered(inner),
+            "a walk of the root must not forget what an inner ask hashed"
+        );
+        assert!(index.members.read().is_empty());
     }
 
     #[test]
